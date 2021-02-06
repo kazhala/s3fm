@@ -33,3 +33,13 @@ class KB(KeyBindings):
             return executable
 
         return decorator
+
+    @property
+    def activated(self) -> bool:
+        """Get activated status."""
+        return self._activated
+
+    @activated.setter
+    def activated(self, value: bool) -> None:
+        """Set activated status."""
+        self._activated = value

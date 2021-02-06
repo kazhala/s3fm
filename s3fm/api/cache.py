@@ -1,5 +1,4 @@
 """Module contains the utils to obtain and process cache result."""
-import asyncio
 from pathlib import Path
 
 
@@ -14,8 +13,23 @@ class Cache:
         self._right_path = str(Path.cwd())
         self._focus = 0
 
-    async def _read_cache(self) -> None:
+    async def read_cache(self) -> None:
         """Read cache."""
         self._left_fs_mode = False
         self._right_fs_mode = True
         self._focus = 0
+
+    @property
+    def focus(self) -> int:
+        """Get current focus id."""
+        return self._focus
+
+    @property
+    def left_fs_mode(self) -> bool:
+        """Get left fs_mode."""
+        return self._left_fs_mode
+
+    @property
+    def right_fs_mode(self) -> bool:
+        """Get right fs_mode."""
+        return self._right_fs_mode

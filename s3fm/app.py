@@ -98,22 +98,21 @@ class App:
         """Read cache and instruct left/right pane to load appropriate data."""
         cache = Cache()
         if not self._no_cache:
-            await cache._read_cache()
-        self._focus_pane(cache._focus)
-        self._kb._activated = True
+            await cache.read_cache()
+        self._focus_pane(cache.focus)
+        self._kb.activated = True
         await asyncio.gather(
-            self._load_pane_data(pane=self._left_pane, fs_mode=cache._left_fs_mode),
-            self._load_pane_data(pane=self._right_pane, fs_mode=cache._right_fs_mode),
+            self._load_pane_data(pane=self._left_pane, fs_mode=cache.left_fs_mode),
+            self._load_pane_data(pane=self._right_pane, fs_mode=cache.right_fs_mode),
         )
 
     def _after_render(self, app) -> None:
         """Run after the app is running, same as `useEffect` in react.js."""
         if not self._rendered:
             self._rendered = True
-            app.create_background_task(
-                self._right_pane._spinner.spin(self._app.invalidate)
-            )
-            app.create_background_task(self._render_task())
+            asyncio.create_task(self._left_pane.spinner.spin(self._app.invalidate))
+            asyncio.create_task(self._right_pane.spinner.spin(self._app.invalidate))
+            asyncio.create_task(self._render_task())
 
     async def run(self) -> None:
         """Run the application in async mode."""
