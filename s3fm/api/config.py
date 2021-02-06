@@ -1,8 +1,6 @@
 """Module contains the main config class."""
 from typing import List, NamedTuple, Optional
 
-from s3fm.exceptions import ClientError
-
 
 class Config:
     """Class to manage configuration of s3fm."""

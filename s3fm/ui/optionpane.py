@@ -1,5 +1,4 @@
 """Module contains the floating options pane."""
-
 from prompt_toolkit.formatted_text.base import FormattedText
 from prompt_toolkit.layout.containers import Window
 from prompt_toolkit.layout.controls import FormattedTextControl

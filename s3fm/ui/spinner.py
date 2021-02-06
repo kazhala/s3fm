@@ -1,5 +1,4 @@
 """Module contains the floating loading spinner pane."""
-
 import asyncio
 from itertools import zip_longest
 from typing import Callable, List
