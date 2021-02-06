@@ -2,7 +2,6 @@
 import asyncio
 
 from prompt_toolkit.application import Application
-from prompt_toolkit.key_binding.key_bindings import KeyBindings
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.layout.containers import Float, FloatContainer, HSplit, VSplit
 from prompt_toolkit.layout.layout import Layout
@@ -12,10 +11,10 @@ from prompt_toolkit.widgets.base import Frame
 from s3fm.api.cache import Cache
 from s3fm.api.config import Config
 from s3fm.api.kb import KB
-from s3fm.exceptions import Bug
 from s3fm.ui.commandpane import CommandPane
 from s3fm.ui.filepane import FilePane
 from s3fm.ui.optionpane import OptionPane
+from s3fm.utils import kill_child_processes
 
 
 class App:
@@ -46,15 +45,16 @@ class App:
         self._kb = KB()
 
         @self._kb.add("c-c")
-        def ___(event):
+        def exit(event):
+            kill_child_processes()
             event.app.exit()
 
         @self._kb.add(Keys.Tab)
-        def __(_):
+        def focus_pane(_):
             self._focus_pane(0 if self._current_focus == 1 else 1)
 
         @self._kb.add(":")
-        def _(_):
+        def focus_cli(_):
             self._layout.focus(self._pane_map[2])
 
         self._pane_map = {
