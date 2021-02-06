@@ -1,4 +1,4 @@
-"""Module contains the S3 class to access s3."""
+"""Module contains the main api class to access s3."""
 import asyncio
 from concurrent.futures.process import ProcessPoolExecutor
 from typing import List
@@ -8,7 +8,7 @@ from mypy_boto3_s3 import Client
 
 
 class S3:
-    """Class to provide access and interacte with AWS s3.
+    """Class to provide access and interact with AWS s3.
 
     :param bucket: bucket name
     :type bucket: str
