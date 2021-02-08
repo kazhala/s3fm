@@ -9,16 +9,38 @@ class Config:
         """Initialise all configurable variables."""
         self._app = AppConfig()
         self._spinner = SpinnerConfig()
+        self._style = StyleConfig()
+
+    @property
+    def style(self):
+        """Get style config."""
+        return self._style
 
     @property
     def app(self):
-        """Get the app config."""
+        """Get app config."""
         return self._app
 
     @property
     def spinner(self):
-        """Get the spinner config."""
+        """Get spinner config."""
         return self._spinner
+
+
+class StyleConfig:
+    """Style config class."""
+
+    def __init__(self) -> None:
+        """Initialise the default style."""
+        self.file: str = "#abb2bf"
+        self.directory: str = "#61afef"
+        self.current_line: str = "reverse"
+        self.aaa: str = "#000000 reverse"
+
+    def clear(self) -> None:
+        """Clear all default styles."""
+        for attribute in self.__dict__.keys():
+            setattr(self, attribute, "")
 
 
 class AppConfig(NamedTuple):
