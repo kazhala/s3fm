@@ -2,6 +2,7 @@
 import asyncio
 
 from prompt_toolkit.application import Application
+from prompt_toolkit.filters.base import Condition
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.layout.containers import Float, FloatContainer, HSplit, VSplit
 from prompt_toolkit.layout.layout import Layout
@@ -22,13 +23,15 @@ class App:
 
     def __init__(self, config: Config, no_cache: bool = False) -> None:
         """Process config, options and then create the application."""
-        self._style = Style.from_dict(config.style.__dict__)  # type: ignore
+        self._style = Style.from_dict(config.style.__dict__)
         self._rendered = False
         self._no_cache = no_cache
         self._left_pane = FilePane(pane_id=0, spinner_config=config.spinner)
         self._right_pane = FilePane(pane_id=1, spinner_config=config.spinner)
         self._command_pane = CommandPane()
         self._option_pane = OptionPane()
+        self._command_focus = False
+        self._kb = KB()
 
         window = HSplit(
             [VSplit([self._left_pane, self._right_pane]), self._command_pane]
@@ -42,12 +45,28 @@ class App:
             )
         )
 
-        self._kb = KB()
+        self._pane_map = {
+            0: self._left_pane,
+            1: self._right_pane,
+            2: self._command_pane,
+        }
+        self._current_focus = 0
+        self._layout.focus(self._pane_map[self._current_focus])
 
-        @self._kb.add("c-c")
-        def exit(event):
+        self._is_command_focus = Condition(lambda: self._command_focus)
+        self._is_pane_focus = Condition(lambda: not self._command_focus)
+
+        @self._kb.add("c-c", filter=self._is_pane_focus)
+        @self._kb.add("q", filter=self._is_pane_focus)
+        def exit_app(event):
             kill_child_processes()
             event.app.exit()
+
+        @self._kb.add("escape", filter=self._is_command_focus, eager=True)
+        @self._kb.add("c-c", filter=self._is_command_focus)
+        def exit_command(event):
+            self._focus_pane(self._current_focus)
+            self._command_focus = False
 
         @self._kb.add(Keys.Tab)
         def focus_pane(_):
@@ -56,14 +75,7 @@ class App:
         @self._kb.add(":")
         def focus_cli(_):
             self._layout.focus(self._pane_map[2])
-
-        self._pane_map = {
-            0: self._left_pane,
-            1: self._right_pane,
-            2: self._command_pane,
-        }
-        self._current_focus = 0
-        self._layout.focus(self._pane_map[self._current_focus])
+            self._command_focus = True
 
         self._app = Application(
             layout=self._layout,
