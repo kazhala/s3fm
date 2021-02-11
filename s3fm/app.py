@@ -23,7 +23,7 @@ class App:
 
     def __init__(self, config: Config, no_cache: bool = False) -> None:
         """Process config, options and then create the application."""
-        self._style = Style.from_dict(config.style.__dict__)
+        self._style = Style.from_dict(dict(config.style))
         self._rendered = False
         self._no_cache = no_cache
         self._left_pane = FilePane(pane_id=0, spinner_config=config.spinner)

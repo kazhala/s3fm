@@ -1,5 +1,43 @@
 """Module contains the main config class."""
-from typing import List, NamedTuple, Optional
+from typing import List, Optional
+
+from s3fm.base import BaseStyleConfig
+
+
+class AppConfig:
+    """App config class."""
+
+    border: bool = False
+
+
+class SpinnerConfig:
+    """Spinner config class."""
+
+    prefix_pattern: Optional[List[str]] = None
+    postfix_pattern: Optional[List[str]] = None
+    text: str = " Loading "
+    border: bool = True
+
+
+class StyleConfig(BaseStyleConfig):
+    """Style config class."""
+
+    class Spinner(BaseStyleConfig):
+        """Spinner style config."""
+
+        def __init__(self, text: str, prefix: str, postfix: str) -> None:
+            """Init spinner style settings."""
+            self.text = text
+            self.prefix = prefix
+            self.postfix = postfix
+
+    def __init__(self) -> None:
+        """Initialise the default styles."""
+        self.file: str = "#abb2bf"
+        self.directory: str = "#61afef"
+        self.current_line: str = "reverse"
+        self.aaa: str = "#000000 reverse"
+        self.spinner = self.Spinner(text="#000000", prefix="#ffffff", postfix="#ffffff")
 
 
 class Config:
@@ -10,6 +48,7 @@ class Config:
         self._app = AppConfig()
         self._spinner = SpinnerConfig()
         self._style = StyleConfig()
+        self._app.border = True
 
     @property
     def style(self):
@@ -25,34 +64,3 @@ class Config:
     def spinner(self):
         """Get spinner config."""
         return self._spinner
-
-
-class StyleConfig:
-    """Style config class."""
-
-    def __init__(self) -> None:
-        """Initialise the default style."""
-        self.file: str = "#abb2bf"
-        self.directory: str = "#61afef"
-        self.current_line: str = "reverse"
-        self.aaa: str = "#000000 reverse"
-
-    def clear(self) -> None:
-        """Clear all default styles."""
-        for attribute in self.__dict__.keys():
-            setattr(self, attribute, "")
-
-
-class AppConfig(NamedTuple):
-    """App config class."""
-
-    border: bool = False
-
-
-class SpinnerConfig(NamedTuple):
-    """Spinner config class."""
-
-    prefix_pattern: Optional[List[str]] = None
-    postfix_pattern: Optional[List[str]] = None
-    text: str = "Loading"
-    border: bool = True
