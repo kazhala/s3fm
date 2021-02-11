@@ -8,7 +8,7 @@ from prompt_toolkit.layout.containers import ConditionalContainer, Float, Window
 from prompt_toolkit.layout.controls import FormattedTextControl
 from prompt_toolkit.widgets.base import Frame
 
-from s3fm.typings import FormattedText
+from s3fm.base import FormattedText
 
 
 class Spinner(Float):
@@ -19,7 +19,7 @@ class Spinner(Float):
         is_loading: FilterOrBool,
         prefix_pattern: List[str] = None,
         postfix_pattern: List[str] = None,
-        text: str = "Loading",
+        text: str = " Loading ",
         border: bool = True,
     ) -> None:
         """Initialise the UI options."""
@@ -47,7 +47,11 @@ class Spinner(Float):
         :return: a list of tuple as FormattedText
         :rtype: FormattedText
         """
-        return [("", "%s %s %s" % (self._prefix, self._text, self._postfix))]
+        return [
+            ("class:spinner.prefix", self._prefix),
+            ("class:spinner.text", self._text),
+            ("class:spinner.postfix", self._postfix),
+        ]
 
     async def spin(self, re_render: Callable[[], None]) -> None:
         """Run spinner.
