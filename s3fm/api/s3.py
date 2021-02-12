@@ -38,5 +38,6 @@ class S3:
     @property
     def client(self) -> Client:
         """Retrieve boto3 client."""
-        client = boto3.client("s3")
+        session = boto3.Session(region_name=self._region, profile_name=self._profile)
+        client = session.client("s3")
         return client
