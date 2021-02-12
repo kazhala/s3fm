@@ -16,6 +16,7 @@ class Spinner(Float):
     def __init__(
         self,
         is_loading: FilterOrBool,
+        redraw: Callable[[], None],
         prefix_pattern: List[str] = None,
         postfix_pattern: List[str] = None,
         text: str = " Loading ",
@@ -23,6 +24,7 @@ class Spinner(Float):
     ) -> None:
         """Initialise the UI options."""
         self._is_loading = is_loading
+        self._redraw = redraw
         self._prefix_pattern = prefix_pattern or ["|", "/", "-", "\\"]
         self._postfix_pattern = postfix_pattern or [".   ", "..  ", "... ", "...."]
         self._text = text
@@ -52,7 +54,7 @@ class Spinner(Float):
             ("class:spinner.postfix", self._postfix),
         ]
 
-    async def spin(self, re_render: Callable[[], None]) -> None:
+    async def spin(self) -> None:
         """Run spinner.
 
         :param re_render: application re-render function
@@ -66,4 +68,4 @@ class Spinner(Float):
                 await asyncio.sleep(0.1)
                 self._prefix = prefix
                 self._postfix = postfix
-                re_render()
+                self._redraw()

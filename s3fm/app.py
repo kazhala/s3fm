@@ -27,8 +27,12 @@ class App:
         self._style = Style.from_dict(dict(config.style))
         self._rendered = False
         self._no_cache = no_cache
-        self._left_pane = FilePane(pane_id=0, spinner_config=config.spinner)
-        self._right_pane = FilePane(pane_id=1, spinner_config=config.spinner)
+        self._left_pane = FilePane(
+            pane_id=0, spinner_config=config.spinner, redraw=self._redraw
+        )
+        self._right_pane = FilePane(
+            pane_id=1, spinner_config=config.spinner, redraw=self._redraw
+        )
         self._command_pane = CommandPane()
         self._option_pane = OptionPane()
         self._command_focus = False
@@ -90,6 +94,10 @@ class App:
             key_bindings=self._kb,
         )
 
+    def _redraw(self) -> None:
+        """Instruct the app to redraw itself to the terminal."""
+        self._app.invalidate()
+
     def _focus_pane(self, pane: FOCUS) -> None:
         """Focus specified pane and set the focus state.
 
@@ -109,7 +117,7 @@ class App:
         :type fs_mode: bool
         """
         await pane.load_data(mode=mode)
-        self._app.invalidate()
+        self._redraw()
 
     async def _render_task(self) -> None:
         """Read cache and instruct left/right pane to load appropriate data."""
@@ -127,8 +135,8 @@ class App:
         """Run after the app is running, same as `useEffect` in react.js."""
         if not self._rendered:
             self._rendered = True
-            asyncio.create_task(self._left_pane.spinner.spin(self._app.invalidate))
-            asyncio.create_task(self._right_pane.spinner.spin(self._app.invalidate))
+            asyncio.create_task(self._left_pane.spinner.spin())
+            asyncio.create_task(self._right_pane.spinner.spin())
             asyncio.create_task(self._render_task())
 
     async def run(self) -> None:

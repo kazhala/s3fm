@@ -1,5 +1,5 @@
 """Module contains the main left/right pane."""
-from typing import List, Tuple
+from typing import Callable, List, Tuple
 
 from prompt_toolkit.filters.base import Condition
 from prompt_toolkit.layout.containers import FloatContainer, Window
@@ -19,7 +19,9 @@ FS_MODE = PaneMode.fs
 class FilePane(FloatContainer):
     """The main file pane of the app."""
 
-    def __init__(self, pane_id: int, spinner_config: SpinnerConfig):
+    def __init__(
+        self, pane_id: int, spinner_config: SpinnerConfig, redraw: Callable[[], None]
+    ) -> None:
         """Initialise the layout of file pane."""
         self._s3 = S3()
         self._fs = FS()
@@ -34,6 +36,7 @@ class FilePane(FloatContainer):
             postfix_pattern=spinner_config.postfix_pattern,
             text=spinner_config.text,
             border=spinner_config.border,
+            redraw=redraw,
         )
 
         super().__init__(
