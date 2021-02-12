@@ -8,7 +8,12 @@ from prompt_toolkit.layout.controls import FormattedTextControl
 from s3fm.api.config import SpinnerConfig
 from s3fm.api.fs import FS
 from s3fm.api.s3 import S3
+from s3fm.base import MODE, PaneMode
+from s3fm.exceptions import Bug
 from s3fm.ui.spinner import Spinner
+
+S3_MODE = PaneMode.s3
+FS_MODE = PaneMode.fs
 
 
 class FilePane(FloatContainer):
@@ -18,7 +23,7 @@ class FilePane(FloatContainer):
         """Initialise the layout of file pane."""
         self._s3 = S3()
         self._fs = FS()
-        self._fs_mode = False
+        self._mode = S3_MODE
         self._choices = []
         self._loading = True
 
@@ -58,14 +63,16 @@ class FilePane(FloatContainer):
         return display_choices
 
     async def load_data(
-        self, fs_mode: bool = False, bucket: str = None, path: str = None
+        self, mode: MODE = S3_MODE, bucket: str = None, path: str = None
     ) -> None:
         """Load the data from either s3 or local."""
-        self._fs_mode = fs_mode
-        if not fs_mode:
+        self._mode = mode
+        if self._mode == S3_MODE:
             self._choices += await self._s3.get_buckets()
-        else:
+        elif self._mode == FS_MODE:
             self._choices += await self._fs.get_paths()
+        else:
+            raise Bug("unexpected pane mode.")
         self._loading = False
 
     @property

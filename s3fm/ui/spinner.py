@@ -4,11 +4,10 @@ from itertools import zip_longest
 from typing import Callable, List
 
 from prompt_toolkit.filters.base import FilterOrBool
+from prompt_toolkit.formatted_text.base import AnyFormattedText
 from prompt_toolkit.layout.containers import ConditionalContainer, Float, Window
 from prompt_toolkit.layout.controls import FormattedTextControl
 from prompt_toolkit.widgets.base import Frame
-
-from s3fm.base import FormattedText
 
 
 class Spinner(Float):
@@ -41,7 +40,7 @@ class Spinner(Float):
             ),
         )
 
-    def _get_text(self) -> FormattedText:
+    def _get_text(self) -> AnyFormattedText:
         """Get the loading text in FormattedText.
 
         :return: a list of tuple as FormattedText

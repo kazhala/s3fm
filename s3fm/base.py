@@ -1,7 +1,14 @@
-"""Module contains base classes and common typings."""
-from typing import Any, Iterator, List, Tuple
+"""Module contains base classes and enums."""
+from typing import Any, Iterator, NamedTuple, Tuple
 
-FormattedText = List[Tuple[str, str]]
+KBMode = NamedTuple("KBMode", [("normal", int), ("command", int)])(0, 1)
+PaneMode = NamedTuple("PaneMode", [("s3", int), ("fs", int)])(0, 1)
+PaneFocus = NamedTuple("PaneFocus", [("left", int), ("right", int), ("cmd", int)])(
+    0, 1, 2
+)
+
+MODE = int
+FOCUS = int
 
 
 class BaseStyleConfig:

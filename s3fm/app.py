@@ -12,6 +12,7 @@ from prompt_toolkit.widgets.base import Frame
 from s3fm.api.cache import Cache
 from s3fm.api.config import Config
 from s3fm.api.kb import KB
+from s3fm.base import FOCUS, MODE, PaneFocus
 from s3fm.ui.commandpane import CommandPane
 from s3fm.ui.filepane import FilePane
 from s3fm.ui.optionpane import OptionPane
@@ -31,7 +32,6 @@ class App:
         self._command_pane = CommandPane()
         self._option_pane = OptionPane()
         self._command_focus = False
-        self._kb = KB()
 
         window = HSplit(
             [VSplit([self._left_pane, self._right_pane]), self._command_pane]
@@ -46,35 +46,40 @@ class App:
         )
 
         self._pane_map = {
-            0: self._left_pane,
-            1: self._right_pane,
-            2: self._command_pane,
+            PaneFocus.left: self._left_pane,
+            PaneFocus.right: self._right_pane,
+            PaneFocus.cmd: self._command_pane,
         }
-        self._current_focus = 0
+        self._current_focus = PaneFocus.left
         self._layout.focus(self._pane_map[self._current_focus])
 
-        self._is_command_focus = Condition(lambda: self._command_focus)
-        self._is_pane_focus = Condition(lambda: not self._command_focus)
+        self._command_mode = Condition(lambda: self._command_focus)
+        self._normal_mode = Condition(lambda: not self._command_focus)
+        self._kb = KB(self._normal_mode, self._command_mode)
 
-        @self._kb.add("c-c", filter=self._is_pane_focus)
-        @self._kb.add("q", filter=self._is_pane_focus)
+        @self._kb.add("c-c", mode=0)
+        @self._kb.add("q", mode=0)
         def exit_app(event):
             kill_child_processes()
             event.app.exit()
 
-        @self._kb.add("escape", filter=self._is_command_focus, eager=True)
-        @self._kb.add("c-c", filter=self._is_command_focus)
+        @self._kb.add("escape", eager=True, mode=1)
+        @self._kb.add("c-c", mode=1)
         def exit_command(event):
             self._focus_pane(self._current_focus)
             self._command_focus = False
 
         @self._kb.add(Keys.Tab)
         def focus_pane(_):
-            self._focus_pane(0 if self._current_focus == 1 else 1)
+            self._focus_pane(
+                PaneFocus.left
+                if self._current_focus == PaneFocus.right
+                else PaneFocus.right
+            )
 
         @self._kb.add(":")
         def focus_cli(_):
-            self._layout.focus(self._pane_map[2])
+            self._layout.focus(self._pane_map[PaneFocus.cmd])
             self._command_focus = True
 
         self._app = Application(
@@ -85,17 +90,17 @@ class App:
             key_bindings=self._kb,
         )
 
-    def _focus_pane(self, pane_id: int) -> None:
+    def _focus_pane(self, pane: FOCUS) -> None:
         """Focus specified pane and set the focus state.
 
         :param pane_id: the id of the pane to focus
             reference `self._pane_map`
-        :type pane_id: int
+        :type pane_id: FOCUS
         """
-        self._current_focus = pane_id
+        self._current_focus = pane
         self._layout.focus(self._pane_map[self._current_focus])
 
-    async def _load_pane_data(self, pane: FilePane, fs_mode: bool) -> None:
+    async def _load_pane_data(self, pane: FilePane, mode: MODE) -> None:
         """Load the data for the specified pane and refersh the app.
 
         :param pane: a FilePane instance to load data
@@ -103,7 +108,7 @@ class App:
         :param fs_mode: notify the FilePane whether to load data from s3 or local
         :type fs_mode: bool
         """
-        await pane.load_data(fs_mode=fs_mode)
+        await pane.load_data(mode=mode)
         self._app.invalidate()
 
     async def _render_task(self) -> None:
@@ -114,8 +119,8 @@ class App:
         self._focus_pane(cache.focus)
         self._kb.activated = True
         await asyncio.gather(
-            self._load_pane_data(pane=self._left_pane, fs_mode=cache.left_fs_mode),
-            self._load_pane_data(pane=self._right_pane, fs_mode=cache.right_fs_mode),
+            self._load_pane_data(pane=self._left_pane, mode=cache.left_mode),
+            self._load_pane_data(pane=self._right_pane, mode=cache.right_mode),
         )
 
     def _after_render(self, app) -> None:

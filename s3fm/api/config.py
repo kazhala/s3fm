@@ -48,7 +48,6 @@ class Config:
         self._app = AppConfig()
         self._spinner = SpinnerConfig()
         self._style = StyleConfig()
-        self._app.border = True
 
     @property
     def style(self):
