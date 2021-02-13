@@ -1,9 +1,9 @@
 """Module contains the main App class which creates the main application."""
 import asyncio
+from typing import Dict, Union
 
 from prompt_toolkit.application import Application
 from prompt_toolkit.filters.base import Condition
-from prompt_toolkit.key_binding.key_processor import KeyPressEvent
 from prompt_toolkit.layout.containers import Float, FloatContainer, HSplit, VSplit
 from prompt_toolkit.layout.layout import Layout
 from prompt_toolkit.styles import Style
@@ -12,7 +12,7 @@ from prompt_toolkit.widgets.base import Frame
 from s3fm.api.cache import Cache
 from s3fm.api.config import Config
 from s3fm.api.kb import KB
-from s3fm.base import FOCUS, MODE, KBMode, PaneFocus
+from s3fm.base import FOCUS, MODE, PaneFocus
 from s3fm.ui.commandpane import CommandPane
 from s3fm.ui.filepane import FilePane
 from s3fm.ui.optionpane import OptionPane
@@ -59,19 +59,7 @@ class App:
 
         self._command_mode = Condition(lambda: self._command_focus)
         self._normal_mode = Condition(lambda: not self._command_focus)
-        self._kb = KB(self._normal_mode, self._command_mode)
-
-        for kb_action, kb_binds in self._kb.list_kbs(KBMode.normal):
-            for bind in kb_binds:
-                self._kb.factory(
-                    action=getattr(self, kb_action), mode=KBMode.normal, **bind
-                )
-
-        for kb_action, kb_binds in self._kb.list_kbs(KBMode.command):
-            for bind in kb_binds:
-                self._kb.factory(
-                    action=getattr(self, kb_action), mode=KBMode.command, **bind
-                )
+        self._kb = KB(self)
 
         self._app = Application(
             layout=self._layout,
@@ -81,42 +69,9 @@ class App:
             key_bindings=self._kb,
         )
 
-    def _kb_norm_exit(self, event: KeyPressEvent) -> None:
-        """Exit the application in normal mode."""
-        kill_child_processes()
-        event.app.exit()
-
-    def _kb_norm_focus_pane(self, event: KeyPressEvent) -> None:
-        """Focus next file pane in normal mode."""
-        self._focus_pane(
-            PaneFocus.left
-            if self._current_focus == PaneFocus.right
-            else PaneFocus.right
-        )
-
-    def _kb_norm_focus_cmd(self, event: KeyPressEvent) -> None:
-        """Focus cmd pane in normal mode."""
-        self._layout.focus(self._pane_map[PaneFocus.cmd])
-        self._command_focus = True
-
-    def _kb_cmd_exit(self, event: KeyPressEvent) -> None:
-        """Focus file pane in command mode."""
-        self._focus_pane(self._current_focus)
-        self._command_focus = False
-
     def _redraw(self) -> None:
         """Instruct the app to redraw itself to the terminal."""
         self._app.invalidate()
-
-    def _focus_pane(self, pane: FOCUS) -> None:
-        """Focus specified pane and set the focus state.
-
-        :param pane_id: the id of the pane to focus
-            reference `self._pane_map`
-        :type pane_id: FOCUS
-        """
-        self._current_focus = pane
-        self._layout.focus(self._pane_map[self._current_focus])
 
     async def _load_pane_data(self, pane: FilePane, mode: MODE) -> None:
         """Load the data for the specified pane and refersh the app.
@@ -134,7 +89,7 @@ class App:
         cache = Cache()
         if not self._no_cache:
             await cache.read_cache()
-        self._focus_pane(cache.focus)
+        self.focus_pane(cache.focus)
         self._kb.activated = True
         await asyncio.gather(
             self._load_pane_data(pane=self._left_pane, mode=cache.left_mode),
@@ -152,3 +107,48 @@ class App:
     async def run(self) -> None:
         """Run the application in async mode."""
         await self._app.run_async()
+
+    def focus_pane(self, pane: FOCUS) -> None:
+        """Focus specified pane and set the focus state.
+
+        :param pane_id: the id of the pane to focus
+            reference `self._pane_map`
+        :type pane_id: FOCUS
+        """
+        self._current_focus = pane
+        self._layout.focus(self._pane_map[self._current_focus])
+
+    def focus_cmd(self) -> None:
+        """Focus the cmd pane."""
+        self._layout.focus(self.panes[PaneFocus.cmd])
+        self._command_focus = True
+
+    def exit_cmd(self) -> None:
+        """Exit the command pane."""
+        self.focus_pane(self.current_focus)
+        self._command_focus = False
+
+    def exit(self) -> None:
+        """Exit the application and kill all spawed processes."""
+        kill_child_processes()
+        self._app.exit()
+
+    @property
+    def command_mode(self) -> Condition:
+        """Get command mode condition."""
+        return self._command_mode
+
+    @property
+    def normal_mode(self) -> Condition:
+        """Get normal mode condition."""
+        return self._normal_mode
+
+    @property
+    def current_focus(self) -> FOCUS:
+        """Get current app focus."""
+        return self._current_focus
+
+    @property
+    def panes(self) -> Dict[FOCUS, Union[FilePane, CommandPane]]:
+        """Get pane mappings."""
+        return self._pane_map

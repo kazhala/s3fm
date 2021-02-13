@@ -1,24 +1,28 @@
 """Module contains the modified `KeyBindings` class."""
-from typing import Any, Callable, Iterator, List, Tuple, Union
+from typing import TYPE_CHECKING, Callable, List, Union
 
 from prompt_toolkit.filters.base import Condition
 from prompt_toolkit.key_binding.key_bindings import KeyBindings, KeyHandlerCallable
 from prompt_toolkit.key_binding.key_processor import KeyPressEvent
 from prompt_toolkit.keys import Keys
 
-from s3fm.base import MODE, KBMode
-from s3fm.exceptions import Bug
+from s3fm.base import MODE, KBMode, PaneFocus
+
+if TYPE_CHECKING:
+    from s3fm.app import App
 
 
 class KB(KeyBindings):
     """Modified `KeyBindings` class to apply custom decorator logic."""
 
-    def __init__(self, normal_mode: Condition, command_mode: Condition) -> None:
+    def __init__(self, app: "App") -> None:
         """Initialise `KeyBindings`."""
         self._activated = False
-        self._mode = {KBMode.normal: normal_mode, KBMode.command: command_mode}
-        self._command_mode = command_mode
-        self._normal_mode = normal_mode
+        self._app = app
+        self._mode = {
+            KBMode.normal: self._app.normal_mode,
+            KBMode.command: self._app.command_mode,
+        }
         self._kb_maps = {
             KBMode.normal: {
                 "exit": [{"keys": "c-c"}, {"keys": "q"}],
@@ -29,34 +33,48 @@ class KB(KeyBindings):
                 "exit": [{"keys": "c-c"}, {"keys": "escape", "eager": True}]
             },
         }
+        self._kb_lookup = {
+            KBMode.normal: {
+                "exit": [{"func": self._app.exit}],
+                "focus_pane": [
+                    {
+                        "func": self._app.focus_pane,
+                        "args": [
+                            PaneFocus.left
+                            if self._app.current_focus == PaneFocus.right
+                            else PaneFocus.right
+                        ],
+                    }
+                ],
+                "focus_cmd": [{"func": self._app.focus_cmd}],
+            },
+            KBMode.command: {"exit": [{"func": self._app.exit_cmd}]},
+        }
         super().__init__()
 
-    def list_kbs(self, mode: MODE) -> Iterator[Tuple[str, Any]]:
-        """List modified keybinding information."""
-        if mode == KBMode.normal:
-            for key, item in self._kb_maps[KBMode.normal].items():
-                yield ("_kb_norm_%s" % key, item)
-        elif mode == KBMode.command:
-            for key, item in self._kb_maps[KBMode.command].items():
-                yield ("_kb_cmd_%s" % key, item)
-        else:
-            raise Bug("unexpected kb mode")
+        def _factory(
+            action: str,
+            mode: MODE,
+            keys: Union[List[Union[Keys, str]], Union[Keys, str]],
+            filter: Condition = Condition(lambda: True),
+            eager: bool = False,
+        ) -> None:
+            """Create keybindings."""
+            if not isinstance(keys, list):
+                keys = [keys]
 
-    def factory(
-        self,
-        action: Callable[[KeyPressEvent], None],
-        mode: MODE,
-        keys: Union[List[Union[Keys, str]], Union[Keys, str]],
-        filter: Condition = Condition(lambda: True),
-        eager: bool = False,
-    ) -> None:
-        """Create keybindings."""
-        if not isinstance(keys, list):
-            keys = [keys]
+            @self.add(*keys, filter=filter, eager=eager, mode=mode)
+            def _(event: KeyPressEvent) -> None:
+                for method in self._kb_lookup[mode][action]:
+                    method["func"](*method.get("args", []))
 
-        @self.add(*keys, filter=filter, eager=eager, mode=mode)
-        def _(event: KeyPressEvent) -> None:
-            action(event)
+        for action, binds in self._kb_maps[KBMode.normal].items():
+            for bind in binds:
+                _factory(action, KBMode.normal, **bind)
+
+        for action, binds in self._kb_maps[KBMode.command].items():
+            for bind in binds:
+                _factory(action, KBMode.normal, **bind)
 
     def add(
         self,
