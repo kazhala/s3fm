@@ -1,10 +1,12 @@
 """Module contains the main api class to access s3."""
 import asyncio
 from concurrent.futures.process import ProcessPoolExecutor
-from typing import List
+from typing import TYPE_CHECKING, List
 
 import boto3
-from mypy_boto3_s3 import Client
+
+if TYPE_CHECKING:
+    from mypy_boto3_s3 import S3Client
 
 
 class S3:
@@ -36,7 +38,7 @@ class S3:
         return [bucket["Name"] for bucket in result["Buckets"]]
 
     @property
-    def client(self) -> Client:
+    def client(self) -> "S3Client":
         """Retrieve boto3 client."""
         session = boto3.Session(region_name=self._region, profile_name=self._profile)
         client = session.client("s3")
