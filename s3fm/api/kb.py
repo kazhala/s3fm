@@ -1,21 +1,30 @@
 """Module contains the modified `KeyBindings` class."""
-from typing import TYPE_CHECKING, Callable, List, Union
+from typing import TYPE_CHECKING, Callable, Dict, List, Union
 
 from prompt_toolkit.filters.base import Condition
 from prompt_toolkit.key_binding.key_bindings import KeyBindings, KeyHandlerCallable
 from prompt_toolkit.key_binding.key_processor import KeyPressEvent
 from prompt_toolkit.keys import Keys
 
-from s3fm.base import MODE, KBMode, PaneFocus
+from s3fm.base import KB_MAPS, MODE, KBMode, PaneFocus
 
 if TYPE_CHECKING:
     from s3fm.app import App
+
+default_kb_maps: Dict[MODE, KB_MAPS] = {
+    KBMode.normal: {
+        "exit": [{"keys": "c-c"}, {"keys": "q"}],
+        "focus_pane": [{"keys": Keys.Tab}],
+        "focus_cmd": [{"keys": ":"}],
+    },
+    KBMode.command: {"exit": [{"keys": "c-c"}, {"keys": "escape", "eager": True}]},
+}
 
 
 class KB(KeyBindings):
     """Modified `KeyBindings` class to apply custom decorator logic."""
 
-    def __init__(self, app: "App") -> None:
+    def __init__(self, app: "App", kb_maps: Dict[MODE, KB_MAPS] = None) -> None:
         """Initialise `KeyBindings`."""
         self._activated = False
         self._app = app
@@ -23,16 +32,7 @@ class KB(KeyBindings):
             KBMode.normal: self._app.normal_mode,
             KBMode.command: self._app.command_mode,
         }
-        self._kb_maps = {
-            KBMode.normal: {
-                "exit": [{"keys": "c-c"}, {"keys": "q"}],
-                "focus_pane": [{"keys": Keys.Tab}],
-                "focus_cmd": [{"keys": ":"}],
-            },
-            KBMode.command: {
-                "exit": [{"keys": "c-c"}, {"keys": "escape", "eager": True}]
-            },
-        }
+        self._kb_maps = kb_maps or default_kb_maps
         self._kb_lookup = {
             KBMode.normal: {
                 "exit": [{"func": self._app.exit}],

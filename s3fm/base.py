@@ -1,5 +1,8 @@
 """Module contains base classes and enums."""
-from typing import Any, Iterator, NamedTuple, Tuple
+from typing import Any, Dict, Iterator, List, NamedTuple, Tuple, Union
+
+from prompt_toolkit.filters.base import Condition
+from prompt_toolkit.keys import Keys
 
 KBMode = NamedTuple("KBMode", [("normal", int), ("command", int)])(0, 1)
 PaneMode = NamedTuple("PaneMode", [("s3", int), ("fs", int)])(0, 1)
@@ -9,6 +12,7 @@ PaneFocus = NamedTuple("PaneFocus", [("left", int), ("right", int), ("cmd", int)
 
 MODE = int
 FOCUS = int
+KB_MAPS = Dict[str, List[Dict[str, Union[str, bool, Keys, Condition]]]]
 
 
 class BaseStyleConfig:
