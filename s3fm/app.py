@@ -3,7 +3,7 @@ import asyncio
 
 from prompt_toolkit.application import Application
 from prompt_toolkit.filters.base import Condition
-from prompt_toolkit.keys import Keys
+from prompt_toolkit.key_binding.key_processor import KeyPressEvent
 from prompt_toolkit.layout.containers import Float, FloatContainer, HSplit, VSplit
 from prompt_toolkit.layout.layout import Layout
 from prompt_toolkit.styles import Style
@@ -12,7 +12,7 @@ from prompt_toolkit.widgets.base import Frame
 from s3fm.api.cache import Cache
 from s3fm.api.config import Config
 from s3fm.api.kb import KB
-from s3fm.base import FOCUS, MODE, PaneFocus
+from s3fm.base import FOCUS, MODE, KBMode, PaneFocus
 from s3fm.ui.commandpane import CommandPane
 from s3fm.ui.filepane import FilePane
 from s3fm.ui.optionpane import OptionPane
@@ -28,10 +28,10 @@ class App:
         self._rendered = False
         self._no_cache = no_cache
         self._left_pane = FilePane(
-            pane_id=0, spinner_config=config.spinner, redraw=self._redraw
+            pane_id=PaneFocus.left, spinner_config=config.spinner, redraw=self._redraw
         )
         self._right_pane = FilePane(
-            pane_id=1, spinner_config=config.spinner, redraw=self._redraw
+            pane_id=PaneFocus.right, spinner_config=config.spinner, redraw=self._redraw
         )
         self._command_pane = CommandPane()
         self._option_pane = OptionPane()
@@ -61,30 +61,17 @@ class App:
         self._normal_mode = Condition(lambda: not self._command_focus)
         self._kb = KB(self._normal_mode, self._command_mode)
 
-        @self._kb.add("c-c", mode=0)
-        @self._kb.add("q", mode=0)
-        def exit_app(event):
-            kill_child_processes()
-            event.app.exit()
+        for kb_action, kb_binds in self._kb.list_kbs(KBMode.normal):
+            for bind in kb_binds:
+                self._kb.factory(
+                    action=getattr(self, kb_action), mode=KBMode.normal, **bind
+                )
 
-        @self._kb.add("escape", eager=True, mode=1)
-        @self._kb.add("c-c", mode=1)
-        def exit_command(event):
-            self._focus_pane(self._current_focus)
-            self._command_focus = False
-
-        @self._kb.add(Keys.Tab)
-        def focus_pane(_):
-            self._focus_pane(
-                PaneFocus.left
-                if self._current_focus == PaneFocus.right
-                else PaneFocus.right
-            )
-
-        @self._kb.add(":")
-        def focus_cli(_):
-            self._layout.focus(self._pane_map[PaneFocus.cmd])
-            self._command_focus = True
+        for kb_action, kb_binds in self._kb.list_kbs(KBMode.command):
+            for bind in kb_binds:
+                self._kb.factory(
+                    action=getattr(self, kb_action), mode=KBMode.command, **bind
+                )
 
         self._app = Application(
             layout=self._layout,
@@ -93,6 +80,29 @@ class App:
             style=self._style,
             key_bindings=self._kb,
         )
+
+    def _kb_norm_exit(self, event: KeyPressEvent) -> None:
+        """Exit the application in normal mode."""
+        kill_child_processes()
+        event.app.exit()
+
+    def _kb_norm_focus_pane(self, event: KeyPressEvent) -> None:
+        """Focus next file pane in normal mode."""
+        self._focus_pane(
+            PaneFocus.left
+            if self._current_focus == PaneFocus.right
+            else PaneFocus.right
+        )
+
+    def _kb_norm_focus_cmd(self, event: KeyPressEvent) -> None:
+        """Focus cmd pane in normal mode."""
+        self._layout.focus(self._pane_map[PaneFocus.cmd])
+        self._command_focus = True
+
+    def _kb_cmd_exit(self, event: KeyPressEvent) -> None:
+        """Focus file pane in command mode."""
+        self._focus_pane(self._current_focus)
+        self._command_focus = False
 
     def _redraw(self) -> None:
         """Instruct the app to redraw itself to the terminal."""
