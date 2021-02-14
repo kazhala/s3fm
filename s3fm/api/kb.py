@@ -1,5 +1,6 @@
 """Module contains the modified `KeyBindings` class."""
-from typing import TYPE_CHECKING, Callable, Dict, List, Union
+import copy
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Union
 
 from prompt_toolkit.filters.base import Condition
 from prompt_toolkit.key_binding.key_bindings import KeyBindings, KeyHandlerCallable
@@ -24,7 +25,13 @@ default_kb_maps: Dict[MODE, KB_MAPS] = {
 class KB(KeyBindings):
     """Modified `KeyBindings` class to apply custom decorator logic."""
 
-    def __init__(self, app: "App", kb_maps: Dict[MODE, KB_MAPS] = None) -> None:
+    def __init__(
+        self,
+        app: "App",
+        kb_maps: Dict[MODE, KB_MAPS] = None,
+        custom_kb_maps: Dict[MODE, KB_MAPS] = None,
+        custom_kb_lookup: Dict[MODE, Dict[str, Any]] = None,
+    ) -> None:
         """Initialise `KeyBindings`."""
         self._activated = False
         self._app = app
@@ -32,59 +39,77 @@ class KB(KeyBindings):
             KBMode.normal: self._app.normal_mode,
             KBMode.command: self._app.command_mode,
         }
-        self._kb_maps = kb_maps or default_kb_maps
+        self._kb_maps = kb_maps or copy.deepcopy(default_kb_maps)
         self._kb_lookup = {
             KBMode.normal: {
-                "exit": [{"func": self._app.exit}],
-                "focus_pane": [
-                    {
-                        "func": self._app.focus_pane,
-                        "args": [
-                            PaneFocus.left
-                            if self._app.current_focus == PaneFocus.right
-                            else PaneFocus.right
-                        ],
-                    }
-                ],
-                "focus_cmd": [{"func": self._app.focus_cmd}],
+                "exit": {"func": self._app.exit},
+                "focus_pane": {
+                    "func": self._app.focus_pane,
+                    "args": [
+                        PaneFocus.left
+                        if self._app.current_focus == PaneFocus.right
+                        else PaneFocus.right
+                    ],
+                },
+                "focus_cmd": {"func": self._app.focus_cmd},
             },
-            KBMode.command: {"exit": [{"func": self._app.exit_cmd}]},
+            KBMode.command: {"exit": {"func": self._app.exit_cmd}},
+        }
+        self._custom_kb_maps = custom_kb_maps or {
+            KBMode.normal: {},
+            KBMode.command: {},
+        }
+        self._custom_kb_lookup = custom_kb_lookup or {
+            KBMode.normal: {},
+            KBMode.command: {},
         }
         super().__init__()
 
-        def _factory(
-            action: str,
-            mode: MODE,
-            keys: Union[List[Union[Keys, str]], Union[Keys, str]],
-            filter: Condition = Condition(lambda: True),
-            eager: bool = False,
-        ) -> None:
-            """Create keybindings."""
-            if not isinstance(keys, list):
-                keys = [keys]
+        self._create_bindings(KBMode.normal, custom=False)
+        self._create_bindings(KBMode.command, custom=False)
+        self._create_bindings(KBMode.normal, custom=True)
+        self._create_bindings(KBMode.command, custom=True)
 
-            @self.add(*keys, filter=filter, eager=eager, mode=mode)
-            def _(event: KeyPressEvent) -> None:
-                for method in self._kb_lookup[mode][action]:
-                    method["func"](*method.get("args", []))
-
-        for action, binds in self._kb_maps[KBMode.normal].items():
+    def _create_bindings(self, mode, custom: bool = False) -> None:
+        """Create keybindings."""
+        target_maps = self._kb_maps if not custom else self._custom_kb_maps
+        for action, binds in target_maps[mode].items():
             for bind in binds:
-                _factory(action, KBMode.normal, **bind)
+                self._factory(action=action, mode=mode, custom=custom, **bind)
 
-        for action, binds in self._kb_maps[KBMode.command].items():
-            for bind in binds:
-                _factory(action, KBMode.command, **bind)
+    def _factory(
+        self,
+        action: str,
+        mode: MODE,
+        custom: bool,
+        keys: Union[List[Union[Keys, str]], Union[Keys, str]],
+        filter: Condition = Condition(lambda: True),
+        eager: bool = False,
+        **kwargs,
+    ) -> None:
+        """Call `add` to create bindings."""
+        if not isinstance(keys, list):
+            keys = [keys]
+        target_lookup = self._kb_lookup if not custom else self._custom_kb_lookup
+
+        @self.add(*keys, filter=filter, eager=eager, mode=mode, **kwargs)
+        def _(event: KeyPressEvent) -> None:
+            target_lookup[mode][action]["func"](
+                *target_lookup[mode][action].get("args", [])
+            )
 
     def add(
         self,
         *keys: Union[Keys, str],
         filter: Condition = Condition(lambda: True),
         eager: bool = False,
-        mode: MODE = KBMode.normal
+        mode: MODE = KBMode.normal,
+        **kwargs,
     ) -> Callable[[KeyHandlerCallable], KeyHandlerCallable]:
         """Run checks before running `KeyHandlerCallable`."""
-        super_dec = super().add(*keys, filter=filter & self._mode[mode], eager=eager)
+        super_dec = super().add(
+            *keys, filter=filter & self._mode[mode], eager=eager, **kwargs
+        )
 
         def decorator(func: KeyHandlerCallable) -> KeyHandlerCallable:
             @super_dec

@@ -59,7 +59,12 @@ class App:
 
         self._command_mode = Condition(lambda: self._command_focus)
         self._normal_mode = Condition(lambda: not self._command_focus)
-        self._kb = KB(app=self, kb_maps=config.kb.kb_maps)
+        self._kb = KB(
+            app=self,
+            kb_maps=config.kb.kb_maps,
+            custom_kb_maps=config.kb.custom_kb_maps,
+            custom_kb_lookup=config.kb.custom_kb_lookup,
+        )
 
         self._app = Application(
             layout=self._layout,

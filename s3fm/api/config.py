@@ -1,11 +1,11 @@
 """Module contains the main config class."""
-from typing import Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 
 from prompt_toolkit.filters.base import Condition
-from prompt_toolkit.keys import Keys
 
 from s3fm.api.kb import default_kb_maps
-from s3fm.base import KB_MAPS, KBS, MODE, BaseStyleConfig, KBMode
+from s3fm.base import KB_MAPS, MODE, BaseStyleConfig, KBMode, KBs
+from s3fm.exceptions import ClientError
 
 
 class AppConfig:
@@ -50,23 +50,51 @@ class KBConfig:
     def __init__(self) -> None:
         """Initialise default kb."""
         self._kb_maps = default_kb_maps
+        self._custom_kb_maps = {KBMode.normal: {}, KBMode.command: {}}
+        self._custom_kb_lookup = {KBMode.normal: {}, KBMode.command: {}}
 
     def map(
         self,
         action: Union[str, Callable],
-        keys: Union[KBS, List[KBS]],
+        keys: Union[KBs, List[KBs]],
         mode: MODE = KBMode.normal,
         filter: Callable[[], bool] = lambda: True,
-        priority: bool = False,
+        eager: bool = False,
+        **kwargs
     ) -> None:
         """Map keys to actions."""
         if isinstance(action, str):
             if action in self._kb_maps[mode]:
                 self._kb_maps[mode][action].append(
-                    {"keys": keys, "filter": Condition(filter), "eager": priority}
+                    {
+                        "keys": keys,
+                        "filter": Condition(filter),
+                        "eager": eager,
+                        **kwargs,
+                    }
                 )
+            else:
+                raise ClientError("keybinding action %s does not exists." % action)
         else:
-            pass
+            if action.__name__ in self._custom_kb_maps[mode]:
+                self._custom_kb_maps[mode][action.__name__].append(
+                    {
+                        "keys": keys,
+                        "filter": Condition(filter),
+                        "eager": eager,
+                        **kwargs,
+                    }
+                )
+            else:
+                self._custom_kb_maps[mode][action.__name__] = [
+                    {
+                        "keys": keys,
+                        "filter": Condition(filter),
+                        "eager": eager,
+                        **kwargs,
+                    }
+                ]
+                self._custom_kb_lookup[mode][action.__name__] = {"func": action}
 
     def unmap(self) -> None:
         """Unmap keys from actions."""
@@ -86,6 +114,16 @@ class KBConfig:
     def kb_maps(self) -> Dict[MODE, KB_MAPS]:
         """Get kb mappings."""
         return self._kb_maps
+
+    @property
+    def custom_kb_maps(self) -> Dict[MODE, KB_MAPS]:
+        """Get custom kb mappings."""
+        return self._custom_kb_maps
+
+    @property
+    def custom_kb_lookup(self) -> Dict[MODE, Dict[str, Any]]:
+        """Get custom kb lookup."""
+        return self._custom_kb_lookup
 
 
 class Config:

@@ -12,8 +12,8 @@ PaneFocus = NamedTuple("PaneFocus", [("left", int), ("right", int), ("cmd", int)
 
 MODE = int
 FOCUS = int
-KBS = Union[Keys, str]
-KB_MAPS = Dict[str, List[Dict[str, Union[bool, KBS, Condition, List[KBS]]]]]
+KBs = Union[Keys, str]
+KB_MAPS = Dict[str, List[Dict[str, Union[bool, KBs, Condition, List[KBs]]]]]
 
 
 class BaseStyleConfig:
