@@ -1,8 +1,11 @@
 """Module contains the main config class."""
-from typing import Dict, List, Optional
+from typing import Callable, Dict, List, Optional, Union
+
+from prompt_toolkit.filters.base import Condition
+from prompt_toolkit.keys import Keys
 
 from s3fm.api.kb import default_kb_maps
-from s3fm.base import KB_MAPS, MODE, BaseStyleConfig
+from s3fm.base import KB_MAPS, KBS, MODE, BaseStyleConfig, KBMode
 
 
 class AppConfig:
@@ -47,6 +50,37 @@ class KBConfig:
     def __init__(self) -> None:
         """Initialise default kb."""
         self._kb_maps = default_kb_maps
+
+    def map(
+        self,
+        action: Union[str, Callable],
+        keys: Union[KBS, List[KBS]],
+        mode: MODE = KBMode.normal,
+        filter: Callable[[], bool] = lambda: True,
+        priority: bool = False,
+    ) -> None:
+        """Map keys to actions."""
+        if isinstance(action, str):
+            if action in self._kb_maps[mode]:
+                self._kb_maps[mode][action].append(
+                    {"keys": keys, "filter": Condition(filter), "eager": priority}
+                )
+        else:
+            pass
+
+    def unmap(self) -> None:
+        """Unmap keys from actions."""
+        pass
+
+    @property
+    def available_actions(self) -> Dict[str, List[str]]:
+        """List all available actions."""
+        result = {"Normal": [], "Command": []}
+        for key in self._kb_maps[KBMode.normal].keys():
+            result["Normal"].append(key)
+        for key in self._kb_maps[KBMode.command].keys():
+            result["Command"].append(key)
+        return result
 
     @property
     def kb_maps(self) -> Dict[MODE, KB_MAPS]:
