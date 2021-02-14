@@ -74,7 +74,7 @@ class KB(KeyBindings):
 
         for action, binds in self._kb_maps[KBMode.command].items():
             for bind in binds:
-                _factory(action, KBMode.normal, **bind)
+                _factory(action, KBMode.command, **bind)
 
     def add(
         self,
