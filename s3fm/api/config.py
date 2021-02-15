@@ -1,11 +1,14 @@
 """Module contains the main config class."""
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Union
 
 from prompt_toolkit.filters.base import Condition
+from prompt_toolkit.keys import Keys
 
-from s3fm.api.kb import default_kb_maps
 from s3fm.base import KB_MAPS, MODE, BaseStyleConfig, KBMode, KBs
 from s3fm.exceptions import ClientError
+
+if TYPE_CHECKING:
+    from s3fm.app import App
 
 
 class AppConfig:
@@ -49,13 +52,22 @@ class KBConfig:
 
     def __init__(self) -> None:
         """Initialise default kb."""
-        self._kb_maps = default_kb_maps
+        self._kb_maps: Dict[MODE, KB_MAPS] = {
+            KBMode.normal: {
+                "exit": [{"keys": "c-c"}, {"keys": "q"}],
+                "focus_pane": [{"keys": Keys.Tab}],
+                "focus_cmd": [{"keys": ":"}],
+            },
+            KBMode.command: {
+                "exit": [{"keys": "c-c"}, {"keys": "escape", "eager": True}]
+            },
+        }
         self._custom_kb_maps = {KBMode.normal: {}, KBMode.command: {}}
         self._custom_kb_lookup = {KBMode.normal: {}, KBMode.command: {}}
 
     def map(
         self,
-        action: Union[str, Callable],
+        action: Union[str, Callable[["App"], None]],
         keys: Union[KBs, List[KBs]],
         mode: MODE = KBMode.normal,
         filter: Callable[[], bool] = lambda: True,
@@ -96,19 +108,14 @@ class KBConfig:
                 ]
                 self._custom_kb_lookup[mode][str(action)] = action
 
-    def unmap(self) -> None:
-        """Unmap keys from actions."""
-        pass
-
-    @property
-    def available_actions(self) -> Dict[str, List[str]]:
-        """List all available actions."""
-        result = {"Normal": [], "Command": []}
-        for key in self._kb_maps[KBMode.normal].keys():
-            result["Normal"].append(key)
-        for key in self._kb_maps[KBMode.command].keys():
-            result["Command"].append(key)
-        return result
+    def unmap(
+        self, action: Union[str, Callable[["App"], None]], mode: MODE = KBMode.normal
+    ) -> None:
+        """Unmap actions."""
+        if isinstance(action, str):
+            self._kb_maps[mode].pop(action, None)
+        else:
+            self._custom_kb_maps[mode].pop(str(action), None)
 
     @property
     def kb_maps(self) -> Dict[MODE, KB_MAPS]:

@@ -1,5 +1,4 @@
 """Module contains the modified `KeyBindings` class."""
-import copy
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Union
 
 from prompt_toolkit.filters.base import Condition
@@ -11,15 +10,6 @@ from s3fm.base import KB_MAPS, MODE, KBMode, PaneFocus
 
 if TYPE_CHECKING:
     from s3fm.app import App
-
-default_kb_maps: Dict[MODE, KB_MAPS] = {
-    KBMode.normal: {
-        "exit": [{"keys": "c-c"}, {"keys": "q"}],
-        "focus_pane": [{"keys": Keys.Tab}],
-        "focus_cmd": [{"keys": ":"}],
-    },
-    KBMode.command: {"exit": [{"keys": "c-c"}, {"keys": "escape", "eager": True}]},
-}
 
 
 class KB(KeyBindings):
@@ -39,7 +29,7 @@ class KB(KeyBindings):
             KBMode.normal: self._app.normal_mode,
             KBMode.command: self._app.command_mode,
         }
-        self._kb_maps = kb_maps or copy.deepcopy(default_kb_maps)
+        self._kb_maps = kb_maps or {KBMode.normal: {}, KBMode.command: {}}
         self._kb_lookup = {
             KBMode.normal: {
                 "exit": self._app.exit,
