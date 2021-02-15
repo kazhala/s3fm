@@ -76,8 +76,8 @@ class KBConfig:
             else:
                 raise ClientError("keybinding action %s does not exists." % action)
         else:
-            if action.__name__ in self._custom_kb_maps[mode]:
-                self._custom_kb_maps[mode][action.__name__].append(
+            if str(action) in self._custom_kb_maps[mode]:
+                self._custom_kb_maps[mode][str(action)].append(
                     {
                         "keys": keys,
                         "filter": Condition(filter),
@@ -86,7 +86,7 @@ class KBConfig:
                     }
                 )
             else:
-                self._custom_kb_maps[mode][action.__name__] = [
+                self._custom_kb_maps[mode][str(action)] = [
                     {
                         "keys": keys,
                         "filter": Condition(filter),
@@ -94,7 +94,7 @@ class KBConfig:
                         **kwargs,
                     }
                 ]
-                self._custom_kb_lookup[mode][action.__name__] = {"func": action}
+                self._custom_kb_lookup[mode][str(action)] = action
 
     def unmap(self) -> None:
         """Unmap keys from actions."""

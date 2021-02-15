@@ -42,18 +42,11 @@ class KB(KeyBindings):
         self._kb_maps = kb_maps or copy.deepcopy(default_kb_maps)
         self._kb_lookup = {
             KBMode.normal: {
-                "exit": {"func": self._app.exit},
-                "focus_pane": {
-                    "func": self._app.focus_pane,
-                    "args": [
-                        PaneFocus.left
-                        if self._app.current_focus == PaneFocus.right
-                        else PaneFocus.right
-                    ],
-                },
-                "focus_cmd": {"func": self._app.focus_cmd},
+                "exit": self._app.exit,
+                "focus_pane": self._focus_other_pane,
+                "focus_cmd": self._app.focus_cmd,
             },
-            KBMode.command: {"exit": {"func": self._app.exit_cmd}},
+            KBMode.command: {"exit": self._app.exit_cmd},
         }
         self._custom_kb_maps = custom_kb_maps or {
             KBMode.normal: {},
@@ -94,9 +87,15 @@ class KB(KeyBindings):
 
         @self.add(*keys, filter=filter, eager=eager, mode=mode, **kwargs)
         def _(event: KeyPressEvent) -> None:
-            target_lookup[mode][action]["func"](
-                *target_lookup[mode][action].get("args", [])
-            )
+            target_lookup[mode][action](*[] if not custom else [self._app])
+
+    def _focus_other_pane(self) -> None:
+        """Focus the other file pane."""
+        self._app.focus_pane(
+            PaneFocus.left
+            if self._app.current_focus == PaneFocus.right
+            else PaneFocus.right
+        )
 
     def add(
         self,
