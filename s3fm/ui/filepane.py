@@ -4,6 +4,7 @@ from typing import Callable, List, Tuple
 from prompt_toolkit.filters.base import Condition
 from prompt_toolkit.layout.containers import FloatContainer, Window
 from prompt_toolkit.layout.controls import FormattedTextControl
+from prompt_toolkit.layout.dimension import LayoutDimension
 
 from s3fm.api.config import SpinnerConfig
 from s3fm.api.fs import FS
@@ -11,6 +12,7 @@ from s3fm.api.s3 import S3
 from s3fm.base import MODE, PaneMode
 from s3fm.exceptions import Bug
 from s3fm.ui.spinner import Spinner
+from s3fm.utils import get_dimmension
 
 S3_MODE = PaneMode.s3
 FS_MODE = PaneMode.fs
@@ -20,7 +22,11 @@ class FilePane(FloatContainer):
     """The main file pane of the app."""
 
     def __init__(
-        self, pane_id: int, spinner_config: SpinnerConfig, redraw: Callable[[], None]
+        self,
+        pane_id: int,
+        spinner_config: SpinnerConfig,
+        redraw: Callable[[], None],
+        dimmension_offset: int,
     ) -> None:
         """Initialise the layout of file pane."""
         self._s3 = S3()
@@ -28,6 +34,7 @@ class FilePane(FloatContainer):
         self._mode = S3_MODE
         self._choices = []
         self._loading = True
+        self._dimmension_offset = dimmension_offset
 
         self._is_loading = Condition(lambda: self._loading)
         self._spinner = Spinner(
@@ -46,6 +53,7 @@ class FilePane(FloatContainer):
                     focusable=True,
                     show_cursor=True,
                 ),
+                width=self._get_width,
             ),
             floats=[self._spinner],
         )
@@ -64,6 +72,11 @@ class FilePane(FloatContainer):
         if display_choices:
             display_choices.pop()
         return display_choices
+
+    def _get_width(self) -> LayoutDimension:
+        """Retrieve the width dynamically."""
+        width, _ = get_dimmension(offset=self._dimmension_offset)
+        return LayoutDimension(preferred=round(width / 2))
 
     async def load_data(
         self, mode: MODE = S3_MODE, bucket: str = None, path: str = None

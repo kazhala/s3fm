@@ -22,16 +22,24 @@ from s3fm.utils import kill_child_processes
 class App:
     """Main app class which process the config and holds the top level layout."""
 
-    def __init__(self, config: Config, no_cache: bool = False) -> None:
+    def __init__(self, config: Config = None, no_cache: bool = False) -> None:
         """Process config, options and then create the application."""
+        config = config or Config()
+
         self._style = Style.from_dict(dict(config.style))
         self._rendered = False
         self._no_cache = no_cache
         self._left_pane = FilePane(
-            pane_id=PaneFocus.left, spinner_config=config.spinner, redraw=self._redraw
+            pane_id=PaneFocus.left,
+            spinner_config=config.spinner,
+            redraw=self._redraw,
+            dimmension_offset=0 if not config.app.border else 2,
         )
         self._right_pane = FilePane(
-            pane_id=PaneFocus.right, spinner_config=config.spinner, redraw=self._redraw
+            pane_id=PaneFocus.right,
+            spinner_config=config.spinner,
+            redraw=self._redraw,
+            dimmension_offset=0 if not config.app.border else 2,
         )
         self._command_pane = CommandPane()
         self._option_pane = OptionPane()

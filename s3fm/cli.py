@@ -3,7 +3,6 @@ import asyncio
 
 import click
 
-from s3fm.api.config import Config
 from s3fm.app import App
 from s3fm.exceptions import Bug, ClientError
 
@@ -13,8 +12,8 @@ from s3fm.exceptions import Bug, ClientError
 def main() -> None:
     """Process config, read cache and then run s3fm application."""
     try:
-        config = Config()
-        asyncio.run(App(config=config, no_cache=False).run())
+        # TODO: get user config
+        asyncio.run(App(no_cache=False).run())
     except ClientError:
         raise
     except Exception as e:

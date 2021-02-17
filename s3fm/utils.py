@@ -1,6 +1,8 @@
 """Module contains common helper functions."""
 import os
+import shutil
 import signal
+from typing import Tuple
 
 import psutil
 
@@ -22,3 +24,9 @@ def kill_child_processes() -> None:
     children = parent.children(recursive=True)
     for process in children:
         process.send_signal(signal.SIGTERM)
+
+
+def get_dimmension(offset: int = 0) -> Tuple[int, int]:
+    """Get terminal dimmensions."""
+    term_cols, term_rows = shutil.get_terminal_size()
+    return term_cols - offset, term_rows - offset
