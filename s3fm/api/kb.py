@@ -11,6 +11,17 @@ from s3fm.base import KB_MAPS, MODE, KBMode, PaneFocus
 if TYPE_CHECKING:
     from s3fm.app import App
 
+default_key_maps: Dict[MODE, KB_MAPS] = {
+    KBMode.normal: {
+        "exit": [{"keys": "c-c"}, {"keys": "q"}],
+        "focus_pane": [{"keys": Keys.Tab}],
+        "focus_cmd": [{"keys": ":"}],
+        "layout_vertical": [{"keys": ["c-w", "v"]}],
+        "layout_horizontal": [{"keys": ["c-w", "s"]}],
+    },
+    KBMode.command: {"exit": [{"keys": "c-c"}, {"keys": "escape", "eager": True}]},
+}
+
 
 class KB(KeyBindings):
     """Modified `KeyBindings` class to apply custom decorator logic."""
@@ -35,6 +46,8 @@ class KB(KeyBindings):
                 "exit": self._app.exit,
                 "focus_pane": self._focus_other_pane,
                 "focus_cmd": self._app.focus_cmd,
+                "layout_vertical": self._app.layout_vertical,
+                "layout_horizontal": self._app.layout_horizontal,
             },
             KBMode.command: {"exit": self._app.exit_cmd},
         }

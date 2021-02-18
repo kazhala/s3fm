@@ -2,8 +2,8 @@
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Union
 
 from prompt_toolkit.filters.base import Condition
-from prompt_toolkit.keys import Keys
 
+from s3fm.api.kb import default_key_maps
 from s3fm.base import KB_MAPS, MODE, BaseStyleConfig, KBMode, KBs
 from s3fm.exceptions import ClientError
 
@@ -52,16 +52,7 @@ class KBConfig:
 
     def __init__(self) -> None:
         """Initialise default kb."""
-        self._kb_maps: Dict[MODE, KB_MAPS] = {
-            KBMode.normal: {
-                "exit": [{"keys": "c-c"}, {"keys": "q"}],
-                "focus_pane": [{"keys": Keys.Tab}],
-                "focus_cmd": [{"keys": ":"}],
-            },
-            KBMode.command: {
-                "exit": [{"keys": "c-c"}, {"keys": "escape", "eager": True}]
-            },
-        }
+        self._kb_maps = default_key_maps
         self._custom_kb_maps = {KBMode.normal: {}, KBMode.command: {}}
         self._custom_kb_lookup = {KBMode.normal: {}, KBMode.command: {}}
 
