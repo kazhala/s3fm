@@ -140,6 +140,16 @@ class App:
         kill_child_processes()
         self._app.exit()
 
+    def layout_vertical(self) -> None:
+        """Switch layout to vertical."""
+        self._layout_mode = LayoutMode.vertical
+        self._app.layout = self.layout
+
+    def layout_horizontal(self) -> None:
+        """Switch layout to horizontal."""
+        self._layout_mode = LayoutMode.horizontal
+        self._app.layout = self.layout
+
     @property
     def command_mode(self) -> Condition:
         """Get command mode condition."""
