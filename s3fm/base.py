@@ -9,6 +9,7 @@ PaneMode = NamedTuple("PaneMode", [("s3", int), ("fs", int)])(0, 1)
 PaneFocus = NamedTuple("PaneFocus", [("left", int), ("right", int), ("cmd", int)])(
     0, 1, 2
 )
+LayoutMode = NamedTuple("LayoutMode", [("vertical", int), ("horizontal", int)])(0, 1)
 
 MODE = int
 FOCUS = int

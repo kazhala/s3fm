@@ -12,7 +12,8 @@ from prompt_toolkit.widgets.base import Frame
 from s3fm.api.cache import Cache
 from s3fm.api.config import Config
 from s3fm.api.kb import KB
-from s3fm.base import FOCUS, MODE, PaneFocus
+from s3fm.base import FOCUS, MODE, LayoutMode, PaneFocus
+from s3fm.exceptions import Bug
 from s3fm.ui.commandpane import CommandPane
 from s3fm.ui.filepane import FilePane
 from s3fm.ui.optionpane import OptionPane
@@ -44,26 +45,19 @@ class App:
         self._command_pane = CommandPane()
         self._option_pane = OptionPane()
         self._command_focus = False
-
-        window = HSplit(
+        self._vertical_layout = HSplit(
             [VSplit([self._left_pane, self._right_pane]), self._command_pane]
         )
-        if config.app.border:
-            window = Frame(window)
-        self._layout = Layout(
-            FloatContainer(
-                content=window,
-                floats=[Float(content=self._option_pane)],
-            )
+        self._horizontal_layout = HSplit(
+            [self._left_pane, self._right_pane, self._command_pane]
         )
-
+        self._layout_mode = LayoutMode.vertical
+        self._border = config.app.border
         self._pane_map = {
             PaneFocus.left: self._left_pane,
             PaneFocus.right: self._right_pane,
             PaneFocus.cmd: self._command_pane,
         }
-        self._current_focus = PaneFocus.left
-        self._layout.focus(self._pane_map[self._current_focus])
 
         self._command_mode = Condition(lambda: self._command_focus)
         self._normal_mode = Condition(lambda: not self._command_focus)
@@ -75,7 +69,7 @@ class App:
         )
 
         self._app = Application(
-            layout=self._layout,
+            layout=self.layout,
             full_screen=True,
             after_render=self._after_render,
             style=self._style,
@@ -129,11 +123,11 @@ class App:
         :type pane_id: FOCUS
         """
         self._current_focus = pane
-        self._layout.focus(self._pane_map[self._current_focus])
+        self._app.layout.focus(self._pane_map[self._current_focus])
 
     def focus_cmd(self) -> None:
         """Focus the cmd pane."""
-        self._layout.focus(self.panes[PaneFocus.cmd])
+        self._app.layout.focus(self.panes[PaneFocus.cmd])
         self._command_focus = True
 
     def exit_cmd(self) -> None:
@@ -165,3 +159,21 @@ class App:
     def panes(self) -> Dict[FOCUS, Union[FilePane, CommandPane]]:
         """Get pane mappings."""
         return self._pane_map
+
+    @property
+    def layout(self) -> Layout:
+        """Get the app layout."""
+        if self._layout_mode == LayoutMode.vertical:
+            layout = self._vertical_layout
+        elif self._layout_mode == LayoutMode.horizontal:
+            layout = self._horizontal_layout
+        else:
+            raise Bug("unexpected layout mode.")
+        if self._border:
+            layout = Frame(layout)
+        return Layout(
+            FloatContainer(
+                content=layout,
+                floats=[Float(content=self._option_pane)],
+            )
+        )
