@@ -12,7 +12,7 @@ from prompt_toolkit.widgets.base import Frame
 from s3fm.api.cache import Cache
 from s3fm.api.config import Config
 from s3fm.api.kb import KB
-from s3fm.base import FOCUS, MODE, LayoutMode, PaneFocus
+from s3fm.base import FOCUS, MODE, Direction, LayoutMode, PaneFocus
 from s3fm.exceptions import Bug
 from s3fm.ui.commandpane import CommandPane
 from s3fm.ui.filepane import FilePane
@@ -45,19 +45,8 @@ class App:
         self._command_pane = CommandPane()
         self._option_pane = OptionPane()
         self._command_focus = False
-        self._vertical_layout = HSplit(
-            [VSplit([self._left_pane, self._right_pane]), self._command_pane]
-        )
-        self._horizontal_layout = HSplit(
-            [self._left_pane, self._right_pane, self._command_pane]
-        )
         self._layout_mode = LayoutMode.vertical
         self._border = config.app.border
-        self._pane_map = {
-            PaneFocus.left: self._left_pane,
-            PaneFocus.right: self._right_pane,
-            PaneFocus.cmd: self._command_pane,
-        }
 
         self._command_mode = Condition(lambda: self._command_focus)
         self._normal_mode = Condition(lambda: not self._command_focus)
@@ -123,7 +112,13 @@ class App:
         :type pane_id: FOCUS
         """
         self._current_focus = pane
-        self._app.layout.focus(self._pane_map[self._current_focus])
+        self._app.layout.focus(self.panes[self._current_focus])
+
+    def focus_other_pane(self) -> None:
+        """Focus the other file pane."""
+        self.focus_pane(
+            PaneFocus.left if self.current_focus == PaneFocus.right else PaneFocus.right
+        )
 
     def focus_cmd(self) -> None:
         """Focus the cmd pane."""
@@ -150,6 +145,39 @@ class App:
         self._layout_mode = LayoutMode.horizontal
         self._app.layout = self.layout
 
+    def pane_swap(self, direction: int, layout_mode: int) -> None:
+        """Swap pane/layout."""
+        if (
+            self.current_focus == PaneFocus.right
+            and (direction == Direction.right or direction == Direction.down)
+            and self._layout_mode == layout_mode
+        ):
+            return
+        if (
+            self.current_focus == PaneFocus.left
+            and (direction == Direction.left or direction == Direction.up)
+            and self._layout_mode == layout_mode
+        ):
+            return
+        pane_swapped = False
+        if not (
+            self.current_focus == PaneFocus.right
+            and (direction == Direction.right or direction == Direction.down)
+            and self._layout_mode != layout_mode
+        ) and not (
+            self.current_focus == PaneFocus.left
+            and (direction == Direction.left or direction == Direction.up)
+            and self._layout_mode != layout_mode
+        ):
+            pane_swapped = True
+            self._left_pane, self._right_pane = self._right_pane, self._left_pane
+        self._layout_mode = layout_mode
+        self._app.layout = self.layout
+        if pane_swapped:
+            self.focus_other_pane()
+        else:
+            self.focus_pane(self.current_focus)
+
     @property
     def command_mode(self) -> Condition:
         """Get command mode condition."""
@@ -168,15 +196,22 @@ class App:
     @property
     def panes(self) -> Dict[FOCUS, Union[FilePane, CommandPane]]:
         """Get pane mappings."""
-        return self._pane_map
+        return {
+            PaneFocus.left: self._left_pane,
+            PaneFocus.right: self._right_pane,
+            PaneFocus.cmd: self._command_pane,
+        }
 
     @property
     def layout(self) -> Layout:
         """Get the app layout."""
         if self._layout_mode == LayoutMode.vertical:
-            layout = self._vertical_layout
+            layout = HSplit(
+                [VSplit([self._left_pane, self._right_pane]), self._command_pane]
+            )
+
         elif self._layout_mode == LayoutMode.horizontal:
-            layout = self._horizontal_layout
+            layout = HSplit([self._left_pane, self._right_pane, self._command_pane])
         else:
             raise Bug("unexpected layout mode.")
         if self._border:

@@ -6,7 +6,7 @@ from prompt_toolkit.key_binding.key_bindings import KeyBindings, KeyHandlerCalla
 from prompt_toolkit.key_binding.key_processor import KeyPressEvent
 from prompt_toolkit.keys import Keys
 
-from s3fm.base import KB_MAPS, MODE, KBMode, PaneFocus
+from s3fm.base import KB_MAPS, MODE, Direction, KBMode, LayoutMode
 
 if TYPE_CHECKING:
     from s3fm.app import App
@@ -18,6 +18,10 @@ default_key_maps: Dict[MODE, KB_MAPS] = {
         "focus_cmd": [{"keys": ":"}],
         "layout_vertical": [{"keys": ["c-w", "v"]}],
         "layout_horizontal": [{"keys": ["c-w", "s"]}],
+        "pane_swap_down": [{"keys": ["c-w", "J"]}],
+        "pane_swap_up": [{"keys": ["c-w", "K"]}],
+        "pane_swap_left": [{"keys": ["c-w", "H"]}],
+        "pane_swap_right": [{"keys": ["c-w", "L"]}],
     },
     KBMode.command: {"exit": [{"keys": "c-c"}, {"keys": "escape", "eager": True}]},
 }
@@ -44,10 +48,14 @@ class KB(KeyBindings):
         self._kb_lookup = {
             KBMode.normal: {
                 "exit": self._app.exit,
-                "focus_pane": self._focus_other_pane,
+                "focus_pane": self._app.focus_other_pane,
                 "focus_cmd": self._app.focus_cmd,
                 "layout_vertical": self._app.layout_vertical,
                 "layout_horizontal": self._app.layout_horizontal,
+                "pane_swap_down": self._swap_pane_down,
+                "pane_swap_up": self._swap_pane_up,
+                "pane_swap_left": self._swap_pane_left,
+                "pane_swap_right": self._swap_pane_right,
             },
             KBMode.command: {"exit": self._app.exit_cmd},
         }
@@ -92,13 +100,21 @@ class KB(KeyBindings):
         def _(event: KeyPressEvent) -> None:
             target_lookup[mode][action](*[] if not custom else [self._app])
 
-    def _focus_other_pane(self) -> None:
-        """Focus the other file pane."""
-        self._app.focus_pane(
-            PaneFocus.left
-            if self._app.current_focus == PaneFocus.right
-            else PaneFocus.right
-        )
+    def _swap_pane_down(self) -> None:
+        """Move current pane to bottom split."""
+        self._app.pane_swap(Direction.down, layout_mode=LayoutMode.horizontal)
+
+    def _swap_pane_up(self) -> None:
+        """Move current pane to top split."""
+        self._app.pane_swap(Direction.up, layout_mode=LayoutMode.horizontal)
+
+    def _swap_pane_left(self) -> None:
+        """Move current pane to left split."""
+        self._app.pane_swap(Direction.left, layout_mode=LayoutMode.vertical)
+
+    def _swap_pane_right(self) -> None:
+        """Move current pane to right split."""
+        self._app.pane_swap(Direction.right, layout_mode=LayoutMode.vertical)
 
     def add(
         self,
