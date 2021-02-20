@@ -2,7 +2,11 @@
 from typing import Callable, List, Tuple
 
 from prompt_toolkit.filters.base import Condition
-from prompt_toolkit.layout.containers import FloatContainer, Window
+from prompt_toolkit.layout.containers import (
+    ConditionalContainer,
+    FloatContainer,
+    Window,
+)
 from prompt_toolkit.layout.controls import FormattedTextControl
 from prompt_toolkit.layout.dimension import LayoutDimension
 
@@ -27,6 +31,8 @@ class FilePane(FloatContainer):
         spinner_config: SpinnerConfig,
         redraw: Callable[[], None],
         dimmension_offset: int,
+        layout_single: Condition,
+        focus: Condition,
     ) -> None:
         """Initialise the layout of file pane."""
         self._s3 = S3()
@@ -35,10 +41,12 @@ class FilePane(FloatContainer):
         self._choices = []
         self._loading = True
         self._dimmension_offset = dimmension_offset
+        self._id = pane_id
+        self._single_mode = layout_single
+        self._focus = focus
 
-        self._is_loading = Condition(lambda: self._loading)
         self._spinner = Spinner(
-            is_loading=self._is_loading,
+            loading=Condition(lambda: self._loading),
             prefix_pattern=spinner_config.prefix_pattern,
             postfix_pattern=spinner_config.postfix_pattern,
             text=spinner_config.text,
@@ -47,13 +55,16 @@ class FilePane(FloatContainer):
         )
 
         super().__init__(
-            content=Window(
-                content=FormattedTextControl(
-                    self._get_formatted_choices,
-                    focusable=True,
-                    show_cursor=True,
+            content=ConditionalContainer(
+                Window(
+                    content=FormattedTextControl(
+                        self._get_formatted_choices,
+                        focusable=True,
+                        show_cursor=True,
+                    ),
+                    width=self._get_width,
                 ),
-                width=self._get_width,
+                filter=~self._single_mode | self._focus,
             ),
             floats=[self._spinner],
         )
@@ -95,3 +106,13 @@ class FilePane(FloatContainer):
     def spinner(self) -> Spinner:
         """Get spinner."""
         return self._spinner
+
+    @property
+    def id(self) -> int:
+        """Get pane id."""
+        return self._id
+
+    @id.setter
+    def id(self, value: int) -> None:
+        """Set pane id."""
+        self._id = value

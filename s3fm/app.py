@@ -30,26 +30,33 @@ class App:
         self._style = Style.from_dict(dict(config.style))
         self._rendered = False
         self._no_cache = no_cache
-        self._left_pane = FilePane(
-            pane_id=PaneFocus.left,
-            spinner_config=config.spinner,
-            redraw=self._redraw,
-            dimmension_offset=0 if not config.app.border else 2,
-        )
-        self._right_pane = FilePane(
-            pane_id=PaneFocus.right,
-            spinner_config=config.spinner,
-            redraw=self._redraw,
-            dimmension_offset=0 if not config.app.border else 2,
-        )
-        self._command_pane = CommandPane()
-        self._option_pane = OptionPane()
         self._command_focus = False
         self._layout_mode = LayoutMode.vertical
         self._border = config.app.border
 
         self._command_mode = Condition(lambda: self._command_focus)
         self._normal_mode = Condition(lambda: not self._command_focus)
+        self._layout_single = Condition(lambda: self._layout_mode == LayoutMode.single)
+
+        self._left_pane = FilePane(
+            pane_id=PaneFocus.left,
+            spinner_config=config.spinner,
+            redraw=self._redraw,
+            dimmension_offset=0 if not config.app.border else 2,
+            layout_single=self._layout_single,
+            focus=Condition(lambda: self.current_focus == PaneFocus.left),
+        )
+        self._right_pane = FilePane(
+            pane_id=PaneFocus.right,
+            spinner_config=config.spinner,
+            redraw=self._redraw,
+            dimmension_offset=0 if not config.app.border else 2,
+            layout_single=self._layout_single,
+            focus=Condition(lambda: self.current_focus == PaneFocus.right),
+        )
+        self._command_pane = CommandPane()
+        self._option_pane = OptionPane()
+
         self._kb = KB(
             app=self,
             kb_maps=config.kb.kb_maps,
@@ -116,9 +123,12 @@ class App:
 
     def focus_other_pane(self) -> None:
         """Focus the other file pane."""
-        self.focus_pane(
-            PaneFocus.left if self.current_focus == PaneFocus.right else PaneFocus.right
-        )
+        if not self._layout_single():
+            self.focus_pane(
+                PaneFocus.left
+                if self.current_focus == PaneFocus.right
+                else PaneFocus.right
+            )
 
     def focus_cmd(self) -> None:
         """Focus the cmd pane."""
@@ -138,10 +148,14 @@ class App:
     def switch_layout(self, layout_mode: MODE) -> None:
         """Switch layout."""
         self._layout_mode = layout_mode
-        self._app.layout = self.layout
+        if layout_mode != LayoutMode.single:
+            self._app.layout = self.layout
+        self.focus_pane(self.current_focus)
 
     def pane_swap(self, direction: int, layout_mode: int) -> None:
         """Swap pane/layout."""
+        if self._layout_single():
+            return
         if (
             self.current_focus == PaneFocus.right
             and (direction == Direction.right or direction == Direction.down)
@@ -166,6 +180,10 @@ class App:
         ):
             pane_swapped = True
             self._left_pane, self._right_pane = self._right_pane, self._left_pane
+            self._left_pane.id, self._right_pane.id = (
+                self._left_pane.id,
+                self._right_pane.id,
+            )
         self._layout_mode = layout_mode
         self._app.layout = self.layout
         if pane_swapped:

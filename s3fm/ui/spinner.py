@@ -15,7 +15,7 @@ class Spinner(Float):
 
     def __init__(
         self,
-        is_loading: FilterOrBool,
+        loading: FilterOrBool,
         redraw: Callable[[], None],
         prefix_pattern: List[str] = None,
         postfix_pattern: List[str] = None,
@@ -23,7 +23,7 @@ class Spinner(Float):
         border: bool = True,
     ) -> None:
         """Initialise the UI options."""
-        self._is_loading = is_loading
+        self._loading = loading
         self._redraw = redraw
         self._prefix_pattern = prefix_pattern or ["|", "/", "-", "\\"]
         self._postfix_pattern = postfix_pattern or [".   ", "..  ", "... ", "...."]
@@ -38,7 +38,7 @@ class Spinner(Float):
         super().__init__(
             content=ConditionalContainer(
                 content=window,
-                filter=self._is_loading,
+                filter=self._loading,
             ),
         )
 
@@ -61,7 +61,7 @@ class Spinner(Float):
             used to force the application to re-render
         :type re_render: Callable[[], None]
         """
-        while self._is_loading():  # type: ignore
+        while self._loading():  # type: ignore
             for prefix, postfix in zip_longest(
                 self._prefix_pattern, self._postfix_pattern, fillvalue=" "
             ):
