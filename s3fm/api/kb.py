@@ -6,12 +6,12 @@ from prompt_toolkit.key_binding.key_bindings import KeyBindings, KeyHandlerCalla
 from prompt_toolkit.key_binding.key_processor import KeyPressEvent
 from prompt_toolkit.keys import Keys
 
-from s3fm.base import KB_MAPS, MODE, Direction, KBMode, LayoutMode
+from s3fm.base import ID, KB_MAPS, Direction, KBMode, LayoutMode
 
 if TYPE_CHECKING:
     from s3fm.app import App
 
-default_key_maps: Dict[MODE, KB_MAPS] = {
+default_key_maps: Dict[ID, KB_MAPS] = {
     KBMode.normal: {
         "exit": [{"keys": "c-c"}, {"keys": "q"}],
         "focus_pane": [{"keys": Keys.Tab}],
@@ -34,9 +34,9 @@ class KB(KeyBindings):
     def __init__(
         self,
         app: "App",
-        kb_maps: Dict[MODE, KB_MAPS] = None,
-        custom_kb_maps: Dict[MODE, KB_MAPS] = None,
-        custom_kb_lookup: Dict[MODE, Dict[str, Any]] = None,
+        kb_maps: Dict[ID, KB_MAPS] = None,
+        custom_kb_maps: Dict[ID, KB_MAPS] = None,
+        custom_kb_lookup: Dict[ID, Dict[str, Any]] = None,
     ) -> None:
         """Initialise `KeyBindings`."""
         self._activated = False
@@ -81,12 +81,12 @@ class KB(KeyBindings):
         target_maps = self._kb_maps if not custom else self._custom_kb_maps
         for action, binds in target_maps[mode].items():
             for bind in binds:
-                self._factory(action=action, mode=mode, custom=custom, **bind)
+                self._factory(action=action, mode_id=mode, custom=custom, **bind)
 
     def _factory(
         self,
         action: str,
-        mode: MODE,
+        mode_id: ID,
         custom: bool,
         keys: Union[List[Union[Keys, str]], Union[Keys, str]],
         filter: Condition = Condition(lambda: True),
@@ -98,25 +98,25 @@ class KB(KeyBindings):
             keys = [keys]
         target_lookup = self._kb_lookup if not custom else self._custom_kb_lookup
 
-        @self.add(*keys, filter=filter, eager=eager, mode=mode, **kwargs)
+        @self.add(*keys, filter=filter, eager=eager, mode_id=mode_id, **kwargs)
         def _(event: KeyPressEvent) -> None:
-            target_lookup[mode][action](*[] if not custom else [self._app])
+            target_lookup[mode_id][action](*[] if not custom else [self._app])
 
     def _swap_pane_down(self) -> None:
         """Move current pane to bottom split."""
-        self._app.pane_swap(Direction.down, layout_mode=LayoutMode.horizontal)
+        self._app.pane_swap(Direction.down, layout_id=LayoutMode.horizontal)
 
     def _swap_pane_up(self) -> None:
         """Move current pane to top split."""
-        self._app.pane_swap(Direction.up, layout_mode=LayoutMode.horizontal)
+        self._app.pane_swap(Direction.up, layout_id=LayoutMode.horizontal)
 
     def _swap_pane_left(self) -> None:
         """Move current pane to left split."""
-        self._app.pane_swap(Direction.left, layout_mode=LayoutMode.vertical)
+        self._app.pane_swap(Direction.left, layout_id=LayoutMode.vertical)
 
     def _swap_pane_right(self) -> None:
         """Move current pane to right split."""
-        self._app.pane_swap(Direction.right, layout_mode=LayoutMode.vertical)
+        self._app.pane_swap(Direction.right, layout_id=LayoutMode.vertical)
 
     def _layout_vertical(self) -> None:
         """Switch layout to vertical mode."""
@@ -135,12 +135,12 @@ class KB(KeyBindings):
         *keys: Union[Keys, str],
         filter: Condition = Condition(lambda: True),
         eager: bool = False,
-        mode: MODE = KBMode.normal,
+        mode_id: ID = KBMode.normal,
         **kwargs,
     ) -> Callable[[KeyHandlerCallable], KeyHandlerCallable]:
         """Run checks before running `KeyHandlerCallable`."""
         super_dec = super().add(
-            *keys, filter=filter & self._mode[mode], eager=eager, **kwargs
+            *keys, filter=filter & self._mode[mode_id], eager=eager, **kwargs
         )
 
         def decorator(func: KeyHandlerCallable) -> KeyHandlerCallable:

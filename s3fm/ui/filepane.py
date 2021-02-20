@@ -13,13 +13,10 @@ from prompt_toolkit.layout.dimension import LayoutDimension
 from s3fm.api.config import SpinnerConfig
 from s3fm.api.fs import FS
 from s3fm.api.s3 import S3
-from s3fm.base import MODE, PaneMode
+from s3fm.base import ID, PaneMode
 from s3fm.exceptions import Bug
 from s3fm.ui.spinner import Spinner
 from s3fm.utils import get_dimmension
-
-S3_MODE = PaneMode.s3
-FS_MODE = PaneMode.fs
 
 
 class FilePane(FloatContainer):
@@ -37,7 +34,7 @@ class FilePane(FloatContainer):
         """Initialise the layout of file pane."""
         self._s3 = S3()
         self._fs = FS()
-        self._mode = S3_MODE
+        self._mode = PaneMode.s3
         self._choices = []
         self._loading = True
         self._dimmension_offset = dimmension_offset
@@ -90,13 +87,13 @@ class FilePane(FloatContainer):
         return LayoutDimension(preferred=round(width / 2))
 
     async def load_data(
-        self, mode: MODE = S3_MODE, bucket: str = None, path: str = None
+        self, mode_id: ID = PaneMode.s3, bucket: str = None, path: str = None
     ) -> None:
         """Load the data from either s3 or local."""
-        self._mode = mode
-        if self._mode == S3_MODE:
+        self._mode = mode_id
+        if self._mode == PaneMode.s3:
             self._choices += await self._s3.get_buckets()
-        elif self._mode == FS_MODE:
+        elif self._mode == PaneMode.fs:
             self._choices += await self._fs.get_paths()
         else:
             raise Bug("unexpected pane mode.")

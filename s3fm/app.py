@@ -12,7 +12,7 @@ from prompt_toolkit.widgets.base import Frame
 from s3fm.api.cache import Cache
 from s3fm.api.config import Config
 from s3fm.api.kb import KB
-from s3fm.base import FOCUS, MODE, Direction, LayoutMode, PaneFocus
+from s3fm.base import ID, Direction, LayoutMode, Pane
 from s3fm.exceptions import Bug
 from s3fm.ui.commandpane import CommandPane
 from s3fm.ui.filepane import FilePane
@@ -39,20 +39,20 @@ class App:
         self._layout_single = Condition(lambda: self._layout_mode == LayoutMode.single)
 
         self._left_pane = FilePane(
-            pane_id=PaneFocus.left,
+            pane_id=Pane.left,
             spinner_config=config.spinner,
             redraw=self._redraw,
             dimmension_offset=0 if not config.app.border else 2,
             layout_single=self._layout_single,
-            focus=Condition(lambda: self.current_focus == PaneFocus.left),
+            focus=Condition(lambda: self.current_focus == Pane.left),
         )
         self._right_pane = FilePane(
-            pane_id=PaneFocus.right,
+            pane_id=Pane.right,
             spinner_config=config.spinner,
             redraw=self._redraw,
             dimmension_offset=0 if not config.app.border else 2,
             layout_single=self._layout_single,
-            focus=Condition(lambda: self.current_focus == PaneFocus.right),
+            focus=Condition(lambda: self.current_focus == Pane.right),
         )
         self._command_pane = CommandPane()
         self._option_pane = OptionPane()
@@ -76,7 +76,7 @@ class App:
         """Instruct the app to redraw itself to the terminal."""
         self._app.invalidate()
 
-    async def _load_pane_data(self, pane: FilePane, mode: MODE) -> None:
+    async def _load_pane_data(self, pane: FilePane, mode_id: ID) -> None:
         """Load the data for the specified pane and refersh the app.
 
         :param pane: a FilePane instance to load data
@@ -84,7 +84,7 @@ class App:
         :param fs_mode: notify the FilePane whether to load data from s3 or local
         :type fs_mode: bool
         """
-        await pane.load_data(mode=mode)
+        await pane.load_data(mode_id=mode_id)
         self._redraw()
 
     async def _render_task(self) -> None:
@@ -95,8 +95,8 @@ class App:
         self.focus_pane(cache.focus)
         self._kb.activated = True
         await asyncio.gather(
-            self._load_pane_data(pane=self._left_pane, mode=cache.left_mode),
-            self._load_pane_data(pane=self._right_pane, mode=cache.right_mode),
+            self._load_pane_data(pane=self._left_pane, mode_id=cache.left_mode),
+            self._load_pane_data(pane=self._right_pane, mode_id=cache.right_mode),
         )
 
     def _after_render(self, app) -> None:
@@ -111,28 +111,26 @@ class App:
         """Run the application in async mode."""
         await self._app.run_async()
 
-    def focus_pane(self, pane: FOCUS) -> None:
+    def focus_pane(self, pane_id: ID) -> None:
         """Focus specified pane and set the focus state.
 
         :param pane_id: the id of the pane to focus
             reference `self._pane_map`
         :type pane_id: FOCUS
         """
-        self._current_focus = pane
+        self._current_focus = pane_id
         self._app.layout.focus(self.panes[self._current_focus])
 
     def focus_other_pane(self) -> None:
         """Focus the other file pane."""
         if not self._layout_single():
             self.focus_pane(
-                PaneFocus.left
-                if self.current_focus == PaneFocus.right
-                else PaneFocus.right
+                Pane.left if self.current_focus == Pane.right else Pane.right
             )
 
     def focus_cmd(self) -> None:
         """Focus the cmd pane."""
-        self._app.layout.focus(self.panes[PaneFocus.cmd])
+        self._app.layout.focus(self.panes[Pane.cmd])
         self._command_focus = True
 
     def exit_cmd(self) -> None:
@@ -145,38 +143,38 @@ class App:
         kill_child_processes()
         self._app.exit()
 
-    def switch_layout(self, layout_mode: MODE) -> None:
+    def switch_layout(self, layout_id: ID) -> None:
         """Switch layout."""
-        self._layout_mode = layout_mode
-        if layout_mode != LayoutMode.single:
+        self._layout_mode = layout_id
+        if layout_id != LayoutMode.single:
             self._app.layout = self.layout
         self.focus_pane(self.current_focus)
 
-    def pane_swap(self, direction: int, layout_mode: int) -> None:
+    def pane_swap(self, direction_id: ID, layout_id: ID) -> None:
         """Swap pane/layout."""
         if self._layout_single():
             return
         if (
-            self.current_focus == PaneFocus.right
-            and (direction == Direction.right or direction == Direction.down)
-            and self._layout_mode == layout_mode
+            self.current_focus == Pane.right
+            and (direction_id == Direction.right or direction_id == Direction.down)
+            and self._layout_mode == layout_id
         ):
             return
         if (
-            self.current_focus == PaneFocus.left
-            and (direction == Direction.left or direction == Direction.up)
-            and self._layout_mode == layout_mode
+            self.current_focus == Pane.left
+            and (direction_id == Direction.left or direction_id == Direction.up)
+            and self._layout_mode == layout_id
         ):
             return
         pane_swapped = False
         if not (
-            self.current_focus == PaneFocus.right
-            and (direction == Direction.right or direction == Direction.down)
-            and self._layout_mode != layout_mode
+            self.current_focus == Pane.right
+            and (direction_id == Direction.right or direction_id == Direction.down)
+            and self._layout_mode != layout_id
         ) and not (
-            self.current_focus == PaneFocus.left
-            and (direction == Direction.left or direction == Direction.up)
-            and self._layout_mode != layout_mode
+            self.current_focus == Pane.left
+            and (direction_id == Direction.left or direction_id == Direction.up)
+            and self._layout_mode != layout_id
         ):
             pane_swapped = True
             self._left_pane, self._right_pane = self._right_pane, self._left_pane
@@ -184,7 +182,7 @@ class App:
                 self._left_pane.id,
                 self._right_pane.id,
             )
-        self._layout_mode = layout_mode
+        self._layout_mode = layout_id
         self._app.layout = self.layout
         if pane_swapped:
             self.focus_other_pane()
@@ -202,17 +200,17 @@ class App:
         return self._normal_mode
 
     @property
-    def current_focus(self) -> FOCUS:
+    def current_focus(self) -> ID:
         """Get current app focus."""
         return self._current_focus
 
     @property
-    def panes(self) -> Dict[FOCUS, Union[FilePane, CommandPane]]:
+    def panes(self) -> Dict[ID, Union[FilePane, CommandPane]]:
         """Get pane mappings."""
         return {
-            PaneFocus.left: self._left_pane,
-            PaneFocus.right: self._right_pane,
-            PaneFocus.cmd: self._command_pane,
+            Pane.left: self._left_pane,
+            Pane.right: self._right_pane,
+            Pane.cmd: self._command_pane,
         }
 
     @property

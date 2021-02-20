@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Union
 from prompt_toolkit.filters.base import Condition
 
 from s3fm.api.kb import default_key_maps
-from s3fm.base import KB_MAPS, MODE, BaseStyleConfig, KBMode, KBs
+from s3fm.base import ID, KB_MAPS, BaseStyleConfig, KBMode, KBs
 from s3fm.exceptions import ClientError
 
 if TYPE_CHECKING:
@@ -60,15 +60,15 @@ class KBConfig:
         self,
         action: Union[str, Callable[["App"], None]],
         keys: Union[KBs, List[KBs]],
-        mode: MODE = KBMode.normal,
+        mode_id: ID = KBMode.normal,
         filter: Callable[[], bool] = lambda: True,
         eager: bool = False,
         **kwargs
     ) -> None:
         """Map keys to actions."""
         if isinstance(action, str):
-            if action in self._kb_maps[mode]:
-                self._kb_maps[mode][action].append(
+            if action in self._kb_maps[mode_id]:
+                self._kb_maps[mode_id][action].append(
                     {
                         "keys": keys,
                         "filter": Condition(filter),
@@ -79,8 +79,8 @@ class KBConfig:
             else:
                 raise ClientError("keybinding action %s does not exists." % action)
         else:
-            if str(action) in self._custom_kb_maps[mode]:
-                self._custom_kb_maps[mode][str(action)].append(
+            if str(action) in self._custom_kb_maps[mode_id]:
+                self._custom_kb_maps[mode_id][str(action)].append(
                     {
                         "keys": keys,
                         "filter": Condition(filter),
@@ -89,7 +89,7 @@ class KBConfig:
                     }
                 )
             else:
-                self._custom_kb_maps[mode][str(action)] = [
+                self._custom_kb_maps[mode_id][str(action)] = [
                     {
                         "keys": keys,
                         "filter": Condition(filter),
@@ -97,29 +97,29 @@ class KBConfig:
                         **kwargs,
                     }
                 ]
-                self._custom_kb_lookup[mode][str(action)] = action
+                self._custom_kb_lookup[mode_id][str(action)] = action
 
     def unmap(
-        self, action: Union[str, Callable[["App"], None]], mode: MODE = KBMode.normal
+        self, action: Union[str, Callable[["App"], None]], mode_id: ID = KBMode.normal
     ) -> None:
         """Unmap actions."""
         if isinstance(action, str):
-            self._kb_maps[mode].pop(action, None)
+            self._kb_maps[mode_id].pop(action, None)
         else:
-            self._custom_kb_maps[mode].pop(str(action), None)
+            self._custom_kb_maps[mode_id].pop(str(action), None)
 
     @property
-    def kb_maps(self) -> Dict[MODE, KB_MAPS]:
+    def kb_maps(self) -> Dict[ID, KB_MAPS]:
         """Get kb mappings."""
         return self._kb_maps
 
     @property
-    def custom_kb_maps(self) -> Dict[MODE, KB_MAPS]:
+    def custom_kb_maps(self) -> Dict[ID, KB_MAPS]:
         """Get custom kb mappings."""
         return self._custom_kb_maps
 
     @property
-    def custom_kb_lookup(self) -> Dict[MODE, Dict[str, Any]]:
+    def custom_kb_lookup(self) -> Dict[ID, Dict[str, Any]]:
         """Get custom kb lookup."""
         return self._custom_kb_lookup
 
