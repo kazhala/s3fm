@@ -50,8 +50,8 @@ class KB(KeyBindings):
                 "exit": self._app.exit,
                 "focus_pane": self._app.focus_other_pane,
                 "focus_cmd": self._app.focus_cmd,
-                "layout_vertical": self._app.layout_vertical,
-                "layout_horizontal": self._app.layout_horizontal,
+                "layout_vertical": self._layout_vertical,
+                "layout_horizontal": self._layout_horizontal,
                 "pane_swap_down": self._swap_pane_down,
                 "pane_swap_up": self._swap_pane_up,
                 "pane_swap_left": self._swap_pane_left,
@@ -115,6 +115,14 @@ class KB(KeyBindings):
     def _swap_pane_right(self) -> None:
         """Move current pane to right split."""
         self._app.pane_swap(Direction.right, layout_mode=LayoutMode.vertical)
+
+    def _layout_vertical(self) -> None:
+        """Switch layout to vertical mode."""
+        self._app.switch_layout(LayoutMode.vertical)
+
+    def _layout_horizontal(self) -> None:
+        """Switch layout to horizontal mode."""
+        self._app.switch_layout(LayoutMode.horizontal)
 
     def add(
         self,

@@ -135,14 +135,9 @@ class App:
         kill_child_processes()
         self._app.exit()
 
-    def layout_vertical(self) -> None:
-        """Switch layout to vertical."""
-        self._layout_mode = LayoutMode.vertical
-        self._app.layout = self.layout
-
-    def layout_horizontal(self) -> None:
-        """Switch layout to horizontal."""
-        self._layout_mode = LayoutMode.horizontal
+    def switch_layout(self, layout_mode: MODE) -> None:
+        """Switch layout."""
+        self._layout_mode = layout_mode
         self._app.layout = self.layout
 
     def pane_swap(self, direction: int, layout_mode: int) -> None:
