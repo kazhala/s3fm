@@ -18,6 +18,8 @@ from s3fm.exceptions import Bug
 from s3fm.ui.spinner import Spinner
 from s3fm.utils import get_dimmension
 
+# TODO: create base class for filepane and command pane
+
 
 class FilePane(FloatContainer):
     """The main file pane of the app."""

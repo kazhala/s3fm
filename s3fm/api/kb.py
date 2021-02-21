@@ -103,7 +103,7 @@ class KB(KeyBindings):
         target_lookup = self._kb_lookup if not custom else self._custom_kb_lookup
 
         @self.add(*keys, filter=filter, eager=eager, mode_id=mode_id, **kwargs)
-        def _(event: KeyPressEvent) -> None:
+        def _(_: KeyPressEvent) -> None:
             target_lookup[mode_id][action](*[] if not custom else [self._app])
 
     def _swap_pane_down(self) -> None:

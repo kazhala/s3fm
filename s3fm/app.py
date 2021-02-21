@@ -100,7 +100,7 @@ class App:
             self._load_pane_data(pane=self._right_pane, mode_id=cache.right_mode),
         )
 
-    def _after_render(self, app) -> None:
+    def _after_render(self, _) -> None:
         """Run after the app is running, same as `useEffect` in react.js."""
         if not self._rendered:
             self._rendered = True
