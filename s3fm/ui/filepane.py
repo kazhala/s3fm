@@ -40,7 +40,8 @@ class FilePane(FloatContainer):
         self._dimmension_offset = dimmension_offset
         self._id = pane_id
         self._single_mode = layout_single
-        self._focus = focus
+        self._focus = Condition(lambda: focus() == self._id)
+        self._selected_choice_index = 0
 
         self._spinner = Spinner(
             loading=Condition(lambda: self._loading),
@@ -61,8 +62,7 @@ class FilePane(FloatContainer):
                     ),
                     width=self._get_width,
                 ),
-                filter=~self._single_mode
-                | Condition(lambda: self._focus() == self._id),
+                filter=~self._single_mode | self._focus,
             ),
             floats=[self._spinner],
         )
@@ -75,9 +75,16 @@ class FilePane(FloatContainer):
         """
         display_choices = []
 
-        for _, choice in enumerate(self._choices):
-            display_choices.append(("class:aaa", choice))
-            display_choices.append(("", "\n"))
+        for index, choice in enumerate(self._choices):
+            if index == self._selected_choice_index and self._focus():
+                display_choices.append(("[SetCursorPosition]", ""))
+                display_choices.append(("", choice["Name"]))
+                display_choices.append(("", str(choice["Type"])))
+                display_choices.append(("", "\n"))
+            else:
+                display_choices.append(("class:aaa", choice["Name"]))
+                display_choices.append(("", str(choice["Type"])))
+                display_choices.append(("", "\n"))
         if display_choices:
             display_choices.pop()
         return display_choices
@@ -86,6 +93,18 @@ class FilePane(FloatContainer):
         """Retrieve the width dynamically."""
         width, _ = get_dimmension(offset=self._dimmension_offset)
         return LayoutDimension(preferred=round(width / 2))
+
+    def handle_down(self) -> None:
+        """Move selection down."""
+        self._selected_choice_index = (
+            self._selected_choice_index + 1
+        ) % self.choice_count
+
+    def handle_up(self) -> None:
+        """Move selection up."""
+        self._selected_choice_index = (
+            self._selected_choice_index - 1
+        ) % self.choice_count
 
     async def load_data(
         self, mode_id: ID = PaneMode.s3, bucket: str = None, path: str = None
@@ -99,6 +118,11 @@ class FilePane(FloatContainer):
         else:
             raise Bug("unexpected pane mode.")
         self._loading = False
+
+    @property
+    def choice_count(self) -> int:
+        """Get total choice number."""
+        return len(self._choices)
 
     @property
     def spinner(self) -> Spinner:

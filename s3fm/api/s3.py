@@ -4,6 +4,9 @@ from concurrent.futures.process import ProcessPoolExecutor
 from typing import TYPE_CHECKING, List
 
 import boto3
+from mypy_boto3_s3.type_defs import BucketTypeDef
+
+from s3fm.base import CHOICES, ChoiceType
 
 if TYPE_CHECKING:
     from mypy_boto3_s3 import S3Client
@@ -25,17 +28,19 @@ class S3:
         self._region = "ap-southeast-2"
         self._profile = "default"
 
-    async def get_buckets(self) -> List[str]:
+    async def get_buckets(self) -> List[CHOICES]:
         """Async wrapper to list all buckets."""
         with ProcessPoolExecutor() as executor:
             loop = asyncio.get_running_loop()
             result = await loop.run_in_executor(executor, self.list_buckets)
-            return result
+            return [
+                {"Name": bucket["Name"], "Type": ChoiceType.s3_bucket}
+                for bucket in result
+            ]
 
-    def list_buckets(self) -> List[str]:
+    def list_buckets(self) -> List[BucketTypeDef]:
         """List all buckets in the selected profile and region."""
-        result = self.client.list_buckets()
-        return [bucket["Name"] for bucket in result["Buckets"]]
+        return self.client.list_buckets()["Buckets"]
 
     @property
     def client(self) -> "S3Client":

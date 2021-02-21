@@ -4,6 +4,8 @@ from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 from typing import List
 
+from s3fm.base import CHOICES, ChoiceType
+
 
 class FS:
     """Class to access/interact local file system.
@@ -16,13 +18,21 @@ class FS:
         """Initialise the starting path."""
         self._path = path or ""
 
-    async def get_paths(self) -> List[str]:
+    async def get_paths(self) -> List[CHOICES]:
         """Async wrapper to retrieve all paths/files under `self._path`."""
         with ProcessPoolExecutor() as executor:
             loop = asyncio.get_running_loop()
             result = await loop.run_in_executor(executor, self.list_files)
-            return result
+            return [
+                {
+                    "Name": str(path),
+                    "Type": ChoiceType.local_dir
+                    if path.is_dir()
+                    else ChoiceType.local_file,
+                }
+                for path in result
+            ]
 
-    def list_files(self) -> List[str]:
+    def list_files(self) -> List[Path]:
         """Retrieve all files/paths under `self._path`."""
-        return [str(path) for path in Path(self._path).iterdir()]
+        return list(Path(self._path).iterdir())

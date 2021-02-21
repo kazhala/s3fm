@@ -23,6 +23,8 @@ default_key_maps: Dict[ID, KB_MAPS] = {
         "pane_swap_up": [{"keys": ["c-w", "K"]}],
         "pane_swap_left": [{"keys": ["c-w", "H"]}],
         "pane_swap_right": [{"keys": ["c-w", "L"]}],
+        "handle_down": [{"keys": "j"}],
+        "handle_up": [{"keys": "k"}],
     },
     KBMode.command: {"exit": [{"keys": "c-c"}, {"keys": "escape", "eager": True}]},
 }
@@ -58,6 +60,8 @@ class KB(KeyBindings):
                 "pane_swap_up": self._swap_pane_up,
                 "pane_swap_left": self._swap_pane_left,
                 "pane_swap_right": self._swap_pane_right,
+                "handle_down": self._handle_down,
+                "handle_up": self._handle_up,
             },
             KBMode.command: {"exit": self._app.exit_cmd},
         }
@@ -129,6 +133,14 @@ class KB(KeyBindings):
     def _layout_single(self) -> None:
         """Switch layout to horizontal mode."""
         self._app.switch_layout(LayoutMode.single)
+
+    def _handle_down(self) -> None:
+        """Move focused pane choice down."""
+        self._app.current_focus.handle_down()
+
+    def _handle_up(self) -> None:
+        """Move focused pane choice up."""
+        self._app.current_focus.handle_up()
 
     def add(
         self,

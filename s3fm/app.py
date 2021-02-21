@@ -45,7 +45,7 @@ class App:
             redraw=self._redraw,
             dimmension_offset=0 if not config.app.border else 2,
             layout_single=self._layout_single,
-            focus=lambda: self.current_focus,
+            focus=lambda: self._current_focus,
         )
         self._right_pane = FilePane(
             pane_id=Pane.right,
@@ -53,7 +53,7 @@ class App:
             redraw=self._redraw,
             dimmension_offset=0 if not config.app.border else 2,
             layout_single=self._layout_single,
-            focus=lambda: self.current_focus,
+            focus=lambda: self._current_focus,
         )
         self._command_pane = CommandPane()
         self._option_pane = OptionPane()
@@ -120,13 +120,13 @@ class App:
         :type pane_id: FOCUS
         """
         self._current_focus = pane_id
-        self._app.layout.focus(self.panes[self._current_focus])
+        self._app.layout.focus(self.current_focus)
 
     def focus_other_pane(self) -> None:
         """Focus the other file pane."""
         if not self._layout_single():
             self.focus_pane(
-                Pane.left if self.current_focus == Pane.right else Pane.right
+                Pane.left if self._current_focus == Pane.right else Pane.right
             )
 
     def focus_cmd(self) -> None:
@@ -136,7 +136,7 @@ class App:
 
     def exit_cmd(self) -> None:
         """Exit the command pane."""
-        self.focus_pane(self.current_focus)
+        self.focus_pane(self._current_focus)
         self._command_focus = False
 
     def exit(self) -> None:
@@ -149,31 +149,31 @@ class App:
         self._layout_mode = layout_id
         if layout_id != LayoutMode.single:
             self._app.layout = self.layout
-            self.focus_pane(self.current_focus)
+            self.focus_pane(self._current_focus)
 
     def pane_swap(self, direction_id: ID, layout_id: ID) -> None:
         """Swap pane/layout."""
         if self._layout_single():
             return
         if (
-            self.current_focus == Pane.right
+            self._current_focus == Pane.right
             and (direction_id == Direction.right or direction_id == Direction.down)
             and self._layout_mode == layout_id
         ):
             return
         if (
-            self.current_focus == Pane.left
+            self._current_focus == Pane.left
             and (direction_id == Direction.left or direction_id == Direction.up)
             and self._layout_mode == layout_id
         ):
             return
         pane_swapped = False
         if not (
-            self.current_focus == Pane.right
+            self._current_focus == Pane.right
             and (direction_id == Direction.right or direction_id == Direction.down)
             and self._layout_mode != layout_id
         ) and not (
-            self.current_focus == Pane.left
+            self._current_focus == Pane.left
             and (direction_id == Direction.left or direction_id == Direction.up)
             and self._layout_mode != layout_id
         ):
@@ -188,7 +188,7 @@ class App:
         if pane_swapped:
             self.focus_other_pane()
         else:
-            self.focus_pane(self.current_focus)
+            self.focus_pane(self._current_focus)
 
     @property
     def command_mode(self) -> Condition:
@@ -201,9 +201,17 @@ class App:
         return self._normal_mode
 
     @property
-    def current_focus(self) -> ID:
+    def current_focus(self) -> FilePane:
         """Get current app focus."""
-        return self._current_focus
+        return self.filepanes[self._current_focus]
+
+    @property
+    def filepanes(self) -> Dict[ID, Union[FilePane]]:
+        """Get only filepanes mappings."""
+        return {
+            Pane.left: self._left_pane,
+            Pane.right: self._right_pane,
+        }
 
     @property
     def panes(self) -> Dict[ID, Union[FilePane, CommandPane]]:

@@ -13,10 +13,21 @@ LayoutMode = NamedTuple(
 Direction = NamedTuple(
     "LayoutMode", [("up", int), ("down", int), ("left", int), ("right", int)]
 )(0, 1, 2, 3)
+ChoiceType = NamedTuple(
+    "ChoiceType",
+    [
+        ("s3_bucket", int),
+        ("s3_file", int),
+        ("s3_dir", int),
+        ("local_file", int),
+        ("local_dir", int),
+    ],
+)(0, 1, 2, 3, 4)
 
 ID = int
 KBs = Union[Keys, str]
 KB_MAPS = Dict[str, List[Dict[str, Union[bool, KBs, Condition, List[KBs]]]]]
+CHOICES = Dict[str, Any]
 
 
 class BaseStyleConfig:
