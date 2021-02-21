@@ -33,6 +33,7 @@ class App:
         self._command_focus = False
         self._layout_mode = LayoutMode.vertical
         self._border = config.app.border
+        self._current_focus = Pane.left
 
         self._command_mode = Condition(lambda: self._command_focus)
         self._normal_mode = Condition(lambda: not self._command_focus)
@@ -44,7 +45,7 @@ class App:
             redraw=self._redraw,
             dimmension_offset=0 if not config.app.border else 2,
             layout_single=self._layout_single,
-            focus=Condition(lambda: self.current_focus == Pane.left),
+            focus=lambda: self.current_focus,
         )
         self._right_pane = FilePane(
             pane_id=Pane.right,
@@ -52,7 +53,7 @@ class App:
             redraw=self._redraw,
             dimmension_offset=0 if not config.app.border else 2,
             layout_single=self._layout_single,
-            focus=Condition(lambda: self.current_focus == Pane.right),
+            focus=lambda: self.current_focus,
         )
         self._command_pane = CommandPane()
         self._option_pane = OptionPane()
@@ -148,7 +149,7 @@ class App:
         self._layout_mode = layout_id
         if layout_id != LayoutMode.single:
             self._app.layout = self.layout
-        self.focus_pane(self.current_focus)
+            self.focus_pane(self.current_focus)
 
     def pane_swap(self, direction_id: ID, layout_id: ID) -> None:
         """Swap pane/layout."""
@@ -179,8 +180,8 @@ class App:
             pane_swapped = True
             self._left_pane, self._right_pane = self._right_pane, self._left_pane
             self._left_pane.id, self._right_pane.id = (
-                self._left_pane.id,
                 self._right_pane.id,
+                self._left_pane.id,
             )
         self._layout_mode = layout_id
         self._app.layout = self.layout

@@ -29,7 +29,7 @@ class FilePane(FloatContainer):
         redraw: Callable[[], None],
         dimmension_offset: int,
         layout_single: Condition,
-        focus: Condition,
+        focus: Callable[[], ID],
     ) -> None:
         """Initialise the layout of file pane."""
         self._s3 = S3()
@@ -61,7 +61,8 @@ class FilePane(FloatContainer):
                     ),
                     width=self._get_width,
                 ),
-                filter=~self._single_mode | self._focus,
+                filter=~self._single_mode
+                | Condition(lambda: self._focus() == self._id),
             ),
             floats=[self._spinner],
         )
