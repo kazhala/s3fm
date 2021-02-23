@@ -2,26 +2,20 @@
 from typing import Callable, List, Tuple
 
 from prompt_toolkit.filters.base import Condition
-from prompt_toolkit.layout.containers import (
-    ConditionalContainer,
-    FloatContainer,
-    Window,
-)
+from prompt_toolkit.layout.containers import FloatContainer, Window
 from prompt_toolkit.layout.controls import FormattedTextControl
 from prompt_toolkit.layout.dimension import LayoutDimension
 
 from s3fm.api.config import SpinnerConfig
 from s3fm.api.fs import FS
 from s3fm.api.s3 import S3
-from s3fm.base import ID, PaneMode
+from s3fm.base import ID, BasePane, PaneMode
 from s3fm.exceptions import Bug
 from s3fm.ui.spinner import Spinner
 from s3fm.utils import get_dimmension
 
-# TODO: create base class for filepane and command pane
 
-
-class FilePane(FloatContainer):
+class FilePane(BasePane):
     """The main file pane of the app."""
 
     def __init__(
@@ -55,8 +49,8 @@ class FilePane(FloatContainer):
         )
 
         super().__init__(
-            content=ConditionalContainer(
-                Window(
+            content=FloatContainer(
+                content=Window(
                     content=FormattedTextControl(
                         self._get_formatted_choices,
                         focusable=True,
@@ -64,9 +58,9 @@ class FilePane(FloatContainer):
                     ),
                     width=self._get_width,
                 ),
-                filter=~self._single_mode | self._focus,
+                floats=[self._spinner],
             ),
-            floats=[self._spinner],
+            filter=~self._single_mode | self._focus,
         )
 
     def _get_formatted_choices(self) -> List[Tuple[str, str]]:

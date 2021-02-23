@@ -1,6 +1,6 @@
 """Module contains the main App class which creates the main application."""
 import asyncio
-from typing import Dict, Union
+from typing import Dict
 
 from prompt_toolkit.application import Application
 from prompt_toolkit.filters.base import Condition
@@ -12,7 +12,7 @@ from prompt_toolkit.widgets.base import Frame
 from s3fm.api.cache import Cache
 from s3fm.api.config import Config
 from s3fm.api.kb import KB
-from s3fm.base import ID, Direction, LayoutMode, Pane
+from s3fm.base import ID, BasePane, Direction, LayoutMode, Pane
 from s3fm.exceptions import Bug
 from s3fm.ui.commandpane import CommandPane
 from s3fm.ui.filepane import FilePane
@@ -203,12 +203,12 @@ class App:
         return self._normal_mode
 
     @property
-    def current_focus(self) -> Union[FilePane, CommandPane]:
+    def current_focus(self) -> BasePane:
         """Get current app focus."""
         return self.panes[self._current_focus]
 
     @property
-    def panes(self) -> Dict[ID, Union[FilePane, CommandPane]]:
+    def panes(self) -> Dict[ID, BasePane]:
         """Get pane mappings."""
         return {
             Pane.left: self._left_pane,

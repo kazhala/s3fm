@@ -1,8 +1,9 @@
 """Module contains base classes and enums."""
 from typing import Any, Dict, Iterator, List, NamedTuple, Tuple, Union
 
-from prompt_toolkit.filters.base import Condition
+from prompt_toolkit.filters.base import Condition, FilterOrBool
 from prompt_toolkit.keys import Keys
+from prompt_toolkit.layout.containers import AnyContainer, ConditionalContainer
 
 KBMode = NamedTuple("KBMode", [("normal", int), ("command", int)])(0, 1)
 PaneMode = NamedTuple("PaneMode", [("s3", int), ("fs", int)])(0, 1)
@@ -59,3 +60,27 @@ class BaseStyleConfig:
                     yield ("%s.%s" % (key, subkey), subvalue)
             else:
                 yield (key, value)
+
+
+class BasePane(ConditionalContainer):
+    """Base class to create a pane in the app."""
+
+    def __init__(self, content: AnyContainer, filter: FilterOrBool) -> None:
+        """Create the container."""
+        super().__init__(content=content, filter=filter)
+
+    def handle_down(self) -> None:
+        """Handle down movement."""
+        pass
+
+    def handle_up(self) -> None:
+        """Handle up movement."""
+        pass
+
+    def handle_left(self) -> None:
+        """Handle left movement."""
+        pass
+
+    def handle_right(self) -> None:
+        """Handle right movement."""
+        pass
