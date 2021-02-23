@@ -30,13 +30,16 @@ class App:
         self._style = Style.from_dict(dict(config.style))
         self._rendered = False
         self._no_cache = no_cache
-        self._command_focus = False
         self._layout_mode = LayoutMode.vertical
         self._border = config.app.border
         self._current_focus = Pane.left
+        self._previous_focus = None
 
-        self._command_mode = Condition(lambda: self._command_focus)
-        self._normal_mode = Condition(lambda: not self._command_focus)
+        self._command_mode = Condition(lambda: self._current_focus == Pane.cmd)
+        self._normal_mode = Condition(
+            lambda: self._current_focus == Pane.left
+            or self._current_focus == Pane.right
+        )
         self._layout_single = Condition(lambda: self._layout_mode == LayoutMode.single)
 
         self._left_pane = FilePane(
@@ -119,6 +122,7 @@ class App:
             reference `self._pane_map`
         :type pane_id: FOCUS
         """
+        self._previous_focus = self._current_focus
         self._current_focus = pane_id
         self._app.layout.focus(self.current_focus)
 
@@ -131,13 +135,11 @@ class App:
 
     def focus_cmd(self) -> None:
         """Focus the cmd pane."""
-        self._app.layout.focus(self.panes[Pane.cmd])
-        self._command_focus = True
+        self.focus_pane(Pane.cmd)
 
     def exit_cmd(self) -> None:
         """Exit the command pane."""
-        self.focus_pane(self._current_focus)
-        self._command_focus = False
+        self.focus_pane(self._previous_focus or Pane.left)
 
     def exit(self) -> None:
         """Exit the application and kill all spawed processes."""
@@ -201,17 +203,9 @@ class App:
         return self._normal_mode
 
     @property
-    def current_focus(self) -> FilePane:
+    def current_focus(self) -> Union[FilePane, CommandPane]:
         """Get current app focus."""
-        return self.filepanes[self._current_focus]
-
-    @property
-    def filepanes(self) -> Dict[ID, Union[FilePane]]:
-        """Get only filepanes mappings."""
-        return {
-            Pane.left: self._left_pane,
-            Pane.right: self._right_pane,
-        }
+        return self.panes[self._current_focus]
 
     @property
     def panes(self) -> Dict[ID, Union[FilePane, CommandPane]]:
