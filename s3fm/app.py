@@ -41,6 +41,9 @@ class App:
             or self._current_focus == Pane.right
         )
         self._layout_single = Condition(lambda: self._layout_mode == LayoutMode.single)
+        self._layout_vertical = Condition(
+            lambda: self._layout_mode == LayoutMode.vertical
+        )
 
         self._left_pane = FilePane(
             pane_id=Pane.left,
@@ -48,6 +51,7 @@ class App:
             redraw=self._redraw,
             dimmension_offset=0 if not config.app.border else 2,
             layout_single=self._layout_single,
+            layout_vertical=self._layout_vertical,
             focus=lambda: self._current_focus,
         )
         self._right_pane = FilePane(
@@ -56,6 +60,7 @@ class App:
             redraw=self._redraw,
             dimmension_offset=0 if not config.app.border else 2,
             layout_single=self._layout_single,
+            layout_vertical=self._layout_vertical,
             focus=lambda: self._current_focus,
         )
         self._command_pane = CommandPane()

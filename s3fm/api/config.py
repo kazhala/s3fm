@@ -42,7 +42,7 @@ class StyleConfig(BaseStyleConfig):
         """Initialise the default styles."""
         self.file: str = "#abb2bf"
         self.directory: str = "#61afef"
-        self.current_line: str = "reverse"
+        self.current_line: str = "#61afef reverse"
         self.aaa: str = "#000000 reverse"
         self.spinner = self.Spinner(text="#000000", prefix="#ffffff", postfix="#ffffff")
 

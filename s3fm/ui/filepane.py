@@ -25,6 +25,7 @@ class FilePane(BasePane):
         redraw: Callable[[], None],
         dimmension_offset: int,
         layout_single: Condition,
+        layout_vertical: Condition,
         focus: Callable[[], ID],
     ) -> None:
         """Initialise the layout of file pane."""
@@ -36,8 +37,10 @@ class FilePane(BasePane):
         self._dimmension_offset = dimmension_offset
         self._id = pane_id
         self._single_mode = layout_single
+        self._vertical_mode = layout_vertical
         self._focus = Condition(lambda: focus() == self._id)
         self._selected_choice_index = 0
+        self._width = 0
 
         self._spinner = Spinner(
             loading=Condition(lambda: self._loading),
@@ -54,7 +57,7 @@ class FilePane(BasePane):
                     content=FormattedTextControl(
                         self._get_formatted_choices,
                         focusable=True,
-                        show_cursor=True,
+                        show_cursor=False,
                     ),
                     width=self._get_width,
                 ),
@@ -74,8 +77,13 @@ class FilePane(BasePane):
         for index, choice in enumerate(self._choices):
             if index == self._selected_choice_index and self._focus():
                 display_choices.append(("[SetCursorPosition]", ""))
-                display_choices.append(("", choice["Name"]))
-                display_choices.append(("", str(choice["Type"])))
+                display_choices.append(("class:current_line", choice["Name"]))
+                display_choices.append(
+                    (
+                        "class:current_line",
+                        " " * (self._width - len(choice["Name"])),
+                    )
+                )
                 display_choices.append(("", "\n"))
             else:
                 display_choices.append(("class:aaa", choice["Name"]))
@@ -88,7 +96,10 @@ class FilePane(BasePane):
     def _get_width(self) -> LayoutDimension:
         """Retrieve the width dynamically."""
         width, _ = get_dimmension(offset=self._dimmension_offset)
-        return LayoutDimension(preferred=round(width / 2))
+        if self._vertical_mode():
+            width = round(width / 2)
+        self._width = width
+        return LayoutDimension(preferred=width)
 
     def handle_down(self) -> None:
         """Move selection down."""
