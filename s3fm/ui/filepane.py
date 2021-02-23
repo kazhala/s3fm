@@ -77,16 +77,16 @@ class FilePane(BasePane):
         for index, choice in enumerate(self._choices):
             if index == self._selected_choice_index and self._focus():
                 display_choices.append(("[SetCursorPosition]", ""))
-                display_choices.append(("class:current_line", choice["Name"]))
+                display_choices.append(("class:filepane.current_line", choice["Name"]))
                 display_choices.append(
                     (
-                        "class:current_line",
+                        "class:filepane.current_line",
                         " " * (self._width - len(choice["Name"])),
                     )
                 )
                 display_choices.append(("", "\n"))
             else:
-                display_choices.append(("class:aaa", choice["Name"]))
+                display_choices.append(("class:filepane.other_line", choice["Name"]))
                 display_choices.append(("", str(choice["Type"])))
                 display_choices.append(("", "\n"))
         if display_choices:

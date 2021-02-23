@@ -32,19 +32,24 @@ class StyleConfig(BaseStyleConfig):
     class Spinner(BaseStyleConfig):
         """Spinner style config."""
 
-        def __init__(self, text: str, prefix: str, postfix: str) -> None:
+        def __init__(self) -> None:
             """Init spinner style settings."""
-            self.text = text
-            self.prefix = prefix
-            self.postfix = postfix
+            self.text = "#000000"
+            self.prefix = "#ffffff"
+            self.postfix = "#ffffff"
+
+    class FilePane(BaseStyleConfig):
+        """FilePane style config."""
+
+        def __init__(self) -> None:
+            """Init filepane style settings."""
+            self.current_line = "#61afef reverse"
+            self.other_line = "#abb2bf"
 
     def __init__(self) -> None:
         """Initialise the default styles."""
-        self.file: str = "#abb2bf"
-        self.directory: str = "#61afef"
-        self.current_line: str = "#61afef reverse"
-        self.aaa: str = "#000000 reverse"
-        self.spinner = self.Spinner(text="#000000", prefix="#ffffff", postfix="#ffffff")
+        self.spinner = self.Spinner()
+        self.filepane = self.FilePane()
 
 
 class KBConfig:
