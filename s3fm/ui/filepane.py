@@ -27,6 +27,7 @@ class FilePane(BasePane):
         layout_single: Condition,
         layout_vertical: Condition,
         focus: Callable[[], ID],
+        padding: int,
     ) -> None:
         """Initialise the layout of file pane."""
         self._s3 = S3()
@@ -41,6 +42,7 @@ class FilePane(BasePane):
         self._focus = Condition(lambda: focus() == self._id)
         self._selected_choice_index = 0
         self._width = 0
+        self._padding = padding
 
         self._spinner = Spinner(
             loading=Condition(lambda: self._loading),
@@ -57,7 +59,7 @@ class FilePane(BasePane):
                     [
                         Window(
                             content=FormattedTextControl(" "),
-                            width=LayoutDimension.exact(1),
+                            width=LayoutDimension.exact(self._padding),
                         ),
                         HSplit(
                             [
@@ -77,7 +79,7 @@ class FilePane(BasePane):
                         ),
                         Window(
                             content=FormattedTextControl(" "),
-                            width=LayoutDimension.exact(1),
+                            width=LayoutDimension.exact(self._padding),
                         ),
                     ]
                 ),
@@ -117,12 +119,20 @@ class FilePane(BasePane):
                 display_choices.append(
                     (
                         "class:filepane.current_line",
-                        " " * (self._width - len(choice["Name"])),
+                        " " * (self._width - 1 - len(choice["Name"])),
                     )
                 )
+                display_choices.append(("class:filepane.current_line", "h"))
                 display_choices.append(("", "\n"))
             else:
                 display_choices.append(("class:filepane.other_line", choice["Name"]))
+                display_choices.append(
+                    (
+                        "",
+                        " " * (self._width - 1 - len(choice["Name"])),
+                    )
+                )
+                display_choices.append(("class:filepane.other_line", "h"))
                 display_choices.append(("", "\n"))
         if display_choices:
             display_choices.pop()
@@ -130,7 +140,7 @@ class FilePane(BasePane):
 
     def _get_width(self) -> LayoutDimension:
         """Retrieve the width dynamically."""
-        width, _ = get_dimmension(offset=self._dimmension_offset + 2)
+        width, _ = get_dimmension(offset=self._dimmension_offset + (self._padding * 4))
         if self._vertical_mode():
             width = round(width / 2)
         self._width = width

@@ -15,6 +15,7 @@ class AppConfig:
     """App config class."""
 
     border: bool = False
+    padding: int = 1
 
 
 class SpinnerConfig:
