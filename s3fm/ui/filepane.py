@@ -2,7 +2,7 @@
 from typing import Callable, List, Tuple
 
 from prompt_toolkit.filters.base import Condition
-from prompt_toolkit.layout.containers import FloatContainer, Window
+from prompt_toolkit.layout.containers import FloatContainer, HSplit, VSplit, Window
 from prompt_toolkit.layout.controls import FormattedTextControl
 from prompt_toolkit.layout.dimension import LayoutDimension
 
@@ -53,18 +53,54 @@ class FilePane(BasePane):
 
         super().__init__(
             content=FloatContainer(
-                content=Window(
-                    content=FormattedTextControl(
-                        self._get_formatted_choices,
-                        focusable=True,
-                        show_cursor=False,
-                    ),
-                    width=self._get_width,
+                content=VSplit(
+                    [
+                        Window(
+                            content=FormattedTextControl(" "),
+                            width=LayoutDimension.exact(1),
+                        ),
+                        HSplit(
+                            [
+                                Window(
+                                    content=FormattedTextControl(self._get_pane_info),
+                                    height=LayoutDimension.exact(1),
+                                ),
+                                Window(
+                                    content=FormattedTextControl(
+                                        self._get_formatted_choices,
+                                        focusable=True,
+                                        show_cursor=False,
+                                    ),
+                                    width=self._get_width,
+                                ),
+                            ]
+                        ),
+                        Window(
+                            content=FormattedTextControl(" "),
+                            width=LayoutDimension.exact(1),
+                        ),
+                    ]
                 ),
                 floats=[self._spinner],
             ),
             filter=~self._single_mode | self._focus,
         )
+
+    def _get_pane_info(self) -> List[Tuple[str, str]]:
+        """Get the top panel info of the current pane."""
+        display_info = []
+        color_class = (
+            "class:filepane.focus_path"
+            if self._focus()
+            else "class:filepane.unfocus_path"
+        )
+        if self._mode == PaneMode.s3:
+            display_info.append((color_class, self._s3.uri))
+        elif self._mode == PaneMode.fs:
+            display_info.append((color_class, self._fs.path))
+        else:
+            raise Bug("unexpected pane mode.")
+        return display_info
 
     def _get_formatted_choices(self) -> List[Tuple[str, str]]:
         """Get content in `formatted_text` format to display.
@@ -87,7 +123,6 @@ class FilePane(BasePane):
                 display_choices.append(("", "\n"))
             else:
                 display_choices.append(("class:filepane.other_line", choice["Name"]))
-                display_choices.append(("", str(choice["Type"])))
                 display_choices.append(("", "\n"))
         if display_choices:
             display_choices.pop()
@@ -95,7 +130,7 @@ class FilePane(BasePane):
 
     def _get_width(self) -> LayoutDimension:
         """Retrieve the width dynamically."""
-        width, _ = get_dimmension(offset=self._dimmension_offset)
+        width, _ = get_dimmension(offset=self._dimmension_offset + 2)
         if self._vertical_mode():
             width = round(width / 2)
         self._width = width

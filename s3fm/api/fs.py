@@ -36,3 +36,8 @@ class FS:
     def list_files(self) -> List[Path]:
         """Retrieve all files/paths under `self._path`."""
         return list(Path(self._path).iterdir())
+
+    @property
+    def path(self) -> str:
+        """Get current path."""
+        return self._path or "/"

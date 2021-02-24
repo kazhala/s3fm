@@ -45,6 +45,8 @@ class StyleConfig(BaseStyleConfig):
             """Init filepane style settings."""
             self.current_line = "#61afef reverse"
             self.other_line = "#abb2bf"
+            self.focus_path = "#a0c980"
+            self.unfocus_path = "#5c6370"
 
     def __init__(self) -> None:
         """Initialise the default styles."""

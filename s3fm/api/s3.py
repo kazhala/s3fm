@@ -1,6 +1,7 @@
 """Module contains the main api class to access s3."""
 import asyncio
 from concurrent.futures.process import ProcessPoolExecutor
+from pathlib import Path
 from typing import TYPE_CHECKING, List
 
 import boto3
@@ -48,3 +49,10 @@ class S3:
         session = boto3.Session(region_name=self._region, profile_name=self._profile)
         client = session.client("s3")
         return client
+
+    @property
+    def uri(self) -> str:
+        """Get the current s3 uri."""
+        if not self._bucket:
+            return "s3://"
+        return "s3://%s" % str(Path(self._bucket).joinpath(self._path))
