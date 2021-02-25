@@ -135,11 +135,11 @@ class KB(KeyBindings):
         self._app.switch_layout(LayoutMode.single)
 
     def _handle_down(self) -> None:
-        """Move focused pane choice down."""
+        """Move focused pane highlighted line down."""
         self._app.current_focus.handle_down()
 
     def _handle_up(self) -> None:
-        """Move focused pane choice up."""
+        """Move focused pane highlighted line up."""
         self._app.current_focus.handle_up()
 
     def add(

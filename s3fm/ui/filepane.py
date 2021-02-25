@@ -9,7 +9,7 @@ from prompt_toolkit.layout.dimension import LayoutDimension
 from s3fm.api.config import SpinnerConfig
 from s3fm.api.fs import FS
 from s3fm.api.s3 import S3
-from s3fm.base import ID, BasePane, PaneMode
+from s3fm.base import ID, BasePane, File, PaneMode
 from s3fm.exceptions import Bug
 from s3fm.ui.spinner import Spinner
 from s3fm.utils import get_dimmension
@@ -33,14 +33,15 @@ class FilePane(BasePane):
         self._s3 = S3()
         self._fs = FS()
         self._mode = PaneMode.s3
-        self._choices = []
+        self._loaded = False
+        self._files: List[File] = []
         self._loading = True
         self._dimmension_offset = dimmension_offset
         self._id = pane_id
         self._single_mode = layout_single
         self._vertical_mode = layout_vertical
         self._focus = Condition(lambda: focus() == self._id)
-        self._selected_choice_index = 0
+        self._selected_file_index = 0
         self._width = 0
         self._padding = padding
 
@@ -69,7 +70,7 @@ class FilePane(BasePane):
                                 ),
                                 Window(
                                     content=FormattedTextControl(
-                                        self._get_formatted_choices,
+                                        self._get_formatted_files,
                                         focusable=True,
                                         show_cursor=False,
                                     ),
@@ -90,6 +91,8 @@ class FilePane(BasePane):
 
     def _get_pane_info(self) -> List[Tuple[str, str]]:
         """Get the top panel info of the current pane."""
+        if not self._loaded:
+            return []
         display_info = []
         color_class = (
             "class:filepane.focus_path"
@@ -104,39 +107,39 @@ class FilePane(BasePane):
             raise Bug("unexpected pane mode.")
         return display_info
 
-    def _get_formatted_choices(self) -> List[Tuple[str, str]]:
+    def _get_formatted_files(self) -> List[Tuple[str, str]]:
         """Get content in `formatted_text` format to display.
 
-        :return: a list of formatted choices
+        :return: a list of formatted files ready to display
         :rtype: List[Tuple[str, str]]
         """
-        display_choices = []
+        display_files = []
 
-        for index, choice in enumerate(self._choices):
-            if index == self._selected_choice_index and self._focus():
-                display_choices.append(("[SetCursorPosition]", ""))
-                display_choices.append(("class:filepane.current_line", choice["Name"]))
-                display_choices.append(
+        for index, file in enumerate(self._files):
+            if index == self._selected_file_index and self._focus():
+                display_files.append(("[SetCursorPosition]", ""))
+                display_files.append(("class:filepane.current_line", file.name))
+                display_files.append(
                     (
                         "class:filepane.current_line",
-                        " " * (self._width - 1 - len(choice["Name"])),
+                        " " * (self._width - 1 - len(file.name)),
                     )
                 )
-                display_choices.append(("class:filepane.current_line", "h"))
-                display_choices.append(("", "\n"))
+                display_files.append(("class:filepane.current_line", "h"))
+                display_files.append(("", "\n"))
             else:
-                display_choices.append(("class:filepane.other_line", choice["Name"]))
-                display_choices.append(
+                display_files.append(("class:filepane.other_line", file.name))
+                display_files.append(
                     (
                         "",
-                        " " * (self._width - 1 - len(choice["Name"])),
+                        " " * (self._width - 1 - len(file.name)),
                     )
                 )
-                display_choices.append(("class:filepane.other_line", "h"))
-                display_choices.append(("", "\n"))
-        if display_choices:
-            display_choices.pop()
-        return display_choices
+                display_files.append(("class:filepane.other_line", "h"))
+                display_files.append(("", "\n"))
+        if display_files:
+            display_files.pop()
+        return display_files
 
     def _get_width(self) -> LayoutDimension:
         """Retrieve the width dynamically."""
@@ -148,15 +151,11 @@ class FilePane(BasePane):
 
     def handle_down(self) -> None:
         """Move selection down."""
-        self._selected_choice_index = (
-            self._selected_choice_index + 1
-        ) % self.choice_count
+        self._selected_file_index = (self._selected_file_index + 1) % self.file_count
 
     def handle_up(self) -> None:
         """Move selection up."""
-        self._selected_choice_index = (
-            self._selected_choice_index - 1
-        ) % self.choice_count
+        self._selected_file_index = (self._selected_file_index - 1) % self.file_count
 
     async def load_data(
         self, mode_id: ID = PaneMode.s3, bucket: str = None, path: str = None
@@ -164,17 +163,18 @@ class FilePane(BasePane):
         """Load the data from either s3 or local."""
         self._mode = mode_id
         if self._mode == PaneMode.s3:
-            self._choices += await self._s3.get_buckets()
+            self._files += await self._s3.get_buckets()
         elif self._mode == PaneMode.fs:
-            self._choices += await self._fs.get_paths()
+            self._files += await self._fs.get_paths()
         else:
             raise Bug("unexpected pane mode.")
         self._loading = False
+        self._loaded = True
 
     @property
-    def choice_count(self) -> int:
-        """Get total choice number."""
-        return len(self._choices)
+    def file_count(self) -> int:
+        """Get total file count."""
+        return len(self._files)
 
     @property
     def spinner(self) -> Spinner:

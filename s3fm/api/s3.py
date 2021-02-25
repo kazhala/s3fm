@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, List
 import boto3
 from mypy_boto3_s3.type_defs import BucketTypeDef
 
-from s3fm.base import CHOICES, ChoiceType
+from s3fm.base import File, FileType
 
 if TYPE_CHECKING:
     from mypy_boto3_s3 import S3Client
@@ -29,14 +29,13 @@ class S3:
         self._region = "ap-southeast-2"
         self._profile = "default"
 
-    async def get_buckets(self) -> List[CHOICES]:
+    async def get_buckets(self) -> List[File]:
         """Async wrapper to list all buckets."""
         with ProcessPoolExecutor() as executor:
             loop = asyncio.get_running_loop()
             result = await loop.run_in_executor(executor, self.list_buckets)
             return [
-                {"Name": bucket["Name"], "Type": ChoiceType.s3_bucket}
-                for bucket in result
+                File(name=bucket["Name"], type=FileType.bucket) for bucket in result
             ]
 
     def list_buckets(self) -> List[BucketTypeDef]:

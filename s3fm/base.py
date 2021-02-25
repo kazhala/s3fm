@@ -5,30 +5,25 @@ from prompt_toolkit.filters.base import Condition, FilterOrBool
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.layout.containers import AnyContainer, ConditionalContainer
 
-KBMode = NamedTuple("KBMode", [("normal", int), ("command", int)])(0, 1)
-PaneMode = NamedTuple("PaneMode", [("s3", int), ("fs", int)])(0, 1)
-Pane = NamedTuple("PaneFocus", [("left", int), ("right", int), ("cmd", int)])(0, 1, 2)
-LayoutMode = NamedTuple(
-    "LayoutMode", [("vertical", int), ("horizontal", int), ("single", int)]
-)(0, 1, 2)
-Direction = NamedTuple(
-    "LayoutMode", [("up", int), ("down", int), ("left", int), ("right", int)]
-)(0, 1, 2, 3)
-ChoiceType = NamedTuple(
-    "ChoiceType",
-    [
-        ("s3_bucket", int),
-        ("s3_file", int),
-        ("s3_dir", int),
-        ("local_file", int),
-        ("local_dir", int),
-    ],
-)(0, 1, 2, 3, 4)
-
 ID = int
 KBs = Union[Keys, str]
 KB_MAPS = Dict[str, List[Dict[str, Union[bool, KBs, Condition, List[KBs]]]]]
-CHOICES = Dict[str, Any]
+
+KBMode = NamedTuple("KBMode", [("normal", ID), ("command", ID)])(0, 1)
+PaneMode = NamedTuple("PaneMode", [("s3", ID), ("fs", ID)])(0, 1)
+Pane = NamedTuple("PaneFocus", [("left", ID), ("right", ID), ("cmd", ID)])(0, 1, 2)
+LayoutMode = NamedTuple(
+    "LayoutMode", [("vertical", ID), ("horizontal", ID), ("single", ID)]
+)(0, 1, 2)
+Direction = NamedTuple(
+    "LayoutMode", [("up", ID), ("down", ID), ("left", ID), ("right", ID)]
+)(0, 1, 2, 3)
+
+FileType = NamedTuple(
+    "FileType",
+    [("bucket", ID), ("dir", ID), ("file", ID), ("link", ID), ("dir_link", ID)],
+)(0, 1, 2, 3, 4)
+File = NamedTuple("File", [("name", str), ("type", ID)])
 
 
 class BaseStyleConfig:

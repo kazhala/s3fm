@@ -27,6 +27,32 @@ class SpinnerConfig:
     border: bool = True
 
 
+class IconConfig:
+    """Icon config class."""
+
+    def __init__(self) -> None:
+        """Init Icon config."""
+        self.nerd_font = True
+        self.extension_maps = {}
+        self.exact_maps = {}
+        self.filetype_maps = {
+            "bucket": "",
+            "dir": "",
+            "link": "",
+            "dir_link": "",
+            "file": "",
+        }
+        self._pre_processing = []
+
+    def register(self, func: Callable[[Any], str]) -> None:
+        """Register custom processing function."""
+        self._pre_processing.append(func)
+
+    def match(self, Any) -> None:
+        """Match filetype with icons."""
+        pass
+
+
 class StyleConfig(BaseStyleConfig):
     """Style config class."""
 
