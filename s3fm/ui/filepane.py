@@ -140,9 +140,9 @@ class FilePane(BasePane):
 
     def _get_width(self) -> LayoutDimension:
         """Retrieve the width dynamically."""
-        width, _ = get_dimmension(offset=self._dimmension_offset + (self._padding * 4))
+        width, _ = get_dimmension(offset=self._dimmension_offset + (self._padding * 2))
         if self._vertical_mode():
-            width = round(width / 2)
+            width = round((width - (self._padding * 2)) / 2)
         self._width = width
         return LayoutDimension(preferred=width)
 
