@@ -1,10 +1,11 @@
 """Module contains the main config class."""
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Union
 
 from prompt_toolkit.filters.base import Condition
 
 from s3fm.api.kb import default_key_maps
-from s3fm.base import ID, KB_MAPS, BaseStyleConfig, KBMode, KBs
+from s3fm.base import ID, KB_MAPS, BaseStyleConfig, File, FileType, KBMode, KBs
 from s3fm.exceptions import ClientError
 
 if TYPE_CHECKING:
@@ -34,23 +35,36 @@ class IconConfig:
         """Init Icon config."""
         self.nerd_font = True
         self.extension_maps = {}
-        self.exact_maps = {}
+        self.exact_maps = {".vim": "  ", ".git": "  "}
         self.filetype_maps = {
-            "bucket": "",
-            "dir": "",
-            "link": "",
-            "dir_link": "",
-            "file": "",
+            FileType.bucket: "  ",
+            FileType.dir: "  ",
+            FileType.link: "  ",
+            FileType.dir_link: "  ",
+            FileType.file: "  ",
+            FileType.exe: "  ",
         }
-        self._pre_processing = []
+        self._pre_processing: List[Callable[[File], Optional[str]]] = []
 
-    def register(self, func: Callable[[Any], str]) -> None:
+    def register(self, func: Callable[[File], Optional[str]]) -> None:
         """Register custom processing function."""
         self._pre_processing.append(func)
 
-    def match(self, Any) -> None:
+    def match(self, file: File) -> str:
         """Match filetype with icons."""
-        pass
+        result = ""
+        for func in self._pre_processing:
+            icon = func(file)
+            if icon:
+                return icon
+        if file.type in self.filetype_maps:
+            result = self.filetype_maps[file.type]
+        if file.name in self.exact_maps:
+            result = self.exact_maps[file.name]
+        ext = Path(file.name).suffix
+        if ext in self.extension_maps:
+            result = self.extension_maps[ext]
+        return result
 
 
 class StyleConfig(BaseStyleConfig):
@@ -74,6 +88,12 @@ class StyleConfig(BaseStyleConfig):
             self.other_line = "#abb2bf"
             self.focus_path = "#a0c980"
             self.unfocus_path = "#5c6370"
+            self.file = "#abb2bf"
+            self.dir = "#61afef"
+            self.bucket = "#61afef"
+            self.link = "#abb2bf"
+            self.dir_link = "#61afef"
+            self.exe = "#98c379"
 
     def __init__(self) -> None:
         """Initialise the default styles."""
@@ -167,6 +187,7 @@ class Config:
         self._spinner = SpinnerConfig()
         self._style = StyleConfig()
         self._kb = KBConfig()
+        self._icon = IconConfig()
 
     @property
     def style(self) -> StyleConfig:
@@ -187,3 +208,8 @@ class Config:
     def kb(self) -> KBConfig:
         """Get kb config."""
         return self._kb
+
+    @property
+    def icon(self) -> IconConfig:
+        """Get icon config."""
+        return self._icon

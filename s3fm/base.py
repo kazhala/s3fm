@@ -21,8 +21,15 @@ Direction = NamedTuple(
 
 FileType = NamedTuple(
     "FileType",
-    [("bucket", ID), ("dir", ID), ("file", ID), ("link", ID), ("dir_link", ID)],
-)(0, 1, 2, 3, 4)
+    [
+        ("bucket", ID),
+        ("dir", ID),
+        ("file", ID),
+        ("link", ID),
+        ("dir_link", ID),
+        ("exe", ID),
+    ],
+)(0, 1, 2, 3, 4, 5)
 File = NamedTuple("File", [("name", str), ("type", ID)])
 
 

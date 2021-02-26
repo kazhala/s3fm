@@ -6,10 +6,10 @@ from prompt_toolkit.layout.containers import FloatContainer, HSplit, VSplit, Win
 from prompt_toolkit.layout.controls import FormattedTextControl
 from prompt_toolkit.layout.dimension import LayoutDimension
 
-from s3fm.api.config import SpinnerConfig
+from s3fm.api.config import IconConfig, SpinnerConfig
 from s3fm.api.fs import FS
 from s3fm.api.s3 import S3
-from s3fm.base import ID, BasePane, File, PaneMode
+from s3fm.base import ID, BasePane, File, FileType, PaneMode
 from s3fm.exceptions import Bug
 from s3fm.ui.spinner import Spinner
 from s3fm.utils import get_dimmension
@@ -28,6 +28,7 @@ class FilePane(BasePane):
         layout_vertical: Condition,
         focus: Callable[[], ID],
         padding: int,
+        icon: IconConfig,
     ) -> None:
         """Initialise the layout of file pane."""
         self._s3 = S3()
@@ -44,6 +45,15 @@ class FilePane(BasePane):
         self._selected_file_index = 0
         self._width = 0
         self._padding = padding
+        self._icon = icon
+        self._type_class_map = {
+            FileType.bucket: " class:filepane.bucket",
+            FileType.dir: " class:filepane.dir",
+            FileType.link: " class:filepane.link",
+            FileType.dir_link: " class:filepane.dir_link",
+            FileType.file: " class:filepane.file",
+            FileType.exe: " class:filepane.exe",
+        }
 
         self._spinner = Spinner(
             loading=Condition(lambda: self._loading),
@@ -116,27 +126,30 @@ class FilePane(BasePane):
         display_files = []
 
         for index, file in enumerate(self._files):
+            icon = self._icon.match(file)
+            name = file.name
+            if (
+                file.type == FileType.bucket
+                or file.type == FileType.dir
+                or file.type == FileType.dir_link
+            ):
+                name += "/"
+            style_class = "class:filepane.other_line"
             if index == self._selected_file_index and self._focus():
+                style_class = "class:filepane.current_line"
                 display_files.append(("[SetCursorPosition]", ""))
-                display_files.append(("class:filepane.current_line", file.name))
-                display_files.append(
-                    (
-                        "class:filepane.current_line",
-                        " " * (self._width - 1 - len(file.name)),
-                    )
+            style_class += self._type_class_map[file.type]
+
+            display_files.append((style_class, icon))
+            display_files.append((style_class, name))
+            display_files.append(
+                (
+                    style_class,
+                    " " * (self._width - 1 - len(name) - len(icon)),
                 )
-                display_files.append(("class:filepane.current_line", "h"))
-                display_files.append(("", "\n"))
-            else:
-                display_files.append(("class:filepane.other_line", file.name))
-                display_files.append(
-                    (
-                        "",
-                        " " * (self._width - 1 - len(file.name)),
-                    )
-                )
-                display_files.append(("class:filepane.other_line", "h"))
-                display_files.append(("", "\n"))
+            )
+            display_files.append((style_class, "h"))
+            display_files.append(("", "\n"))
         if display_files:
             display_files.pop()
         return display_files

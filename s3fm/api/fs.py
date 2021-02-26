@@ -1,5 +1,6 @@
 """Module contains the main api class to access file system."""
 import asyncio
+import os
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 from typing import List
@@ -25,6 +26,8 @@ class FS:
             if path.is_dir():
                 return FileType.dir if not path.is_symlink() else FileType.dir_link
             else:
+                if os.access(path, os.X_OK):
+                    return FileType.exe
                 return FileType.file if not path.is_symlink() else FileType.link
 
         with ProcessPoolExecutor() as executor:
@@ -34,7 +37,7 @@ class FS:
 
     def list_files(self) -> List[Path]:
         """Retrieve all files/paths under `self._path`."""
-        return list(Path(self._path).iterdir())
+        return list(sorted(Path(self._path).iterdir(), key=lambda file: file.is_file()))
 
     @property
     def path(self) -> str:
