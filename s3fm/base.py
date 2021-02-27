@@ -74,18 +74,32 @@ class BasePane(ConditionalContainer):
         """Create the container."""
         super().__init__(content=content, filter=filter)
 
-    def handle_down(self) -> None:
+    def handle_down(self):
         """Handle down movement."""
         pass
 
-    def handle_up(self) -> None:
+    def handle_up(self):
         """Handle up movement."""
         pass
 
-    def handle_left(self) -> None:
+    def handle_left(self):
         """Handle left movement."""
         pass
 
-    def handle_right(self) -> None:
+    def handle_right(self):
         """Handle right movement."""
+        pass
+
+    def shift(self):
+        """Hanlde additional logic during movement."""
+        pass
+
+    @property
+    def display_hidden_files(self):
+        """Get hidden file display status."""
+        pass
+
+    @display_hidden_files.setter
+    def display_hidden_files(self, value: bool = None):
+        """Change hidden file display status."""
         pass

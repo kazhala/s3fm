@@ -47,7 +47,7 @@ class FilePane(BasePane):
         self._width = 0
         self._padding = padding
         self._linemode = linemode
-        self._display_hidden = False
+        self._display_hidden = True
 
         self._spinner = Spinner(
             loading=Condition(lambda: self._loading),
@@ -194,12 +194,7 @@ class FilePane(BasePane):
             self._selected_file_index = (
                 self._selected_file_index + 1
             ) % self.file_count
-            counter = 0
-            while counter <= self.file_count and self.current_selection.hidden:
-                counter += 1
-                self._selected_file_index = (
-                    self._selected_file_index + 1
-                ) % self.file_count
+            self.shift()
 
     def handle_up(self) -> None:
         """Move selection up."""
@@ -211,12 +206,18 @@ class FilePane(BasePane):
             self._selected_file_index = (
                 self._selected_file_index - 1
             ) % self.file_count
-            counter = 0
-            while counter <= self.file_count and self.current_selection.hidden:
-                counter += 1
-                self._selected_file_index = (
-                    self._selected_file_index - 1
-                ) % self.file_count
+            self.shift(up=True)
+
+    def shift(self, up: bool = False) -> None:
+        """Shit up/down taking consideration of hidden status."""
+        counter = 0
+        while counter <= self.file_count and self.current_selection.hidden:
+            counter += 1
+            self._selected_file_index = (
+                self._selected_file_index + 1
+                if not up
+                else self._selected_file_index - 1
+            ) % self.file_count
 
     async def load_data(
         self, mode_id: ID = PaneMode.s3, bucket: str = None, path: str = None
@@ -229,10 +230,7 @@ class FilePane(BasePane):
             self._files += await self._fs.get_paths()
         else:
             raise Bug("unexpected pane mode.")
-        counter = 0
-        while counter <= self.file_count and self.current_selection.hidden:
-            counter += 1
-            self._selected_file_index += 1
+        self.shift()
         self._loading = False
         self._loaded = True
 
@@ -267,3 +265,13 @@ class FilePane(BasePane):
     def current_selection(self) -> File:
         """Get current file selection."""
         return self._files[self._selected_file_index]
+
+    @property
+    def display_hidden_files(self) -> bool:
+        """Get hidden file display status."""
+        return self._display_hidden
+
+    @display_hidden_files.setter
+    def display_hidden_files(self, value: bool) -> None:
+        """Update hidden file display status."""
+        self._display_hidden = value

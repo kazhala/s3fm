@@ -25,6 +25,7 @@ default_key_maps: Dict[ID, KB_MAPS] = {
         "pane_swap_right": [{"keys": ["c-w", "L"]}],
         "handle_down": [{"keys": "j"}],
         "handle_up": [{"keys": "k"}],
+        "toggle_pane_hidden_files": [{"keys": ["z"]}],
     },
     KBMode.command: {"exit": [{"keys": "c-c"}, {"keys": "escape", "eager": True}]},
 }
@@ -62,6 +63,7 @@ class KB(KeyBindings):
                 "pane_swap_right": self._swap_pane_right,
                 "handle_down": self._handle_down,
                 "handle_up": self._handle_up,
+                "toggle_pane_hidden_files": self._app.toggle_pane_hidden_files,
             },
             KBMode.command: {"exit": self._app.exit_cmd},
         }

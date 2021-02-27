@@ -201,6 +201,13 @@ class App:
         else:
             self.focus_pane(self._current_focus)
 
+    def toggle_pane_hidden_files(self, value: bool = None) -> None:
+        """Toggle focused pane display hidden file status."""
+        self.current_focus.display_hidden_files = (
+            value or not self.current_focus.display_hidden_files
+        )
+        self.current_focus.shift()
+
     @property
     def command_mode(self) -> Condition:
         """Get command mode condition."""
