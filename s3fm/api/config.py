@@ -1,6 +1,5 @@
 """Module contains the main config class."""
-from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple, Union
 
 from prompt_toolkit.filters.base import Condition
 
@@ -28,7 +27,7 @@ class SpinnerConfig:
     border: bool = True
 
 
-class IconConfig:
+class LineModeConfig:
     """Icon config class."""
 
     def __init__(self) -> None:
@@ -44,27 +43,28 @@ class IconConfig:
             FileType.file: "  ",
             FileType.exe: "  ",
         }
-        self._pre_processing: List[Callable[[File], Optional[str]]] = []
+        self.style_maps = {
+            FileType.bucket: "class:filepane.bucket",
+            FileType.dir: "class:filepane.dir",
+            FileType.link: "class:filepane.link",
+            FileType.dir_link: "class:filepane.dir_link",
+            FileType.file: "class:filepane.file",
+            FileType.exe: "class:filepane.exe",
+        }
+        self._process = []
 
-    def register(self, func: Callable[[File], Optional[str]]) -> None:
+    def register(
+        self, func: Callable[[File], Optional[Tuple[str, str, str, str]]]
+    ) -> None:
         """Register custom processing function."""
-        self._pre_processing.append(func)
+        self._process.append(func)
 
-    def match(self, file: File) -> str:
-        """Match filetype with icons."""
-        result = ""
-        for func in self._pre_processing:
-            icon = func(file)
-            if icon:
-                return icon
-        if file.type in self.filetype_maps:
-            result = self.filetype_maps[file.type]
-        if file.name in self.exact_maps:
-            result = self.exact_maps[file.name]
-        ext = Path(file.name).suffix
-        if ext in self.extension_maps:
-            result = self.extension_maps[ext]
-        return result
+    @property
+    def process(
+        self,
+    ) -> List[Callable[[File], Optional[Tuple[str, str, str, str]]]]:
+        """Get all custom processing function."""
+        return self._process
 
 
 class StyleConfig(BaseStyleConfig):
@@ -187,7 +187,7 @@ class Config:
         self._spinner = SpinnerConfig()
         self._style = StyleConfig()
         self._kb = KBConfig()
-        self._icon = IconConfig()
+        self._linemode = LineModeConfig()
 
     @property
     def style(self) -> StyleConfig:
@@ -210,6 +210,6 @@ class Config:
         return self._kb
 
     @property
-    def icon(self) -> IconConfig:
+    def linemode(self) -> LineModeConfig:
         """Get icon config."""
-        return self._icon
+        return self._linemode

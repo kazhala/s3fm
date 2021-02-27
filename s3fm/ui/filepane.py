@@ -1,4 +1,5 @@
 """Module contains the main left/right pane."""
+from pathlib import Path
 from typing import Callable, List, Tuple
 
 from prompt_toolkit.filters.base import Condition
@@ -6,11 +7,11 @@ from prompt_toolkit.layout.containers import FloatContainer, HSplit, VSplit, Win
 from prompt_toolkit.layout.controls import FormattedTextControl
 from prompt_toolkit.layout.dimension import LayoutDimension
 
-from s3fm.api.config import IconConfig, SpinnerConfig
+from s3fm.api.config import LineModeConfig, SpinnerConfig
 from s3fm.api.fs import FS
 from s3fm.api.s3 import S3
-from s3fm.base import ID, BasePane, File, FileType, PaneMode
-from s3fm.exceptions import Bug
+from s3fm.base import ID, BasePane, File, PaneMode
+from s3fm.exceptions import Bug, ClientError
 from s3fm.ui.spinner import Spinner
 from s3fm.utils import get_dimmension
 
@@ -28,7 +29,7 @@ class FilePane(BasePane):
         layout_vertical: Condition,
         focus: Callable[[], ID],
         padding: int,
-        icon: IconConfig,
+        linemode: LineModeConfig,
     ) -> None:
         """Initialise the layout of file pane."""
         self._s3 = S3()
@@ -45,15 +46,7 @@ class FilePane(BasePane):
         self._selected_file_index = 0
         self._width = 0
         self._padding = padding
-        self._icon = icon
-        self._type_class_map = {
-            FileType.bucket: " class:filepane.bucket",
-            FileType.dir: " class:filepane.dir",
-            FileType.link: " class:filepane.link",
-            FileType.dir_link: " class:filepane.dir_link",
-            FileType.file: " class:filepane.file",
-            FileType.exe: " class:filepane.exe",
-        }
+        self._linemode = linemode
 
         self._spinner = Spinner(
             loading=Condition(lambda: self._loading),
@@ -126,33 +119,54 @@ class FilePane(BasePane):
         display_files = []
 
         for index, file in enumerate(self._files):
-            icon = self._icon.match(file)
-            name = file.name
-            if (
-                file.type == FileType.bucket
-                or file.type == FileType.dir
-                or file.type == FileType.dir_link
-            ):
-                name += "/"
+            file_style, icon, name, info = self._get_file_info(file)
             style_class = "class:filepane.other_line"
             if index == self._selected_file_index and self._focus():
                 style_class = "class:filepane.current_line"
                 display_files.append(("[SetCursorPosition]", ""))
-            style_class += self._type_class_map[file.type]
+            style_class += " %s" % file_style
 
             display_files.append((style_class, icon))
             display_files.append((style_class, name))
             display_files.append(
                 (
                     style_class,
-                    " " * (self._width - 1 - len(name) - len(icon)),
+                    " " * (self._width - len(icon) - len(name) - len(info)),
                 )
             )
-            display_files.append((style_class, "h"))
+            display_files.append((style_class, info))
             display_files.append(("", "\n"))
         if display_files:
             display_files.pop()
         return display_files
+
+    def _get_file_info(self, file: File) -> Tuple[str, str, str, str]:
+        style_class = ""
+        icon = ""
+        file_name = file.name
+        file_info = file.info
+
+        for func in self._linemode.process:
+            result = func(file)
+            if isinstance(result, Tuple):
+                try:
+                    style_class, icon, file_name, file_info = result
+                    return style_class, icon, file_name, file_info
+                except ValueError:
+                    raise ClientError(
+                        "linemode process function should return a tuple of total 4 values (style_class, icon, file_name, file_info)."
+                    )
+
+        if file.type in self._linemode.filetype_maps:
+            icon = self._linemode.filetype_maps[file.type]
+        if file.name in self._linemode.exact_maps:
+            icon = self._linemode.exact_maps[file.name]
+        ext = Path(file.name).suffix
+        if ext in self._linemode.extension_maps:
+            icon = self._linemode.extension_maps[ext]
+        style_class = self._linemode.style_maps[file.type]
+
+        return style_class, icon, file_name, file_info
 
     def _get_width(self) -> LayoutDimension:
         """Retrieve the width dynamically."""

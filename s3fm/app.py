@@ -54,7 +54,7 @@ class App:
             layout_vertical=self._layout_vertical,
             focus=lambda: self._current_focus,
             padding=config.app.padding,
-            icon=config.icon,
+            linemode=config.linemode,
         )
         self._right_pane = FilePane(
             pane_id=Pane.right,
@@ -65,7 +65,7 @@ class App:
             layout_vertical=self._layout_vertical,
             focus=lambda: self._current_focus,
             padding=config.app.padding,
-            icon=config.icon,
+            linemode=config.linemode,
         )
         self._command_pane = CommandPane()
         self._option_pane = OptionPane()

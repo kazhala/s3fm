@@ -33,7 +33,24 @@ class FS:
         with ProcessPoolExecutor() as executor:
             loop = asyncio.get_running_loop()
             result = await loop.run_in_executor(executor, self.list_files)
-            return [File(name=str(path), type=_get_filetype(path)) for path in result]
+            response = []
+            for path in result:
+                file_type = _get_filetype(path)
+                response.append(
+                    File(
+                        name="%s%s"
+                        % (
+                            str(path),
+                            "/"
+                            if file_type == FileType.dir
+                            or file_type == FileType.dir_link
+                            else "",
+                        ),
+                        type=file_type,
+                        info="h",
+                    )
+                )
+            return response
 
     def list_files(self) -> List[Path]:
         """Retrieve all files/paths under `self._path`."""

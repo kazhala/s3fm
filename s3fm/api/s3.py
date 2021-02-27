@@ -35,7 +35,8 @@ class S3:
             loop = asyncio.get_running_loop()
             result = await loop.run_in_executor(executor, self.list_buckets)
             return [
-                File(name=bucket["Name"], type=FileType.bucket) for bucket in result
+                File(name="%s/" % bucket["Name"], type=FileType.bucket, info="h")
+                for bucket in result
             ]
 
     def list_buckets(self) -> List[BucketTypeDef]:
