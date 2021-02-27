@@ -100,6 +100,19 @@ class StyleConfig(BaseStyleConfig):
         self.spinner = self.Spinner()
         self.filepane = self.FilePane()
 
+    def register(self, class_name: str) -> Callable[[Any], None]:
+        """Register custom style class."""
+
+        def decorator(style_cls) -> None:
+            class_to_register = style_cls()
+            if not isinstance(class_to_register, BaseStyleConfig):
+                raise ClientError(
+                    "registered style class should inherit `BaseStyleConfig`."
+                )
+            setattr(self, class_name, class_to_register)
+
+        return decorator
+
 
 class KBConfig:
     """Keybinding config class."""
