@@ -1,6 +1,6 @@
 """Module contains the main left/right pane."""
 from pathlib import Path
-from typing import Callable, List, Tuple
+from typing import Callable, Iterable, List, Tuple
 
 from prompt_toolkit.filters.base import Condition
 from prompt_toolkit.layout.containers import FloatContainer, HSplit, VSplit, Window
@@ -47,6 +47,7 @@ class FilePane(BasePane):
         self._width = 0
         self._padding = padding
         self._linemode = linemode
+        self._display_hidden = False
 
         self._spinner = Spinner(
             loading=Condition(lambda: self._loading),
@@ -105,7 +106,14 @@ class FilePane(BasePane):
         if self._mode == PaneMode.s3:
             display_info.append((color_class, self._s3.uri))
         elif self._mode == PaneMode.fs:
-            display_info.append((color_class, self._fs.path))
+            display_info.append(
+                (
+                    color_class,
+                    str(self._fs.path.resolve()).replace(
+                        str(Path("~").expanduser()), "~"
+                    ),
+                )
+            )
         else:
             raise Bug("unexpected pane mode.")
         return display_info
@@ -118,10 +126,10 @@ class FilePane(BasePane):
         """
         display_files = []
 
-        for index, file in enumerate(self._files):
+        for file in self.files:
             file_style, icon, name, info = self._get_file_info(file)
             style_class = "class:filepane.other_line"
-            if index == self._selected_file_index and self._focus():
+            if file.index == self._selected_file_index and self._focus():
                 style_class = "class:filepane.current_line"
                 display_files.append(("[SetCursorPosition]", ""))
             style_class += " %s" % file_style
@@ -178,11 +186,37 @@ class FilePane(BasePane):
 
     def handle_down(self) -> None:
         """Move selection down."""
-        self._selected_file_index = (self._selected_file_index + 1) % self.file_count
+        if self._display_hidden:
+            self._selected_file_index = (
+                self._selected_file_index + 1
+            ) % self.file_count
+        else:
+            self._selected_file_index = (
+                self._selected_file_index + 1
+            ) % self.file_count
+            counter = 0
+            while counter <= self.file_count and self.current_selection.hidden:
+                counter += 1
+                self._selected_file_index = (
+                    self._selected_file_index + 1
+                ) % self.file_count
 
     def handle_up(self) -> None:
         """Move selection up."""
-        self._selected_file_index = (self._selected_file_index - 1) % self.file_count
+        if self._display_hidden:
+            self._selected_file_index = (
+                self._selected_file_index - 1
+            ) % self.file_count
+        else:
+            self._selected_file_index = (
+                self._selected_file_index - 1
+            ) % self.file_count
+            counter = 0
+            while counter <= self.file_count and self.current_selection.hidden:
+                counter += 1
+                self._selected_file_index = (
+                    self._selected_file_index - 1
+                ) % self.file_count
 
     async def load_data(
         self, mode_id: ID = PaneMode.s3, bucket: str = None, path: str = None
@@ -195,6 +229,10 @@ class FilePane(BasePane):
             self._files += await self._fs.get_paths()
         else:
             raise Bug("unexpected pane mode.")
+        counter = 0
+        while counter <= self.file_count and self.current_selection.hidden:
+            counter += 1
+            self._selected_file_index += 1
         self._loading = False
         self._loaded = True
 
@@ -217,3 +255,15 @@ class FilePane(BasePane):
     def id(self, value: int) -> None:
         """Set pane id."""
         self._id = value
+
+    @property
+    def files(self) -> Iterable[File]:
+        """Get all available files to display."""
+        if not self._display_hidden:
+            return filter(lambda file: not file.hidden, self._files)
+        return self._files
+
+    @property
+    def current_selection(self) -> File:
+        """Get current file selection."""
+        return self._files[self._selected_file_index]

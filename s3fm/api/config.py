@@ -98,6 +98,7 @@ class LineModeConfig:
             "Dockerfile": "  ",
             "docker-compose.yml": "  ",
             "LICENSE": "  ",
+            "..": "  ",
         }
         self.filetype_maps = {
             FileType.bucket: "  ",
