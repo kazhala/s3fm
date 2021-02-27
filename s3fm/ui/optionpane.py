@@ -9,4 +9,4 @@ class OptionPane(Window):
 
     def __init__(self) -> None:
         """Initialise the pane."""
-        super().__init__(FormattedTextControl(FormattedText([("", "Options")])))
+        super().__init__(FormattedTextControl(FormattedText([("", "888")])))
