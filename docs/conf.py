@@ -6,7 +6,7 @@ import sphinx_rtd_theme
 from recommonmark.transform import AutoStructify
 from recommonmark.parser import CommonMarkParser
 
-sys.path.insert(0, os.path.abspath("../"))
+sys.path.insert(0, os.path.abspath(".."))
 
 
 project = "s3fm"
@@ -15,9 +15,10 @@ author = "Kevin Zhuang"
 
 extensions = [
     "sphinx.ext.autodoc",
+    "sphinx.ext.napoleon",
+    "sphinx.ext.intersphinx",
     "sphinx_rtd_theme",
     "recommonmark",
-    "sphinx.ext.napoleon",
 ]
 templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
@@ -26,6 +27,13 @@ html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
 
 napoleon_include_init_with_doc = True
+autodoc_typehints = "description"
+
+
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3", None),
+    "prompt_toolkit": ("https://python-prompt-toolkit.readthedocs.io/en/master/", None),
+}
 
 
 def visit_document(*_):

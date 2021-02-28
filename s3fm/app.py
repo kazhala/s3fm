@@ -281,12 +281,20 @@ class App:
 
     @property
     def command_mode(self) -> Condition:
-        """Condition: `prompt_toolkit` condition if current focus is commandpane."""
+        """Condition: A callable if current focus is commandpane.
+
+        Reference:
+            :class:`prompt_toolkit.filters.Condition`
+        """
         return self._command_mode
 
     @property
     def normal_mode(self) -> Condition:
-        """Condition: `prompt_toolkit` condition if current focus is a filepane."""
+        """Condition: A callable if current focus is a filepane.
+
+        Reference:
+            :class:`prompt_toolkit.filters.Condition`
+        """
         return self._normal_mode
 
     @property
