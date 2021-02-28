@@ -1,4 +1,11 @@
-"""Module contains the main App class which creates the main application."""
+"""Module contains the main App class which creates the main application.
+
+User should not directly be using this module for customization purposes.
+Consider using the :class:`~s3fm.api.config.Config` to customize the experience.
+
+However, it's recommended to import the :class:`App` for type hinting purposes when
+using the :class:`~s3fm.api.config.Config`.
+"""
 import asyncio
 from typing import Dict
 
@@ -21,10 +28,22 @@ from s3fm.utils import kill_child_processes
 
 
 class App:
-    """Main app class which process the config and holds the top level layout."""
+    """Main app class to render the UI and run the application.
+
+    It holds the top level layout of the UI and also contains several
+    useful public method that user can leverage in their own customization.
+
+    Its a bridge between all UI element and acts like a root level which
+    has access to the entire application states. Similar to a app.js
+    in React.js.
+
+    Args:
+        config: A :class:`~s3fm.api.config.Config` instance.
+        no_cache: Skip reading cache.
+            :class:`~s3fm.api.cache.Cache` won't be loaded.
+    """
 
     def __init__(self, config: Config = None, no_cache: bool = False) -> None:
-        """Process config, options and then create the application."""
         config = config or Config()
 
         self._style = Style.from_dict(dict(config.style))
@@ -48,7 +67,7 @@ class App:
         self._left_pane = FilePane(
             pane_id=Pane.left,
             spinner_config=config.spinner,
-            redraw=self._redraw,
+            redraw=self.redraw,
             dimmension_offset=0 if not config.app.border else 2,
             layout_single=self._layout_single,
             layout_vertical=self._layout_vertical,
@@ -59,7 +78,7 @@ class App:
         self._right_pane = FilePane(
             pane_id=Pane.right,
             spinner_config=config.spinner,
-            redraw=self._redraw,
+            redraw=self.redraw,
             dimmension_offset=0 if not config.app.border else 2,
             layout_single=self._layout_single,
             layout_vertical=self._layout_vertical,
@@ -85,23 +104,31 @@ class App:
             key_bindings=self._kb,
         )
 
-    def _redraw(self) -> None:
-        """Instruct the app to redraw itself to the terminal."""
+    def redraw(self) -> None:
+        """Instruct the app to redraw itself to the terminal.
+
+        This is useful when trying to force an UI update of the :class:`App`.
+        """
         self._app.invalidate()
 
     async def _load_pane_data(self, pane: FilePane, mode_id: ID) -> None:
-        """Load the data for the specified pane and refersh the app.
+        """Load the data for the target pane and refersh the app.
 
-        :param pane: a FilePane instance to load data
-        :type pane: FilePane
-        :param fs_mode: notify the FilePane whether to load data from s3 or local
-        :type fs_mode: bool
+        Args:
+            pane: A `FilePane` instance to load data.
+            mode_id: Indicate which mode the pane should be operating.
+                This controls what data to be loaded. E.g. load S3 data if its `PaneMode.s3`.
         """
         await pane.load_data(mode_id=mode_id)
-        self._redraw()
+        self.redraw()
 
     async def _render_task(self) -> None:
-        """Read cache and instruct left/right pane to load appropriate data."""
+        """Read cache and instruct left/right pane to load appropriate data.
+
+        When `App` is created, `KB` is not activated and will only be activated
+        once `Cache` is processed. This decision is made because `Cache` may
+        cause the `App` UI to change and confuse the user.
+        """
         cache = Cache()
         if not self._no_cache:
             await cache.read_cache()
@@ -113,7 +140,14 @@ class App:
         )
 
     def _after_render(self, _) -> None:
-        """Run after the app is running, same as `useEffect` in react.js."""
+        """Run this function every time the `App` is re-rendered, same as `useEffect` in react.js.
+
+        Using a class state `self._rendered` to force this function to only run once when
+        the `App` is first created.
+
+        Loading all relevant data in this method can turn the whole data loading into an
+        async experience.
+        """
         if not self._rendered:
             self._rendered = True
             asyncio.create_task(self._left_pane.spinner.spin())
@@ -121,33 +155,40 @@ class App:
             asyncio.create_task(self._render_task())
 
     async def run(self) -> None:
-        """Run the application in async mode."""
+        """Start the application in async mode."""
         await self._app.run_async()
 
     def focus_pane(self, pane_id: ID) -> None:
         """Focus specified pane and set the focus state.
 
-        :param pane_id: the id of the pane to focus
-            reference `self._pane_map`
-        :type pane_id: FOCUS
+        Args:
+            pane_id (ID): An :data:`~s3fm.base.ID` of the pane to focus.
+                E.g. `Pane.left`.
         """
         self._previous_focus = self._current_focus
         self._current_focus = pane_id
         self._app.layout.focus(self.current_focus)
 
     def focus_other_pane(self) -> None:
-        """Focus the other file pane."""
+        """Focus the other filepane.
+
+        Theres only a maximum of 2 filepane in the app currently. Use
+        this method to focus the other filepane.
+
+        This method won't have any effect if the current UI only have
+        one filepane.
+        """
         if not self._layout_single():
             self.focus_pane(
                 Pane.left if self._current_focus == Pane.right else Pane.right
             )
 
     def focus_cmd(self) -> None:
-        """Focus the cmd pane."""
+        """Focus the commandpane."""
         self.focus_pane(Pane.cmd)
 
     def exit_cmd(self) -> None:
-        """Exit the command pane."""
+        """Exit the commandpane and refocus the last focused filepane."""
         self.focus_pane(self._previous_focus or Pane.left)
 
     def exit(self) -> None:
@@ -156,14 +197,32 @@ class App:
         self._app.exit()
 
     def switch_layout(self, layout_id: ID) -> None:
-        """Switch layout."""
+        """Switch to a different layout.
+
+        Args:
+            layout_id (ID): An :data:`~s3fm.base.ID` of the layout.
+                E.g. `LayoutMode.vertical`.
+        """
         self._layout_mode = layout_id
         if layout_id != LayoutMode.single:
             self._app.layout = self.layout
             self.focus_pane(self._current_focus)
 
     def pane_swap(self, direction_id: ID, layout_id: ID) -> None:
-        """Swap pane/layout."""
+        """Swap panes left/right/up/down.
+
+        This has side effects where it may cuase layout to change.
+        When current layout is `LayoutMode.vertical` and switching
+        up/down, layout will be changed to `LayoutMode.horizontal`.
+
+        This function won't have any effect when theres only one filepane.
+
+        Args:
+            direction_id (ID): An :data:`~s3fm.base.ID` of the direction.
+                E.g. `Direction.left`.
+            layout_id (ID): An :data:`~s3fm.base.ID` of the layout.
+                E.g. `LayoutMode.vertical`.
+        """
         if self._layout_single():
             return
         if (
@@ -202,7 +261,19 @@ class App:
             self.focus_pane(self._current_focus)
 
     def toggle_pane_hidden_files(self, value: bool = None) -> None:
-        """Toggle focused pane display hidden file status."""
+        """Toggle the current focused pane display hidden file status.
+
+        Use this method to either instruct the current focused pane to show
+        hidden files or hide hidden files.
+
+        If current highlighted file is a hidden file and the focused pane
+        is instructed to hide hidden file, highlight will shift down until
+        a non hidden file.
+
+        Args:
+            value: Optional bool value to indicate show/hide.
+                If not provided, it will toggle the hidden file status.
+        """
         self.current_focus.display_hidden_files = (
             value or not self.current_focus.display_hidden_files
         )
@@ -210,22 +281,22 @@ class App:
 
     @property
     def command_mode(self) -> Condition:
-        """Get command mode condition."""
+        """Condition: `prompt_toolkit` condition if current focus is commandpane."""
         return self._command_mode
 
     @property
     def normal_mode(self) -> Condition:
-        """Get normal mode condition."""
+        """Condition: `prompt_toolkit` condition if current focus is a filepane."""
         return self._normal_mode
 
     @property
     def current_focus(self) -> BasePane:
-        """Get current app focus."""
+        """:class:`~s3fm.base.BasePane`: Get current focused pane."""
         return self.panes[self._current_focus]
 
     @property
     def panes(self) -> Dict[ID, BasePane]:
-        """Get pane mappings."""
+        """Dict[ID, BasePane]: Get pane mappings."""
         return {
             Pane.left: self._left_pane,
             Pane.right: self._right_pane,
@@ -234,7 +305,7 @@ class App:
 
     @property
     def layout(self) -> Layout:
-        """Get the app layout."""
+        """Layout: Get dynamic app layout."""
         if self._layout_mode == LayoutMode.vertical:
             layout = HSplit(
                 [VSplit([self._left_pane, self._right_pane]), self._command_pane]

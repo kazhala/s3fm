@@ -13,14 +13,19 @@ project = "s3fm"
 copyright = "2021, Kevin Zhuang"
 author = "Kevin Zhuang"
 
-extensions = ["sphinx.ext.autodoc", "sphinx_rtd_theme", "recommonmark"]
+extensions = [
+    "sphinx.ext.autodoc",
+    "sphinx_rtd_theme",
+    "recommonmark",
+    "sphinx.ext.napoleon",
+]
 templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
 
-autodoc_typehints = "description"
+napoleon_include_init_with_doc = True
 
 
 def visit_document(*_):
