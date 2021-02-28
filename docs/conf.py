@@ -28,6 +28,7 @@ html_static_path = ["_static"]
 
 napoleon_include_init_with_doc = True
 autodoc_typehints = "description"
+autodoc_member_order = "bysource"
 
 
 intersphinx_mapping = {
