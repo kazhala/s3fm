@@ -1,10 +1,12 @@
 # s3fm
 
-```eval_rst
-.. toctree::
-    :hidden:
+hello world
 
-    pages/test
-    pages/api_reference
-    Examples <https://github.com/tmbo/questionary/tree/master/examples>
+wtf
+
+```{toctree}
+:hidden:
+
+pages/test.md
+pages/api_reference.md
 ```

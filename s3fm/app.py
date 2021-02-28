@@ -313,7 +313,7 @@ class App:
 
     @property
     def layout(self) -> Layout:
-        """Layout: Get dynamic app layout."""
+        """Layout: Get app layout dynamically."""
         if self._layout_mode == LayoutMode.vertical:
             layout = HSplit(
                 [VSplit([self._left_pane, self._right_pane]), self._command_pane]

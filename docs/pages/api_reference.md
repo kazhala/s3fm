@@ -2,7 +2,7 @@
 
 ## App
 
-```eval_rst
+```{eval-rst}
 .. automodule:: s3fm.app
     :members:
 ```
