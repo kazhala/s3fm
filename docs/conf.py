@@ -14,6 +14,7 @@ extensions = [
     "sphinx.ext.viewcode",
     "furo",
     "myst_parser",
+    "sphinx_copybutton",
 ]
 
 templates_path = ["_templates"]
