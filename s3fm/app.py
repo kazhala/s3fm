@@ -281,20 +281,12 @@ class App:
 
     @property
     def command_mode(self) -> Condition:
-        """Condition: A callable if current focus is commandpane.
-
-        Reference:
-            :class:`prompt_toolkit.filters.Condition`
-        """
+        """:class:`prompt_toolkit.filters.Condition`: A callable if current focus is commandpane."""
         return self._command_mode
 
     @property
     def normal_mode(self) -> Condition:
-        """Condition: A callable if current focus is a filepane.
-
-        Reference:
-            :class:`prompt_toolkit.filters.Condition`
-        """
+        """:class:`prompt_toolkit.filters.Condition`: A callable if current focus is a filepane."""
         return self._normal_mode
 
     @property
@@ -313,7 +305,7 @@ class App:
 
     @property
     def layout(self) -> Layout:
-        """Layout: Get app layout dynamically."""
+        """:class:`prompt_toolkit.layout.Layout`: Get app layout dynamically."""
         if self._layout_mode == LayoutMode.vertical:
             layout = HSplit(
                 [VSplit([self._left_pane, self._right_pane]), self._command_pane]
