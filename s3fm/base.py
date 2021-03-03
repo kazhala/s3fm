@@ -1,4 +1,9 @@
-"""Module contains base classes and enums."""
+"""Module contains base classes and IDs.
+
+ID is an identifier that can be used to find certian resource
+in some of the mappings. More information about ID please reference
+:ref:`pages/configuration:ID`.
+"""
 from typing import Any, Dict, Iterator, List, NamedTuple, Tuple, Union
 
 from prompt_toolkit.filters.base import Condition, FilterOrBool
@@ -40,11 +45,17 @@ class BaseStyleConfig:
     """Base style config class.
 
     Inherit this class to create complex style options
-    such as `class:spinner.text`.
+    such as :class:`~s3fm.api.config.StyleConfig`.
+
+    The `__iter__` method will help transform this class into
+    a processable dictionary for :meth:`prompt_toolkit.styles.Style.from_dict`.
     """
 
     def clear(self) -> None:
-        """Clear all default styles recursively."""
+        """Clear all default styles recursively.
+
+        This will completly wipe all the default style value.
+        """
         for key, value in self.__dict__.items():
             if isinstance(value, BaseStyleConfig):
                 value.clear()
@@ -52,12 +63,13 @@ class BaseStyleConfig:
                 setattr(self, key, "")
 
     def __iter__(self) -> Iterator[Tuple[str, Any]]:
-        """Customise the iteration method for custom `dict` behavior.
+        """Customise the iteration method for custom :func:`dict` behavior.
 
-        When calling `dict` on this class, nested `BaseStyleConfig`
+        When calling :func:`dict` on this class, nested :class:`BaseStyleConfig`
         will return as attribute as chained string as the key.
 
-        E.g `spinner.prefix`.
+        Returns:
+            An iterator which yields a tuple of key and value.
         """
         for key, value in self.__dict__.items():
             if isinstance(value, BaseStyleConfig):
@@ -68,7 +80,11 @@ class BaseStyleConfig:
 
 
 class BasePane(ConditionalContainer):
-    """Base class to create a pane in the app."""
+    """Base class to create a pane in the app.
+
+    Internal use only, this is mainly a work around for type checker
+    type hinting and error screaming.
+    """
 
     def __init__(self, content: AnyContainer, filter: FilterOrBool) -> None:
         """Create the container."""
@@ -101,5 +117,9 @@ class BasePane(ConditionalContainer):
 
     @display_hidden_files.setter
     def display_hidden_files(self, value: bool = None):
-        """Change hidden file display status."""
+        """Change hidden file display status.
+
+        Args:
+            value: The value to set to hidden file display status.
+        """
         pass
