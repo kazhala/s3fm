@@ -12,6 +12,7 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.intersphinx",
     "sphinx.ext.viewcode",
+    "sphinx.ext.autosectionlabel",
     "furo",
     "myst_parser",
     "sphinx_copybutton",
@@ -25,6 +26,7 @@ html_title = "s3fm"
 html_static_path = ["_static"]
 
 napoleon_include_init_with_doc = True
+autosectionlabel_prefix_document = True
 autodoc_typehints = "description"
 autodoc_member_order = "bysource"
 intersphinx_mapping = {

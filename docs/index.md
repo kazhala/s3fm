@@ -25,4 +25,5 @@ print(f'my {a}nd line')
 
 pages/test.md
 pages/api_reference.md
+pages/configuration.md
 ```

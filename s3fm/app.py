@@ -162,7 +162,7 @@ class App:
         """Focus specified pane and set the focus state.
 
         Args:
-            pane_id (ID): An :data:`~s3fm.base.ID` of the pane to focus.
+            pane_id (ID): An :ref:`pages/configuration:ID` of the pane to focus.
                 E.g. `Pane.left`.
         """
         self._previous_focus = self._current_focus
@@ -200,7 +200,7 @@ class App:
         """Switch to a different layout.
 
         Args:
-            layout_id (ID): An :data:`~s3fm.base.ID` of the layout.
+            layout_id (ID): An :ref:`pages/configuration:ID` of the layout.
                 E.g. `LayoutMode.vertical`.
         """
         self._layout_mode = layout_id
@@ -218,9 +218,9 @@ class App:
         This function won't have any effect when theres only one filepane.
 
         Args:
-            direction_id (ID): An :data:`~s3fm.base.ID` of the direction.
+            direction_id (ID): An :ref:`pages/configuration:ID` of the direction.
                 E.g. `Direction.left`.
-            layout_id (ID): An :data:`~s3fm.base.ID` of the layout.
+            layout_id (ID): An :ref:`pages/configuration:ID` of the layout.
                 E.g. `LayoutMode.vertical`.
         """
         if self._layout_single():
