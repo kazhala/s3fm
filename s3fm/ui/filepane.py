@@ -28,7 +28,7 @@ class FilePane(BasePane):
         pane_id (ID): An :ref:`pages/configuration:ID` indicating whether this pane
             is the left pane or right pane. This is used to detect current app focus.
         spinner_config: :class:`~s3fm.api.config.Spinner` configuration.
-        redraw: A callale that should be provided by :ref:`~s3fm.app.App` which can force
+        redraw: A callale that should be provided by :class:`~s3fm.app.App` which can force
             an UI update on the app.
         dimension_offset: Offset that should be applied to height or width.
         layout_single: A :class:`prompt_toolkit.filters.Condition` that can be used to check
@@ -313,7 +313,7 @@ class FilePane(BasePane):
 
     @property
     def id(self) -> ID:
-        """ID: :class:`FilePane` ID in the :class:`~s3fm.app.App`."""
+        """:ref:`pages/configuration:ID`: :class:`FilePane` ID in the :class:`~s3fm.app.App`."""
         return self._id
 
     @id.setter

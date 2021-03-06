@@ -34,3 +34,10 @@
 .. automodule:: s3fm.ui.spinner
     :members:
 ```
+
+## Cache
+
+```{eval-rst}
+.. automodule:: s3fm.api.cache
+    :members:
+```

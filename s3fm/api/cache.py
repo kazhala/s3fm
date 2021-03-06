@@ -1,14 +1,16 @@
-"""Module contains the utils to obtain and process cache result."""
+"""Module contains the :class:`Cache` class.
+
+Used to store and retrieve the state of the :class:`~s3fm.app.App`.
+"""
 from pathlib import Path
 
 from s3fm.base import ID, Pane, PaneMode
 
 
 class Cache:
-    """Cache object which handles storing and reading cache."""
+    """Used for storing and reading cache."""
 
     def __init__(self) -> None:
-        """Initialise states."""
         self._left_mode = PaneMode.s3
         self._left_path = ""
         self._right_mode = PaneMode.fs
@@ -22,16 +24,16 @@ class Cache:
         self._focus = Pane.left
 
     @property
-    def focus(self) -> int:
-        """Get current focus id."""
+    def focus(self) -> ID:
+        """:ref:`pages/configuration:ID`: Current :class:`~s3fm.app.App` focus id."""
         return self._focus
 
     @property
     def left_mode(self) -> ID:
-        """Get left fs_mode."""
+        """:ref:`pages/configuration:ID`: Left pane mode."""
         return self._left_mode
 
     @property
     def right_mode(self) -> ID:
-        """Get right fs_mode."""
+        """:ref:`pages/configuration:ID`: Right pane mode."""
         return self._right_mode

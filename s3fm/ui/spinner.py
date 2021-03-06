@@ -12,12 +12,12 @@ from prompt_toolkit.widgets.base import Frame
 class Spinner(Float):
     """Display spinner in a floating window.
 
-    Each `Spinner` is assigned to a :class:`~s3fm.api.FilePane` so that
+    Each `Spinner` is assigned to a :class:`~s3fm.api.filepane.FilePane` so that
     they can spin individually.
 
     Args:
         loading: :class:`prompt_toolkit.filters.Condition` to indicate if it should spin.
-        redraw: A callable from :class`~s3fm.app.App` to force UI redraw.
+        redraw: A callable from :class:`~s3fm.app.App` to force UI redraw.
         prefix_pattern: A list of str to display infront of the spinner when spinning.
         postfix_pattern: A list of pattern to display behind the spinner when spinning.
         text: The text to display when spinning.
