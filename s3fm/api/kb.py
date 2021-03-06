@@ -182,9 +182,10 @@ class KB(KeyBindings):
 
         It runs some additional checks before running the `KeyHandlerCallable`.
 
-        Note:
+        Warning:
             It is recommended to use :meth:`s3fm.api.config.KBConfig.map` to create
-            keybindings if you are not familiar with :doc:`prompt_toolkit:index`.
+            keybindings. Use this function only if you are familiar with :doc:`prompt_toolkit:index`
+            and would like to access the :class:`prompt_toolkit.key_binding.key_processor.KeyPressEvent`.
 
         Args:
             keys: Any number of keys to bind to the function.
@@ -197,13 +198,20 @@ class KB(KeyBindings):
             Callable[[KeyHandlerCallable], KeyHandlerCallable]: A function decorator to be used to decorate the custom function.
 
         Examples:
-            >>> from s3fm.app import App
-            >>> app = App()
-            >>> @app.kb.add("c-q")
-            ... def _(event):
-            ...     event.app.exit()
+            The following code demonstrate how to use this :meth:`KB.add` function to create keybindings. It
+            binds the `c-q` to exit the application in command mode. Reference :meth:`~s3fm.api.config.AppConfig.use_effect`
+            for more information.
+
+            >>> from s3fm.api.config import Config
+            >>> from s3fm.base import KBMode
+            >>> config = Config()
+            >>> @config.app.use_effect
+            ... def _(app):
+            ...     if not app.rendered:
+            ...         @app.kb.add("c-q", KBMode.command)
+            ...         def _(_):
+            ...             app.exit()
         """
-        # TODO: update example when custom function in after_render is available.
         super_dec = super().add(
             *keys, filter=filter & self._mode[mode_id], eager=eager, **kwargs
         )

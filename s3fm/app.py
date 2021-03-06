@@ -26,8 +26,6 @@ from s3fm.ui.filepane import FilePane
 from s3fm.ui.optionpane import OptionPane
 from s3fm.utils import kill_child_processes
 
-# TODO: allow custom action configured to run in after_render.
-
 
 class App:
     """Main app class to render the UI and run the application.
@@ -55,6 +53,7 @@ class App:
         self._border = config.app.border
         self._current_focus = Pane.left
         self._previous_focus = None
+        self._custom_effects = config.app.custom_effects
 
         self._command_mode = Condition(lambda: self._current_focus == Pane.cmd)
         self._normal_mode = Condition(
@@ -150,6 +149,8 @@ class App:
         Loading all relevant data in this method can turn the whole data loading into an
         async experience.
         """
+        for use_effect in self._custom_effects:
+            use_effect(self)
         if not self._rendered:
             self._rendered = True
             asyncio.create_task(self._left_pane.spinner.spin())
@@ -334,3 +335,8 @@ class App:
     def kb(self) -> KB:
         """KB: KeyBindings."""
         return self._kb
+
+    @property
+    def rendered(self) -> bool:
+        """bool: :class:`App` rendered status."""
+        return self._rendered

@@ -12,13 +12,52 @@ if TYPE_CHECKING:
 
 
 class AppConfig:
-    """App config class.
+    """App config class."""
 
-    Highlevel UI configuration of the entire :class:`~s3fm.app.App`.
-    """
+    def __init__(self) -> None:
+        self.border = False
+        self.padding = 1
+        self._custom_effects = []
 
-    border: bool = False
-    padding: int = 1
+    def use_effect(self, func: Callable[["App"], None]) -> None:
+        """Register custom function to run on :class:`~s3fm.app.App` re-render.
+
+        Works sort of like `useEffect` in React.js. It runs on every UI redraw.
+
+        Warning:
+            Running heavy functions will affect the performance significantly as
+            the UI redraw is happening very often. Its not recommended to register
+            function that runs on every UI redraw.
+
+        Note:
+            Use :attr:`s3fm.app.App.rendered` to check if the UI is rendered or not.
+            If its true, it means that the :class:`~s3fm.app.App` has not yet rendered.
+
+            Check out the example for a code snippet which demonstrate how to run
+            certain actions only the first time when the :class:`~s3fm.app.App` is loaded.
+
+        Args:
+            func: A callable to be registered to run on UI redraw.
+
+        Examples:
+            >>> from s3fm.api.config import Config
+            >>> config = Config()
+            >>> @config.app.use_effect
+            ... def _(app):
+            ...     if not app.rendered:
+            ...         # only run the following once
+            ...         @app.kb.add("c-q")
+            ...         def _(_):
+            ...             app.exit()
+            ...     else:
+            ...         # any code to run on every UI redraw
+        """
+        self._custom_effects.append(func)
+
+    @property
+    def custom_effects(self) -> List[Callable[["App"], None]]:
+        """List[Callable[["App"], None]]: Custom effects to run on every render."""
+        return self._custom_effects
 
 
 class SpinnerConfig:
