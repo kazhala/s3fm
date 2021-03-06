@@ -1,4 +1,4 @@
-"""Module contains the main left/right pane."""
+"""Module contains the main filepane which is used as the left/right pane."""
 from pathlib import Path
 from typing import Callable, Iterable, List, Tuple
 
@@ -13,32 +13,54 @@ from s3fm.api.s3 import S3
 from s3fm.base import ID, BasePane, File, PaneMode
 from s3fm.exceptions import Bug, ClientError
 from s3fm.ui.spinner import Spinner
-from s3fm.utils import get_dimmension
+from s3fm.utils import get_dimension
 
 
 class FilePane(BasePane):
-    """The main file pane of the app."""
+    """Main file pane of the app.
+
+    FilePane has 2 modes to operate: `PaneMode.s3` and `PaneMode.fs`. The default
+    mode is the s3 mode. The mode value at the moment cannot be configured via the
+    :class:`~s3fm.api.config.Config` class, this value is stored to the cache via
+    :class:`~s3fm.api.cache.Cache` and is retrieved on the next time the app is opened.
+
+    Args:
+        pane_id (ID): An :ref:`pages/configuration:ID` indicating whether this pane
+            is the left pane or right pane. This is used to detect current app focus.
+        spinner_config: :class:`~s3fm.api.config.Spinner` configuration.
+        redraw: A callale that should be provided by :ref:`~s3fm.app.App` which can force
+            an UI update on the app.
+        dimension_offset: Offset that should be applied to height or width.
+        layout_single: A :class:`prompt_toolkit.filters.Condition` that can be used to check
+            if the current :class:`~s3fm.app.App` is single layout.
+        layout_vertical: A :class:`prompt_toolkit.filters.Condition` that can be used check
+            if the current :class:`~s3fm.app.App` is vertical layout.
+        focus: A function to be provided by :class:`s3fm.app.App` to be used to get current
+            app focus.
+        padding: Padding to be applied around the file pane. This can be configured under
+            :class:`~s3fm.api.config.AppConfig`.
+        linemode: :class:`~s3fm.api.config.LineModeConfig` instance.
+    """
 
     def __init__(
         self,
-        pane_id: int,
+        pane_id: ID,
         spinner_config: SpinnerConfig,
         redraw: Callable[[], None],
-        dimmension_offset: int,
+        dimension_offset: int,
         layout_single: Condition,
         layout_vertical: Condition,
         focus: Callable[[], ID],
         padding: int,
         linemode: LineModeConfig,
     ) -> None:
-        """Initialise the layout of file pane."""
         self._s3 = S3()
         self._fs = FS()
         self._mode = PaneMode.s3
         self._loaded = False
         self._files: List[File] = []
         self._loading = True
-        self._dimmension_offset = dimmension_offset
+        self._dimension_offset = dimension_offset
         self._id = pane_id
         self._single_mode = layout_single
         self._vertical_mode = layout_vertical
@@ -94,7 +116,18 @@ class FilePane(BasePane):
         )
 
     def _get_pane_info(self) -> List[Tuple[str, str]]:
-        """Get the top panel info of the current pane."""
+        """Get the top panel info of the current pane.
+
+        This will be used to display some information at the top of
+        the filepane.
+
+        Returns:
+            A list of tuples which can be parsed as
+            :class:`prompt_toolkit.formatted_text.FormattedText`.
+
+        Raises:
+            Bug: When pane mode is not recognized.
+        """
         if not self._loaded:
             return []
         display_info = []
@@ -121,8 +154,9 @@ class FilePane(BasePane):
     def _get_formatted_files(self) -> List[Tuple[str, str]]:
         """Get content in `formatted_text` format to display.
 
-        :return: a list of formatted files ready to display
-        :rtype: List[Tuple[str, str]]
+        Returns:
+            A list of tuples which can be parsed as
+            :class:`prompt_toolkit.formatted_text.FormattedText`.
         """
         display_files = []
 
@@ -149,6 +183,17 @@ class FilePane(BasePane):
         return display_files
 
     def _get_file_info(self, file: File) -> Tuple[str, str, str, str]:
+        """Get the file info to display.
+
+        This is used internally by :meth:`FilePane._get_formatted_files`.
+
+        Returns:
+            A tuple representing the style, icon, file_name and file_info.
+
+        Raises:
+            ClientError: When custom linemode does not return 4 values which caused
+            the unpack function to raise error.
+        """
         style_class = ""
         icon = ""
         file_name = file.name
@@ -177,15 +222,19 @@ class FilePane(BasePane):
         return style_class, icon, file_name, file_info
 
     def _get_width(self) -> LayoutDimension:
-        """Retrieve the width dynamically."""
-        width, _ = get_dimmension(offset=self._dimmension_offset + (self._padding * 2))
+        """Retrieve the width dynamically.
+
+        Returns:
+            A :class:`prompt_toolkit.layout.Dimension` instance.
+        """
+        width, _ = get_dimension(offset=self._dimension_offset + (self._padding * 2))
         if self._vertical_mode():
             width = round((width - (self._padding * 2)) / 2)
         self._width = width
         return LayoutDimension(preferred=width)
 
     def handle_down(self) -> None:
-        """Move selection down."""
+        """Move current selection down."""
         if self._display_hidden:
             self._selected_file_index = (
                 self._selected_file_index + 1
@@ -197,7 +246,7 @@ class FilePane(BasePane):
             self.shift()
 
     def handle_up(self) -> None:
-        """Move selection up."""
+        """Move current selection up."""
         if self._display_hidden:
             self._selected_file_index = (
                 self._selected_file_index - 1
@@ -209,7 +258,12 @@ class FilePane(BasePane):
             self.shift(up=True)
 
     def shift(self, up: bool = False) -> None:
-        """Shit up/down taking consideration of hidden status."""
+        """Shift up/down taking consideration of hidden status.
+
+        When the filepane change its hidden display status, if the current
+        highlight is a hidden file, the app will lost its highlighted line.
+        Use this method to shift down until it found a file thats not hidden.
+        """
         counter = 0
         while counter <= self.file_count and self.current_selection.hidden:
             counter += 1
@@ -222,7 +276,17 @@ class FilePane(BasePane):
     async def load_data(
         self, mode_id: ID = PaneMode.s3, bucket: str = None, path: str = None
     ) -> None:
-        """Load the data from either s3 or local."""
+        """Load the data into filepane.
+
+        Provide a `mode_id` to instruct which file to load. `PaneMode.s3` will
+        instruct to load the s3 data. `PaneMode.fs` will load the local file system
+        data.
+
+        Args:
+            mode_id (ID): An :ref:`pages/configuration:ID` indicating which mode.
+            bucket: Bucket to load the s3 data.
+            path: Path to load the s3 or fs data.
+        """
         self._mode = mode_id
         if self._mode == PaneMode.s3:
             self._files += await self._s3.get_buckets()
@@ -236,42 +300,40 @@ class FilePane(BasePane):
 
     @property
     def file_count(self) -> int:
-        """Get total file count."""
+        """int: Total file count."""
         return len(self._files)
 
     @property
     def spinner(self) -> Spinner:
-        """Get spinner."""
+        """:class:`~s3fm.ui.spinner.Spinner`: :class:`FilePane` spinner instance."""
         return self._spinner
 
     @property
-    def id(self) -> int:
-        """Get pane id."""
+    def id(self) -> ID:
+        """ID: :class:`FilePane` ID in the :class:`~s3fm.app.App`."""
         return self._id
 
     @id.setter
     def id(self, value: int) -> None:
-        """Set pane id."""
         self._id = value
 
     @property
     def files(self) -> Iterable[File]:
-        """Get all available files to display."""
+        """Iterable[File]: All available files to display."""
         if not self._display_hidden:
             return filter(lambda file: not file.hidden, self._files)
         return self._files
 
     @property
     def current_selection(self) -> File:
-        """Get current file selection."""
+        """File: Get current file selection."""
         return self._files[self._selected_file_index]
 
     @property
     def display_hidden_files(self) -> bool:
-        """Get hidden file display status."""
+        """bool: Hidden file display status."""
         return self._display_hidden
 
     @display_hidden_files.setter
     def display_hidden_files(self, value: bool) -> None:
-        """Update hidden file display status."""
         self._display_hidden = value

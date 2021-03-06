@@ -31,8 +31,8 @@ def kill_child_processes() -> None:
         process.send_signal(signal.SIGTERM)
 
 
-def get_dimmension(offset: int = 0) -> Tuple[int, int]:
-    """Get terminal dimmensions.
+def get_dimension(offset: int = 0) -> Tuple[int, int]:
+    """Get terminal dimensions.
 
     Args:
         offset: Additional offset to put against the height and width.
