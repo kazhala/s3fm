@@ -1,4 +1,5 @@
 """Module contains the main filepane which is used as the left/right pane."""
+import math
 from pathlib import Path
 from typing import Callable, Iterable, List, Tuple
 
@@ -10,7 +11,7 @@ from prompt_toolkit.layout.dimension import LayoutDimension
 from s3fm.api.config import LineModeConfig, SpinnerConfig
 from s3fm.api.fs import FS
 from s3fm.api.s3 import S3
-from s3fm.base import ID, BasePane, File, PaneMode
+from s3fm.base import ID, BasePane, File, Pane, PaneMode
 from s3fm.exceptions import Bug, ClientError
 from s3fm.ui.spinner import Spinner
 from s3fm.utils import get_dimension
@@ -232,7 +233,10 @@ class FilePane(BasePane):
         """
         width, _ = get_dimension(offset=self._dimension_offset + (self._padding * 2))
         if self._vertical_mode():
-            width = round((width - (self._padding * 2)) / 2)
+            if self._id == Pane.left:
+                width = math.ceil((width - (self._padding * 2)) / 2)
+            elif self._id == Pane.right:
+                width = math.floor((width - (self._padding * 2)) / 2)
         self._width = width
         return LayoutDimension(preferred=width)
 
