@@ -41,3 +41,10 @@
 .. automodule:: s3fm.api.cache
     :members:
 ```
+
+## Config
+
+```{eval-rst}
+.. automodule:: s3fm.api.config
+    :members:
+```

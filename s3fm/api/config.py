@@ -12,7 +12,10 @@ if TYPE_CHECKING:
 
 
 class AppConfig:
-    """App config class."""
+    """App config class.
+
+    Highlevel UI configuration of the entire :class:`~s3fm.app.App`.
+    """
 
     border: bool = False
     padding: int = 1
@@ -28,10 +31,18 @@ class SpinnerConfig:
 
 
 class LineModeConfig:
-    """Icon config class."""
+    """LineMode configuration.
+
+    Borrowed the name from ranger: https://github.com/ranger/ranger/wiki/Custom-linemodes
+
+    This class contains the mappings for filename/filetype with icons as well as filename/filetype
+    with style classes.
+
+    Use the :meth:`LineModeConfig.register` to register custom linemode processing function which
+    will override the default processing logic.
+    """
 
     def __init__(self) -> None:
-        """Init Icon config."""
         self.nerd_font = True
         self.extension_maps = {
             ".7z": "  ",
@@ -121,34 +132,65 @@ class LineModeConfig:
     def register(
         self, func: Callable[[File], Optional[Tuple[str, str, str, str]]]
     ) -> None:
-        """Register custom processing function."""
+        """Register custom processing function.
+
+        Multiple processing function can be registered. The registered function will
+        override the default processing function.
+
+        The custom processing function must return a tuple of 4 values consisting:
+            1. The style class to use for the line.
+            2. The icons to display for the line.
+            3. The name of the file to display for the line.
+            4. Additional information of the file to display at the end of the line.
+
+        They can be empty string if nothing is intended to display.
+
+        Args:
+            func: Custom processing function.
+
+        Examples:
+            >>> from s3fm.api.config import Config
+            >>> config = Config()
+            >>> @config.linemode.register
+            ... def custom_process(file):
+            ...     style_class = config.linemode.style_maps[file.type]
+            ...     icon = config.linemode.filetype_maps[file.type]
+            ...     name = file.name
+            ...     info = file.info
+            ...     return style_class, icon, name, info
+        """
         self._process.append(func)
 
     @property
     def process(
         self,
     ) -> List[Callable[[File], Optional[Tuple[str, str, str, str]]]]:
-        """Get all custom processing function."""
+        """List[Callable[[File], Optional[Tuple[str, str, str, str]]]]: All custom processing function."""
         return self._process
 
 
 class StyleConfig(BaseStyleConfig):
-    """Style config class."""
+    """Style config class.
+
+    Change the attribute within this class to update the color config
+    for different style class.
+
+    All attribute will later be converted to a dictionary that is able
+    to be consumed by :meth:`prompt_toolkit.styles.Style.from_dict`.
+    """
 
     class Spinner(BaseStyleConfig):
-        """Spinner style config."""
+        """Nested spinner style config."""
 
         def __init__(self) -> None:
-            """Init spinner style settings."""
             self.text = "#000000"
             self.prefix = "#ffffff"
             self.postfix = "#ffffff"
 
     class FilePane(BaseStyleConfig):
-        """FilePane style config."""
+        """Nested filepane style config."""
 
         def __init__(self) -> None:
-            """Init filepane style settings."""
             self.current_line = "#61afef reverse"
             self.other_line = "#abb2bf"
             self.focus_path = "#a0c980"
@@ -161,12 +203,31 @@ class StyleConfig(BaseStyleConfig):
             self.exe = "#98c379"
 
     def __init__(self) -> None:
-        """Initialise the default styles."""
         self.spinner = self.Spinner()
         self.filepane = self.FilePane()
 
     def register(self, class_name: str) -> Callable[[Any], None]:
-        """Register custom style class."""
+        """Register custom style class.
+
+        User can create custom style class. However, at the moment, the custom class
+        can only be applied and used for :class:`LineModeConfig`.
+
+        Args:
+            class_name: Name for the custom class.
+
+        Returns:
+            A decorator that register the custom class.
+
+        Examples:
+            >>> from s3fm.api.config import Config
+            >>> from s3fm.base import BaseStyleConfig, FileType
+            >>> config = Config()
+            >>> @config.style.register(class_name="custom_class")
+            ... class CustomClass(BaseStyleConfig):
+            ...     def __init__(self):
+            ...         self.file_color = "#e5c07b"
+            >>> config.linemode.style_maps[FileType.file] = "class:custom_class.file_color"
+        """
 
         def decorator(style_cls) -> None:
             class_to_register = style_cls()
@@ -180,10 +241,13 @@ class StyleConfig(BaseStyleConfig):
 
 
 class KBConfig:
-    """Keybinding config class."""
+    """Keybinding config class.
+
+    Remap default keybindings and also create custom keybindings
+    for custom functions.
+    """
 
     def __init__(self) -> None:
-        """Initialise default kb."""
         self._kb_maps = default_key_maps
         self._custom_kb_maps = {KBMode.normal: {}, KBMode.command: {}}
         self._custom_kb_lookup = {KBMode.normal: {}, KBMode.command: {}}
@@ -197,7 +261,31 @@ class KBConfig:
         eager: bool = False,
         **kwargs
     ) -> None:
-        """Map keys to actions."""
+        """Map keys to actions.
+
+        Mapping for both builtin functions and custom functions should both
+        use this function. Builtin functions can be recognised as str while
+        custom functions should be provided directly.
+
+        Args:
+            action: Provide str will indicate mappings for builtin functions.
+                Provide a callable for custom function mappings.
+            keys: Keys to map to the action.
+            mode_id (ID): Which mode the keybinding should be operating.
+            filter: A callable to enable the keybinding only in certain conditions.
+            eager: Force priority of the keybindings. Meaning if theres already
+                a mapping using a key like `f`, set this flag to overwrite the other
+                duplicated key maps.
+
+        Raises:
+            ClientError: When the provided str doesn't match any available default functions.
+
+        Examples:
+            >>> from s3fm.api.config import Config
+            >>> config = Config()
+            >>> config.kb.map(action=lambda app: app.exit(), keys="c-q")
+            >>> config.kb.map(action="focus_cmd", keys=["c-w", ":"])
+        """
         if isinstance(action, str):
             if action in self._kb_maps[mode_id]:
                 self._kb_maps[mode_id][action].append(
@@ -234,7 +322,27 @@ class KBConfig:
     def unmap(
         self, action: Union[str, Callable[["App"], None]], mode_id: ID = KBMode.normal
     ) -> None:
-        """Unmap actions."""
+        """Unmap actions and keys.
+
+        Use this method to unmap default functions or custom functions.
+
+        Note:
+            This will unmap all keys binded to the function. At the moment, you cannot
+            select which keys to unmap from a function.
+
+        Args:
+            action: Provide str will indicate unmapping for builtin functions.
+                Provide a callable for unmapping custom function mappings.
+            mode_id (ID): Which mode the keybinding should be unmapped.
+
+        Examples:
+            >>> from s3fm.api.config import Config
+            >>> config = Config()
+            >>> def exit_app(app):
+            ...     app.exit()
+            >>> config.kb.unmap("exit")
+            >>> config.kb.map(action=exit_app, keys="c-q")
+        """
         if isinstance(action, str):
             self._kb_maps[mode_id].pop(action, None)
         else:
@@ -242,25 +350,29 @@ class KBConfig:
 
     @property
     def kb_maps(self) -> Dict[ID, KB_MAPS]:
-        """Get kb mappings."""
+        """Dict[ID, KB_MAPS]: Configured kb mappings."""
         return self._kb_maps
 
     @property
     def custom_kb_maps(self) -> Dict[ID, KB_MAPS]:
-        """Get custom kb mappings."""
+        """Dict[ID, KB_MAPS]: Custom kb mappings."""
         return self._custom_kb_maps
 
     @property
     def custom_kb_lookup(self) -> Dict[ID, Dict[str, Any]]:
-        """Get custom kb lookup."""
+        """Dict[ID, Dict[str, Any]]: Custom kb lookup."""
         return self._custom_kb_lookup
 
 
 class Config:
-    """Class to manage configuration of s3fm."""
+    """Configuration class to customise s3fm.
+
+    Note:
+        This is just a highlevel container for all config classes. Please
+        reference individual config class documentation for detailed usage.
+    """
 
     def __init__(self):
-        """Initialise all configurable variables."""
         self._app = AppConfig()
         self._spinner = SpinnerConfig()
         self._style = StyleConfig()
@@ -269,25 +381,25 @@ class Config:
 
     @property
     def style(self) -> StyleConfig:
-        """Get style config."""
+        """:class:`StyleConfig`: Style config."""
         return self._style
 
     @property
     def app(self) -> AppConfig:
-        """Get app config."""
+        """:class:`AppConfig`: App config."""
         return self._app
 
     @property
     def spinner(self) -> SpinnerConfig:
-        """Get spinner config."""
+        """:class:`SpinnerConfig`: Spinner config."""
         return self._spinner
 
     @property
     def kb(self) -> KBConfig:
-        """Get kb config."""
+        """:class:`KBConfig`: Kb config."""
         return self._kb
 
     @property
     def linemode(self) -> LineModeConfig:
-        """Get icon config."""
+        """:class:`LineModeConfig`: Icon config."""
         return self._linemode
