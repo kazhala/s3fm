@@ -35,7 +35,7 @@ class FilePane(BasePane):
             if the current :class:`~s3fm.app.App` is single layout.
         layout_vertical: A :class:`prompt_toolkit.filters.Condition` that can be used check
             if the current :class:`~s3fm.app.App` is vertical layout.
-        focus: A function to be provided by :class:`s3fm.app.App` to be used to get current
+        focus: A function to be provided by :class:`~s3fm.app.App` to be used to get current
             app focus.
         padding: Padding to be applied around the file pane. This can be configured under
             :class:`~s3fm.api.config.AppConfig`.
@@ -263,6 +263,9 @@ class FilePane(BasePane):
         When the filepane change its hidden display status, if the current
         highlight is a hidden file, the app will lost its highlighted line.
         Use this method to shift down until it found a file thats not hidden.
+
+        Args:
+            up: Shift direction.
         """
         counter = 0
         while counter <= self.file_count and self.current_selection.hidden:

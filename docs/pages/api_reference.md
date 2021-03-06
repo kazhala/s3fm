@@ -18,5 +18,12 @@
 
 ```{eval-rst}
 .. automodule:: s3fm.base
-    :members: BaseStyleConfig
+    :members: BaseStyleConfig, File
+```
+
+## FilePane
+
+```{eval-rst}
+.. automodule:: s3fm.ui.filepane
+    :members:
 ```
