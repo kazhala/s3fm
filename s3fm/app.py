@@ -26,6 +26,8 @@ from s3fm.ui.filepane import FilePane
 from s3fm.ui.optionpane import OptionPane
 from s3fm.utils import kill_child_processes
 
+# TODO: allow custom action configured to run in after_render.
+
 
 class App:
     """Main app class to render the UI and run the application.
@@ -323,3 +325,8 @@ class App:
                 floats=[Float(content=self._option_pane)],
             )
         )
+
+    @property
+    def kb(self) -> KB:
+        """KB: KeyBindings."""
+        return self._kb

@@ -55,3 +55,10 @@
 .. automodule:: s3fm.api.fs
     :members:
 ```
+
+## KB
+
+```{eval-rst}
+.. automodule:: s3fm.api.kb
+    :members:
+```

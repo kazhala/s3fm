@@ -1,4 +1,4 @@
-"""Module contains the modified `KeyBindings` class."""
+"""Module contains the modified :class:`prompt_toolkit.key_binding.KeyBindings` class."""
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Union
 
 from prompt_toolkit.filters.base import Condition
@@ -32,7 +32,15 @@ default_key_maps: Dict[ID, KB_MAPS] = {
 
 
 class KB(KeyBindings):
-    """Modified `KeyBindings` class to apply custom decorator logic."""
+    """Modified :class:`prompt_toolkit.key_binding.KeyBindings` class to apply custom decorator logic.
+
+    Args:
+        app: To be provided by :class:`~s3fm.app.App`.
+            Used to interact and instruct actions on :class:`~s3fm.app.App`.
+        kb_maps: The :attr:`s3fm.api.config.KBConfig.kb_maps` in config class.
+        custom_kb_maps: The :attr:`s3fm.api.config.KBConfig.custom_kb_maps` in config class.
+        custom_kb_lookup: The :attr:`s3fm.api.config.KBConfig.custom_kb_lookup` in config class.
+    """
 
     def __init__(
         self,
@@ -41,7 +49,6 @@ class KB(KeyBindings):
         custom_kb_maps: Dict[ID, KB_MAPS] = None,
         custom_kb_lookup: Dict[ID, Dict[str, Any]] = None,
     ) -> None:
-        """Initialise `KeyBindings`."""
         self._activated = False
         self._app = app
         self._mode = {
@@ -82,8 +89,15 @@ class KB(KeyBindings):
         self._create_bindings(KBMode.normal, custom=True)
         self._create_bindings(KBMode.command, custom=True)
 
-    def _create_bindings(self, mode, custom: bool = False) -> None:
-        """Create keybindings."""
+    def _create_bindings(self, mode: ID, custom: bool = False) -> None:
+        """Create keybindings.
+
+        Interal function to create all keybindings in `kb_maps` and `custom_kb_maps`.
+
+        Args:
+            mode (ID): Indicate which mode to create the kb.
+            custom: Indicate if its custom kb.
+        """
         target_maps = self._kb_maps if not custom else self._custom_kb_maps
         for action, binds in target_maps[mode].items():
             for bind in binds:
@@ -99,7 +113,10 @@ class KB(KeyBindings):
         eager: bool = False,
         **kwargs,
     ) -> None:
-        """Call `add` to create bindings."""
+        """Call `add` to create bindings.
+
+        Internal factory function to create keybindings in a loop.
+        """
         if not isinstance(keys, list):
             keys = [keys]
         target_lookup = self._kb_lookup if not custom else self._custom_kb_lookup
@@ -152,7 +169,31 @@ class KB(KeyBindings):
         mode_id: ID = KBMode.normal,
         **kwargs,
     ) -> Callable[[KeyHandlerCallable], KeyHandlerCallable]:
-        """Run checks before running `KeyHandlerCallable`."""
+        """Bind keys to functions.
+
+        It runs some additional checks before running the `KeyHandlerCallable`.
+
+        Note:
+            It is recommended to use :meth:`s3fm.api.config.KBConfig.map` to create
+            keybindings if you are not familiar with :doc:`prompt_toolkit:index`.
+
+        Args:
+            *keys: Any number of keys to bind to the function.
+            filter: Enable the keybinding only if filter condition is satisfied.
+            eager: Force priority on this keybinding.
+            mode_id (ID): Which mode to bind this function.
+
+        Returns:
+            Callable[[KeyHandlerCallable], KeyHandlerCallable]: A function decorator to be used to decorate the custom function.
+
+        Examples:
+            >>> from s3fm.app import App
+            >>> app = App()
+            >>> @app.kb.add("c-q")
+            ... def _(event):
+            ...     event.app.exit()
+        """
+        # TODO: update example when custom function in after_render is available.
         super_dec = super().add(
             *keys, filter=filter & self._mode[mode_id], eager=eager, **kwargs
         )
@@ -170,10 +211,9 @@ class KB(KeyBindings):
 
     @property
     def activated(self) -> bool:
-        """Get activated status."""
+        """bool: Keybinding activated status."""
         return self._activated
 
     @activated.setter
     def activated(self, value: bool) -> None:
-        """Set activated status."""
         self._activated = value
