@@ -27,3 +27,10 @@
 .. automodule:: s3fm.ui.filepane
     :members:
 ```
+
+## Spinner
+
+```{eval-rst}
+.. automodule:: s3fm.ui.spinner
+    :members:
+```
