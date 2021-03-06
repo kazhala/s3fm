@@ -13,7 +13,6 @@ class ClientError(Exception):
     """
 
     def __init__(self, message: str) -> None:
-        """Set message."""
         self._message = message
         super().__init__(self._message)
 
@@ -26,7 +25,6 @@ class Bug(Exception):
     """
 
     def __init__(self, message: str) -> None:
-        """Set message."""
         self._message = message
         self._message += "\n"
         self._message += "Something went wrong with s3fm, please report this behavior over at https://github.com/kazhala/s3fm/issues"

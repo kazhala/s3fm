@@ -307,7 +307,11 @@ class App:
 
     @property
     def layout(self) -> Layout:
-        """:class:`prompt_toolkit.layout.Layout`: Get app layout dynamically."""
+        """:class:`prompt_toolkit.layout.Layout`: Get app layout dynamically.
+
+        Raises:
+            Bug: When layout mode is not recognized.
+        """
         if self._layout_mode == LayoutMode.vertical:
             layout = HSplit(
                 [VSplit([self._left_pane, self._right_pane]), self._command_pane]

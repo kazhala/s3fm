@@ -276,6 +276,7 @@ class KBConfig:
             eager: Force priority of the keybindings. Meaning if theres already
                 a mapping using a key like `f`, set this flag to overwrite the other
                 duplicated key maps.
+            **kwargs: Additional args to provide to the :meth:`prompt_toolkit.key_binding.KeyBindings.add`.
 
         Raises:
             ClientError: When the provided str doesn't match any available default functions.

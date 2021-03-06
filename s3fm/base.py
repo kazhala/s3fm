@@ -68,8 +68,8 @@ class BaseStyleConfig:
         When calling :func:`dict` on this class, nested :class:`BaseStyleConfig`
         will return as attribute as chained string as the key.
 
-        Returns:
-            An iterator which yields a tuple of key and value.
+        Yields:
+            Yields a tuple of key and value.
         """
         for key, value in self.__dict__.items():
             if isinstance(value, BaseStyleConfig):
@@ -87,7 +87,6 @@ class BasePane(ConditionalContainer):
     """
 
     def __init__(self, content: AnyContainer, filter: FilterOrBool) -> None:
-        """Create the container."""
         super().__init__(content=content, filter=filter)
 
     def handle_down(self):

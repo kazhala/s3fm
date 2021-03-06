@@ -187,12 +187,15 @@ class FilePane(BasePane):
 
         This is used internally by :meth:`FilePane._get_formatted_files`.
 
+        Args:
+            file: A :class:`~s3fm.base.File` instance.
+
         Returns:
             A tuple representing the style, icon, file_name and file_info.
 
         Raises:
             ClientError: When custom linemode does not return 4 values which caused
-            the unpack function to raise error.
+                the unpack function to raise error.
         """
         style_class = ""
         icon = ""
@@ -225,7 +228,7 @@ class FilePane(BasePane):
         """Retrieve the width dynamically.
 
         Returns:
-            A :class:`prompt_toolkit.layout.Dimension` instance.
+            :class:`prompt_toolkit.layout.Dimension` instance.
         """
         width, _ = get_dimension(offset=self._dimension_offset + (self._padding * 2))
         if self._vertical_mode():
@@ -289,6 +292,9 @@ class FilePane(BasePane):
             mode_id (ID): An :ref:`pages/configuration:ID` indicating which mode.
             bucket: Bucket to load the s3 data.
             path: Path to load the s3 or fs data.
+
+        Raises:
+            Bug: Current pane mode is not recognized.
         """
         self._mode = mode_id
         if self._mode == PaneMode.s3:

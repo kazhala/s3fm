@@ -116,6 +116,15 @@ class KB(KeyBindings):
         """Call `add` to create bindings.
 
         Internal factory function to create keybindings in a loop.
+
+        Args:
+            action: The action to apply keybinding.
+            mode_id (ID): Which mode to bind this function.
+            custom: Flag indicate if its custom function.
+            keys: List of keys to bind to the function.
+            filter: Enable the keybinding only if filter condition is satisfied.
+            eager: Force priority on this keybinding.
+            **kwargs: Additional args to provide to the :meth:`prompt_toolkit.key_binding.KeyBindings.add`.
         """
         if not isinstance(keys, list):
             keys = [keys]
@@ -178,10 +187,11 @@ class KB(KeyBindings):
             keybindings if you are not familiar with :doc:`prompt_toolkit:index`.
 
         Args:
-            *keys: Any number of keys to bind to the function.
+            keys: Any number of keys to bind to the function.
             filter: Enable the keybinding only if filter condition is satisfied.
             eager: Force priority on this keybinding.
             mode_id (ID): Which mode to bind this function.
+            **kwargs: Additional args to provide to the :meth:`prompt_toolkit.key_binding.KeyBindings.add`.
 
         Returns:
             Callable[[KeyHandlerCallable], KeyHandlerCallable]: A function decorator to be used to decorate the custom function.
