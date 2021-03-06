@@ -48,3 +48,10 @@
 .. automodule:: s3fm.api.config
     :members:
 ```
+
+## FS
+
+```{eval-rst}
+.. automodule:: s3fm.api.fs
+    :members:
+```

@@ -1,4 +1,4 @@
-"""Module contains the main api class to access file system."""
+"""Module contains the api class to access/interact with the local file system."""
 import asyncio
 import os
 from concurrent.futures import ProcessPoolExecutor
@@ -11,17 +11,30 @@ from s3fm.base import ID, File, FileType
 class FS:
     """Class to access/interact local file system.
 
-    :param path: local file directory
-    :type path: str
+    Args:
+        path: Local directory path as the default path.
     """
 
     def __init__(self, path: str = None) -> None:
-        """Initialise the starting path."""
         path = path or ""
         self._path = Path(path).expanduser()
 
     async def get_paths(self) -> List[File]:
-        """Async wrapper to retrieve all paths/files under `self._path`."""
+        """Async wrapper to retrieve all paths/files under :attr:`FS.path`.
+
+        Retrieve a list of files under :obj:`concurrent.futures.ProcessPoolExecutor`.
+
+        Returns:
+            A list of :class:`~s3fm.base.File`.
+
+        Examples:
+            >>> import asyncio
+            >>> from s3fm.api.fs import FS
+            >>> async def main():
+            ...     fs = FS()
+            ...     files = await fs.get_paths()
+            >>> asyncio.run(main())
+        """
 
         def _get_filetype(path: Path) -> ID:
             if path.is_dir():
@@ -35,7 +48,7 @@ class FS:
 
         with ProcessPoolExecutor() as executor:
             loop = asyncio.get_running_loop()
-            result = await loop.run_in_executor(executor, self.list_files)
+            result = await loop.run_in_executor(executor, self._list_files)
             response = []
             if str(self._path) != "/":
                 response.append(
@@ -62,13 +75,13 @@ class FS:
                 )
             return response
 
-    def list_files(self) -> List[Path]:
-        """Retrieve all files/paths under `self._path`."""
+    def _list_files(self) -> List[Path]:
+        """Retrieve all files/paths under :attr:`FS.path`."""
         return list(
             sorted(self._path.iterdir(), key=lambda file: (file.is_file(), file.name))
         )
 
     @property
     def path(self) -> Path:
-        """Get current path."""
+        """:obj:`pathlib.Path`: Current path."""
         return self._path
