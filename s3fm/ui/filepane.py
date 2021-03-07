@@ -75,7 +75,6 @@ class FilePane(BasePane):
         self._display_hidden = True
         self._first_line = 0
         self._last_line = self._get_height() - self._first_line
-        print(self._last_line)
 
         self._spinner = Spinner(
             loading=Condition(lambda: self._loading),
@@ -167,24 +166,40 @@ class FilePane(BasePane):
         """
         display_files = []
 
-        for file in self.files:
-            file_style, icon, name, info = self._get_file_info(file)
-            style_class = "class:filepane.other_line"
-            if file.index == self._selected_file_index and self._focus():
-                style_class = "class:filepane.current_line"
-                display_files.append(("[SetCursorPosition]", ""))
-            style_class += " %s" % file_style
-
-            display_files.append((style_class, icon))
-            display_files.append((style_class, name))
-            display_files.append(
-                (
-                    style_class,
-                    " " * (self._width - len(icon) - len(name) - len(info)),
-                )
+        if self._selected_file_index <= self._first_line:
+            self._first_line = self._selected_file_index
+            self._last_line = self._first_line + min(
+                self._get_height(), self.file_count
             )
-            display_files.append((style_class, info))
-            display_files.append(("", "\n"))
+        elif self._selected_file_index >= self._last_line:
+            self._last_line = self._selected_file_index
+            self._first_line = self._last_line - min(
+                self._get_height(), self.file_count
+            )
+
+        for index in range(self._first_line, self._last_line + 1):
+            try:
+                file = list(self.files)[index]
+                file_style, icon, name, info = self._get_file_info(file)
+                style_class = "class:filepane.other_line"
+                if file.index == self._selected_file_index and self._focus():
+                    style_class = "class:filepane.current_line"
+                    display_files.append(("[SetCursorPosition]", ""))
+                style_class += " %s" % file_style
+
+                display_files.append((style_class, icon))
+                display_files.append((style_class, name))
+                display_files.append(
+                    (
+                        style_class,
+                        " " * (self._width - len(icon) - len(name) - len(info)),
+                    )
+                )
+                display_files.append((style_class, info))
+                display_files.append(("", "\n"))
+            except IndexError:
+                # IndexError will happen when the file list is still empty, skip doing anything.
+                break
         if display_files:
             display_files.pop()
         return display_files
