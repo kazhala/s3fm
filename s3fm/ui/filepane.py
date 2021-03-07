@@ -16,6 +16,8 @@ from s3fm.exceptions import Bug, ClientError
 from s3fm.ui.spinner import Spinner
 from s3fm.utils import get_dimension
 
+# TODO: calculate height and optimise render
+
 
 class FilePane(BasePane):
     """Main file pane of the app.
@@ -71,6 +73,9 @@ class FilePane(BasePane):
         self._padding = padding
         self._linemode = linemode
         self._display_hidden = True
+        self._first_line = 0
+        self._last_line = self._get_height() - self._first_line
+        print(self._last_line)
 
         self._spinner = Spinner(
             loading=Condition(lambda: self._loading),
@@ -101,7 +106,7 @@ class FilePane(BasePane):
                                         focusable=True,
                                         show_cursor=False,
                                     ),
-                                    width=self._get_width,
+                                    width=self._get_width_dimension,
                                 ),
                             ]
                         ),
@@ -109,7 +114,8 @@ class FilePane(BasePane):
                             content=FormattedTextControl(" "),
                             width=LayoutDimension.exact(self._padding),
                         ),
-                    ]
+                    ],
+                    height=self._get_height_dimension,
                 ),
                 floats=[self._spinner],
             ),
@@ -225,8 +231,8 @@ class FilePane(BasePane):
 
         return style_class, icon, file_name, file_info
 
-    def _get_width(self) -> LayoutDimension:
-        """Retrieve the width dynamically.
+    def _get_width_dimension(self) -> LayoutDimension:
+        """Retrieve the width dimension dynamically.
 
         Returns:
             :class:`prompt_toolkit.layout.Dimension` instance.
@@ -239,6 +245,30 @@ class FilePane(BasePane):
                 width = math.floor((width - (self._padding * 2)) / 2)
         self._width = width
         return LayoutDimension(preferred=width)
+
+    def _get_height_dimension(self) -> LayoutDimension:
+        """Retrieve the height dimension dynamically.
+
+        Returns:
+            :class:`prompt_toolkit.layout.Dimension` instance.
+        """
+        return LayoutDimension(preferred=self._get_height() + 1)
+
+    def _get_height(self) -> int:
+        """Obtain the total available height for file display.
+
+        Returns:
+            The available height to display files.
+        """
+        if self._vertical_mode() or self._single_mode():
+            _, height = get_dimension(offset=self._dimension_offset + 2)
+        else:
+            _, height = get_dimension(offset=self._dimension_offset + 1)
+            if self._id == Pane.left:
+                height = math.ceil(height / 2) - 1
+            elif self._id == Pane.right:
+                height = math.floor(height / 2) - 1
+        return height
 
     def handle_down(self) -> None:
         """Move current selection down."""
