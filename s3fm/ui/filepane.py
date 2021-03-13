@@ -308,7 +308,12 @@ class FilePane(ConditionalContainer):
         return height
 
     def scroll_down(self, value: int = 1, page: bool = False) -> None:
-        """Move current selection down."""
+        """Move current selection down.
+
+        Args:
+            value: Number of lines to scroll down.
+            page: Scroll half a page down.
+        """
         if page:
             value = self._get_height() // 2
         if self._cycle and value == 1:
@@ -321,7 +326,12 @@ class FilePane(ConditionalContainer):
                 self._selected_file_index = self.file_count - 1
 
     def scroll_up(self, value: int = 1, page: bool = False) -> None:
-        """Move current selection up."""
+        """Move current selection up.
+
+        Args:
+            value: Number of lines to scroll down.
+            page: Scroll half a page down.
+        """
         if page:
             value = self._get_height() // 2
         if self._cycle and value == 1:

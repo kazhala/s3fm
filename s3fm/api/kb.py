@@ -152,18 +152,30 @@ class KB(KeyBindings):
                 key_action(*[] if not custom else [self._app])
 
     def _swap_pane(self, direction: ID) -> None:
-        """Move current pane to bottom split."""
+        """Move current pane to bottom split.
+
+        Args:
+            direction (ID): Swap direction id.
+        """
         if direction == Direction.down or direction == Direction.up:
             self._app.pane_swap(direction, layout_id=LayoutMode.horizontal)
         else:
             self._app.pane_swap(direction, layout_id=LayoutMode.vertical)
 
     def _scroll_down(self, value: int = 1, page: bool = False) -> None:
-        """Move focused pane highlighted line down."""
+        """Move focused pane highlighted line down.
+
+        Reference:
+            :meth:`~s3fm.ui.filepane.FilePane.scroll_down`
+        """
         self._app.current_filepane.scroll_down(value=value, page=page)
 
     def _scroll_up(self, value: int = 1, page: bool = False) -> None:
-        """Move focused pane highlighted line up."""
+        """Move focused pane highlighted line up.
+
+        Reference:
+            :meth:`~s3fm.ui.filepane.FilePane.scroll_up`
+        """
         self._app.current_filepane.scroll_up(value=value, page=page)
 
     def add(

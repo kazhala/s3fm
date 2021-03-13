@@ -311,7 +311,11 @@ class App:
 
     @property
     def current_filepane(self) -> FilePane:
-        """:class:`~s3fm.base.FilePane`: Get current focused filepane."""
+        """:class:`~s3fm.base.FilePane`: Get current focused filepane.
+
+        Raises:
+            Bug: Current focus is not a filepane.
+        """
         if self._current_focus == Pane.left:
             return self._left_pane
         elif self._current_focus == Pane.right:
