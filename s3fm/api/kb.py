@@ -23,8 +23,10 @@ default_key_maps: Dict[ID, KB_MAPS] = {
         "pane_swap_up": [{"keys": ["c-w", "K"]}],
         "pane_swap_left": [{"keys": ["c-w", "H"]}],
         "pane_swap_right": [{"keys": ["c-w", "L"]}],
-        "handle_down": [{"keys": "j"}],
-        "handle_up": [{"keys": "k"}],
+        "scroll_down": [{"keys": "j"}],
+        "scroll_up": [{"keys": "k"}],
+        "scroll_page_down": [{"keys": "c-d"}],
+        "scroll_page_up": [{"keys": "c-u"}],
         "toggle_pane_hidden_files": [{"keys": ["z"]}],
     },
     KBMode.command: {"exit": [{"keys": "c-c"}, {"keys": "escape", "eager": True}]},
@@ -61,15 +63,26 @@ class KB(KeyBindings):
                 "exit": self._app.exit,
                 "focus_pane": self._app.focus_other_pane,
                 "focus_cmd": self._app.focus_cmd,
-                "layout_vertical": self._layout_vertical,
-                "layout_horizontal": self._layout_horizontal,
-                "layout_single": self._layout_single,
-                "pane_swap_down": self._swap_pane_down,
-                "pane_swap_up": self._swap_pane_up,
-                "pane_swap_left": self._swap_pane_left,
-                "pane_swap_right": self._swap_pane_right,
-                "handle_down": self._handle_down,
-                "handle_up": self._handle_up,
+                "layout_vertical": {
+                    "func": self._app.switch_layout,
+                    "args": [LayoutMode.vertical],
+                },
+                "layout_horizontal": {
+                    "func": self._app.switch_layout,
+                    "args": [LayoutMode.horizontal],
+                },
+                "layout_single": {
+                    "func": self._app.switch_layout,
+                    "args": [LayoutMode.single],
+                },
+                "pane_swap_down": {"func": self._swap_pane, "args": [Direction.down]},
+                "pane_swap_up": {"func": self._swap_pane, "args": [Direction.up]},
+                "pane_swap_left": {"func": self._swap_pane, "args": [Direction.left]},
+                "pane_swap_right": {"func": self._swap_pane, "args": [Direction.right]},
+                "scroll_down": self._handle_down,
+                "scroll_up": self._handle_up,
+                "scroll_page_down": {"func": self._handle_down, "args": [1, True]},
+                "scroll_page_up": {"func": self._handle_up, "args": [1, True]},
                 "toggle_pane_hidden_files": self._app.toggle_pane_hidden_files,
             },
             KBMode.command: {"exit": self._app.exit_cmd},
@@ -132,43 +145,26 @@ class KB(KeyBindings):
 
         @self.add(*keys, filter=filter, eager=eager, mode_id=mode_id, **kwargs)
         def _(_: KeyPressEvent) -> None:
-            target_lookup[mode_id][action](*[] if not custom else [self._app])
+            key_action = target_lookup[mode_id][action]
+            if isinstance(key_action, dict):
+                key_action["func"](*key_action["args"])
+            else:
+                key_action(*[] if not custom else [self._app])
 
-    def _swap_pane_down(self) -> None:
+    def _swap_pane(self, direction: ID) -> None:
         """Move current pane to bottom split."""
-        self._app.pane_swap(Direction.down, layout_id=LayoutMode.horizontal)
+        if direction == Direction.down or direction == Direction.up:
+            self._app.pane_swap(direction, layout_id=LayoutMode.horizontal)
+        else:
+            self._app.pane_swap(direction, layout_id=LayoutMode.vertical)
 
-    def _swap_pane_up(self) -> None:
-        """Move current pane to top split."""
-        self._app.pane_swap(Direction.up, layout_id=LayoutMode.horizontal)
-
-    def _swap_pane_left(self) -> None:
-        """Move current pane to left split."""
-        self._app.pane_swap(Direction.left, layout_id=LayoutMode.vertical)
-
-    def _swap_pane_right(self) -> None:
-        """Move current pane to right split."""
-        self._app.pane_swap(Direction.right, layout_id=LayoutMode.vertical)
-
-    def _layout_vertical(self) -> None:
-        """Switch layout to vertical mode."""
-        self._app.switch_layout(LayoutMode.vertical)
-
-    def _layout_horizontal(self) -> None:
-        """Switch layout to horizontal mode."""
-        self._app.switch_layout(LayoutMode.horizontal)
-
-    def _layout_single(self) -> None:
-        """Switch layout to horizontal mode."""
-        self._app.switch_layout(LayoutMode.single)
-
-    def _handle_down(self) -> None:
+    def _handle_down(self, value: int = 1, page: bool = False) -> None:
         """Move focused pane highlighted line down."""
-        self._app.current_focus.handle_down()
+        self._app.current_focus.scroll_down(value=value, page=page)
 
-    def _handle_up(self) -> None:
+    def _handle_up(self, value: int = 1, page: bool = False) -> None:
         """Move focused pane highlighted line up."""
-        self._app.current_focus.handle_up()
+        self._app.current_focus.scroll_up(value=value, page=page)
 
     def add(
         self,

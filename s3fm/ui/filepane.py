@@ -301,25 +301,29 @@ class FilePane(BasePane):
                 height = math.floor(height / 2) - 1
         return height
 
-    def handle_down(self) -> None:
+    def scroll_down(self, value: int = 1, page: bool = False) -> None:
         """Move current selection down."""
-        if self._cycle:
+        if page:
+            value = self._get_height() // 2
+        if self._cycle and value == 1:
             self._selected_file_index = (
                 self._selected_file_index + 1
             ) % self.file_count
         else:
-            self._selected_file_index += 1
+            self._selected_file_index += value
             if self._selected_file_index >= self.file_count:
                 self._selected_file_index = self.file_count - 1
 
-    def handle_up(self) -> None:
+    def scroll_up(self, value: int = 1, page: bool = False) -> None:
         """Move current selection up."""
-        if self._cycle:
+        if page:
+            value = self._get_height() // 2
+        if self._cycle and value == 1:
             self._selected_file_index = (
                 self._selected_file_index - 1
             ) % self.file_count
         else:
-            self._selected_file_index -= 1
+            self._selected_file_index -= value
             if self._selected_file_index < 0:
                 self._selected_file_index = 0
 

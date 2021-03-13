@@ -93,11 +93,11 @@ class BasePane(ConditionalContainer):
     def __init__(self, content: AnyContainer, filter: FilterOrBool) -> None:
         super().__init__(content=content, filter=filter)
 
-    def handle_down(self):
+    def scroll_down(self, value: int = 1, page: bool = False):
         """Handle down movement."""
         pass
 
-    def handle_up(self):
+    def scroll_up(self, value: int = 1, page: bool = False):
         """Handle up movement."""
         pass
 
