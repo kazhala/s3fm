@@ -40,6 +40,7 @@ class Spinner(Float):
         self._text = text
         self._prefix = self._prefix_pattern[0]
         self._postfix = self._postfix_pattern[0]
+        self._spinning = False
 
         window = Window(content=FormattedTextControl(text=self._get_text))
         if border:
@@ -67,6 +68,9 @@ class Spinner(Float):
 
     async def spin(self) -> None:
         """Run spinner."""
+        if self._spinning:
+            return
+        self._spinning = True
         while self._loading():
             for prefix, postfix in zip_longest(
                 self._prefix_pattern, self._postfix_pattern, fillvalue=" "
@@ -75,3 +79,4 @@ class Spinner(Float):
                 self._prefix = prefix
                 self._postfix = postfix
                 self._redraw()
+        self._spinning = False

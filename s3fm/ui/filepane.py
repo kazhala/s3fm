@@ -1,4 +1,5 @@
 """Module contains the main filepane which is used as the left/right pane."""
+import asyncio
 import math
 from pathlib import Path
 from typing import Callable, List, Tuple
@@ -315,12 +316,14 @@ class FilePane(BasePane):
         highlight is a hidden file, the app will lost its highlighted line.
         Use this method to shift down until it found a file thats not hidden.
         """
+        self.loading = True
         if self._display_hidden:
             self._filtered_files = self._files
         else:
             self._filtered_files = list(
                 filter(lambda file: not file.hidden, self._files)
             )
+        self.loading = False
 
     async def load_data(
         self, mode_id: ID = PaneMode.s3, bucket: str = None, path: str = None
@@ -387,3 +390,14 @@ class FilePane(BasePane):
     @display_hidden_files.setter
     def display_hidden_files(self, value: bool) -> None:
         self._display_hidden = value
+
+    @property
+    def loading(self) -> bool:
+        """bool: Loading status of the pane."""
+        return self._loading
+
+    @loading.setter
+    def loading(self, value: bool) -> None:
+        self._loading = value
+        if value:
+            asyncio.create_task(self.spinner.spin())

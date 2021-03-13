@@ -160,8 +160,8 @@ class App:
             use_effect(self)
         if not self._rendered:
             self._rendered = True
-            asyncio.create_task(self._left_pane.spinner.spin())
-            asyncio.create_task(self._right_pane.spinner.spin())
+            self._left_pane.loading = True
+            self._right_pane.loading = True
             asyncio.create_task(self._render_task())
 
     async def run(self) -> None:
