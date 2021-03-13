@@ -1,10 +1,20 @@
 """Module contains the main config class."""
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    Iterator,
+    List,
+    Optional,
+    Tuple,
+    Union,
+)
 
 from prompt_toolkit.filters.base import Condition
 
 from s3fm.api.kb import default_key_maps
-from s3fm.base import ID, KB_MAPS, BaseStyleConfig, File, FileType, KBMode, KBs
+from s3fm.base import ID, KB_MAPS, File, FileType, KBMode, KBs
 from s3fm.exceptions import ClientError
 
 if TYPE_CHECKING:
@@ -209,6 +219,44 @@ class LineModeConfig:
         return self._process
 
 
+class BaseStyleConfig:
+    """Base style config class.
+
+    Inherit this class to create complex style options
+    such as :class:`~s3fm.api.config.StyleConfig`.
+
+    The `__iter__` method will help transform this class into
+    a processable dictionary for :meth:`prompt_toolkit.styles.Style.from_dict`.
+    """
+
+    def clear(self) -> None:
+        """Clear all default styles recursively.
+
+        This will completly wipe all the default style value.
+        """
+        for key, value in self.__dict__.items():
+            if isinstance(value, BaseStyleConfig):
+                value.clear()
+            else:
+                setattr(self, key, "")
+
+    def __iter__(self) -> Iterator[Tuple[str, Any]]:
+        """Customise the iteration method for custom :func:`dict` behavior.
+
+        When calling :func:`dict` on this class, nested :class:`BaseStyleConfig`
+        will return as attribute as chained string as the key.
+
+        Yields:
+            Yields a tuple of key and value.
+        """
+        for key, value in self.__dict__.items():
+            if isinstance(value, BaseStyleConfig):
+                for subkey, subvalue in value.__dict__.items():
+                    yield ("%s.%s" % (key, subkey), subvalue)
+            else:
+                yield (key, value)
+
+
 class StyleConfig(BaseStyleConfig):
     """Style config class.
 
@@ -259,8 +307,8 @@ class StyleConfig(BaseStyleConfig):
             A decorator that register the custom class.
 
         Examples:
-            >>> from s3fm.api.config import Config
-            >>> from s3fm.base import BaseStyleConfig, FileType
+            >>> from s3fm.api.config import Config, BaseStyleConfig
+            >>> from s3fm.base import FileType
             >>> config = Config()
             >>> @config.style.register(class_name="custom_class")
             ... class CustomClass(BaseStyleConfig):

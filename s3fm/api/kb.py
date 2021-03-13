@@ -79,10 +79,10 @@ class KB(KeyBindings):
                 "pane_swap_up": {"func": self._swap_pane, "args": [Direction.up]},
                 "pane_swap_left": {"func": self._swap_pane, "args": [Direction.left]},
                 "pane_swap_right": {"func": self._swap_pane, "args": [Direction.right]},
-                "scroll_down": self._handle_down,
-                "scroll_up": self._handle_up,
-                "scroll_page_down": {"func": self._handle_down, "args": [1, True]},
-                "scroll_page_up": {"func": self._handle_up, "args": [1, True]},
+                "scroll_down": self._scroll_down,
+                "scroll_up": self._scroll_up,
+                "scroll_page_down": {"func": self._scroll_down, "args": [1, True]},
+                "scroll_page_up": {"func": self._scroll_up, "args": [1, True]},
                 "toggle_pane_hidden_files": self._app.toggle_pane_hidden_files,
             },
             KBMode.command: {"exit": self._app.exit_cmd},
@@ -158,13 +158,13 @@ class KB(KeyBindings):
         else:
             self._app.pane_swap(direction, layout_id=LayoutMode.vertical)
 
-    def _handle_down(self, value: int = 1, page: bool = False) -> None:
+    def _scroll_down(self, value: int = 1, page: bool = False) -> None:
         """Move focused pane highlighted line down."""
-        self._app.current_focus.scroll_down(value=value, page=page)
+        self._app.current_filepane.scroll_down(value=value, page=page)
 
-    def _handle_up(self, value: int = 1, page: bool = False) -> None:
+    def _scroll_up(self, value: int = 1, page: bool = False) -> None:
         """Move focused pane highlighted line up."""
-        self._app.current_focus.scroll_up(value=value, page=page)
+        self._app.current_filepane.scroll_up(value=value, page=page)
 
     def add(
         self,

@@ -5,20 +5,26 @@ from pathlib import Path
 from typing import Callable, List, Tuple
 
 from prompt_toolkit.filters.base import Condition
-from prompt_toolkit.layout.containers import FloatContainer, HSplit, VSplit, Window
+from prompt_toolkit.layout.containers import (
+    ConditionalContainer,
+    FloatContainer,
+    HSplit,
+    VSplit,
+    Window,
+)
 from prompt_toolkit.layout.controls import FormattedTextControl
 from prompt_toolkit.layout.dimension import LayoutDimension
 
 from s3fm.api.config import AppConfig, LineModeConfig, SpinnerConfig
 from s3fm.api.fs import FS
 from s3fm.api.s3 import S3
-from s3fm.base import ID, BasePane, File, Pane, PaneMode
+from s3fm.base import ID, File, Pane, PaneMode
 from s3fm.exceptions import Bug, ClientError
 from s3fm.ui.spinner import Spinner
 from s3fm.utils import get_dimension
 
 
-class FilePane(BasePane):
+class FilePane(ConditionalContainer):
     """Main file pane of the app.
 
     FilePane has 2 modes to operate: `PaneMode.s3` and `PaneMode.fs`. The default

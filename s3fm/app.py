@@ -12,7 +12,13 @@ from typing import Dict
 
 from prompt_toolkit.application import Application
 from prompt_toolkit.filters.base import Condition
-from prompt_toolkit.layout.containers import Float, FloatContainer, HSplit, VSplit
+from prompt_toolkit.layout.containers import (
+    Container,
+    Float,
+    FloatContainer,
+    HSplit,
+    VSplit,
+)
 from prompt_toolkit.layout.layout import Layout
 from prompt_toolkit.styles import Style
 from prompt_toolkit.widgets.base import Frame
@@ -20,7 +26,7 @@ from prompt_toolkit.widgets.base import Frame
 from s3fm.api.cache import Cache
 from s3fm.api.config import Config
 from s3fm.api.kb import KB
-from s3fm.base import ID, BasePane, Direction, LayoutMode, Pane
+from s3fm.base import ID, Direction, LayoutMode, Pane
 from s3fm.exceptions import Bug
 from s3fm.ui.commandpane import CommandPane
 from s3fm.ui.filepane import FilePane
@@ -282,10 +288,10 @@ class App:
             value: Optional bool value to indicate show/hide.
                 If not provided, it will toggle the hidden file status.
         """
-        self.current_focus.display_hidden_files = (
-            value or not self.current_focus.display_hidden_files
+        self.current_filepane.display_hidden_files = (
+            value or not self.current_filepane.display_hidden_files
         )
-        task = asyncio.create_task(self.current_focus.filter_files())
+        task = asyncio.create_task(self.current_filepane.filter_files())
         task.add_done_callback(self.redraw)
 
     @property
@@ -299,12 +305,22 @@ class App:
         return self._normal_mode
 
     @property
-    def current_focus(self) -> BasePane:
+    def current_focus(self) -> Container:
         """:class:`~s3fm.base.BasePane`: Get current focused pane."""
         return self.panes[self._current_focus]
 
     @property
-    def panes(self) -> Dict[ID, BasePane]:
+    def current_filepane(self) -> FilePane:
+        """:class:`~s3fm.base.FilePane`: Get current focused filepane."""
+        if self._left_pane == self._current_focus:
+            return self._left_pane
+        elif self._right_pane == self._current_focus:
+            return self._right_pane
+        else:
+            raise Bug("not focusing any filepane.")
+
+    @property
+    def panes(self) -> Dict[ID, Container]:
         """Dict[ID, BasePane]: Get pane mappings."""
         return {
             Pane.left: self._left_pane,
