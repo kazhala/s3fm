@@ -27,6 +27,10 @@ default_key_maps: Dict[ID, KB_MAPS] = {
         "scroll_up": [{"keys": "k"}],
         "scroll_page_down": [{"keys": "c-d"}],
         "scroll_page_up": [{"keys": "c-u"}],
+        "scroll_top": [
+            {"keys": ["g", "g"]},
+        ],
+        "scroll_bottom": [{"keys": "G"}],
         "toggle_pane_hidden_files": [{"keys": ["z"]}],
     },
     KBMode.command: {"exit": [{"keys": "c-c"}, {"keys": "escape", "eager": True}]},
@@ -83,6 +87,8 @@ class KB(KeyBindings):
                 "scroll_up": self._scroll_up,
                 "scroll_page_down": {"func": self._scroll_down, "args": [1, True]},
                 "scroll_page_up": {"func": self._scroll_up, "args": [1, True]},
+                "scroll_bottom": {"func": self._scroll_down, "args": [1, False, True]},
+                "scroll_top": {"func": self._scroll_up, "args": [1, False, True]},
                 "toggle_pane_hidden_files": self._app.toggle_pane_hidden_files,
             },
             KBMode.command: {"exit": self._app.exit_cmd},
@@ -162,21 +168,23 @@ class KB(KeyBindings):
         else:
             self._app.pane_swap(direction, layout_id=LayoutMode.vertical)
 
-    def _scroll_down(self, value: int = 1, page: bool = False) -> None:
+    def _scroll_down(
+        self, value: int = 1, page: bool = False, bottom: bool = False
+    ) -> None:
         """Move focused pane highlighted line down.
 
         Reference:
             :meth:`~s3fm.ui.filepane.FilePane.scroll_down`
         """
-        self._app.current_filepane.scroll_down(value=value, page=page)
+        self._app.current_filepane.scroll_down(value=value, page=page, bottom=bottom)
 
-    def _scroll_up(self, value: int = 1, page: bool = False) -> None:
+    def _scroll_up(self, value: int = 1, page: bool = False, top: bool = False) -> None:
         """Move focused pane highlighted line up.
 
         Reference:
             :meth:`~s3fm.ui.filepane.FilePane.scroll_up`
         """
-        self._app.current_filepane.scroll_up(value=value, page=page)
+        self._app.current_filepane.scroll_up(value=value, page=page, top=top)
 
     def add(
         self,
