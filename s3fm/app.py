@@ -7,6 +7,7 @@ However, it's recommended to import the :class:`App` for type hinting purposes w
 using the :class:`~s3fm.api.config.Config`.
 """
 import asyncio
+from asyncio.tasks import Task
 from typing import Dict
 
 from prompt_toolkit.application import Application
@@ -105,11 +106,17 @@ class App:
             key_bindings=self._kb,
         )
 
-    def redraw(self) -> None:
+    def redraw(self, task: Task = None) -> None:
         """Instruct the app to redraw itself to the terminal.
 
         This is useful when trying to force an UI update of the :class:`App`.
+
+        Args:
+            task: An asyncio task object.
+                Internal use for async task callback.
         """
+        if task is not None and task.cancelled():
+            return
         self._app.invalidate()
 
     async def _load_pane_data(self, pane: FilePane, mode_id: ID) -> None:
@@ -280,7 +287,8 @@ class App:
         self.current_focus.display_hidden_files = (
             value or not self.current_focus.display_hidden_files
         )
-        self.current_focus.shift()
+        task = asyncio.create_task(self.current_focus.filter_files())
+        task.add_done_callback(self.redraw)
 
     @property
     def command_mode(self) -> Condition:

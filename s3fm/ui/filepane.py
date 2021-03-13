@@ -1,7 +1,7 @@
 """Module contains the main filepane which is used as the left/right pane."""
 import math
 from pathlib import Path
-from typing import Callable, Iterable, List, Tuple
+from typing import Callable, List, Tuple
 
 from prompt_toolkit.filters.base import Condition
 from prompt_toolkit.layout.containers import FloatContainer, HSplit, VSplit, Window
@@ -15,8 +15,6 @@ from s3fm.base import ID, BasePane, File, Pane, PaneMode
 from s3fm.exceptions import Bug, ClientError
 from s3fm.ui.spinner import Spinner
 from s3fm.utils import get_dimension
-
-# TODO: calculate height and optimise render
 
 
 class FilePane(BasePane):
@@ -62,6 +60,7 @@ class FilePane(BasePane):
         self._mode = PaneMode.s3
         self._loaded = False
         self._files: List[File] = []
+        self._filtered_files: List[File] = []
         self._loading = True
         self._dimension_offset = dimension_offset
         self._id = pane_id
@@ -160,46 +159,62 @@ class FilePane(BasePane):
     def _get_formatted_files(self) -> List[Tuple[str, str]]:
         """Get content in `formatted_text` format to display.
 
+        This function will only try to return the necessary files to display
+        to optimise performance.
+
+        The files/height will be calculated dynamically based on certain conditions.
+
         Returns:
             A list of tuples which can be parsed as
             :class:`prompt_toolkit.formatted_text.FormattedText`.
         """
         display_files = []
+        if self.file_count == 0:
+            return display_files
+        height = self._get_height()
+
+        if self._selected_file_index < 0:
+            self._selected_file_index = 0
+        elif self._selected_file_index >= self.file_count:
+            self._selected_file_index = self.file_count - 1
+
+        if (self._last_line - self._first_line) < min(self.file_count, height):
+            self._last_line = min(self.file_count, height)
+            self._first_line = self._last_line - min(self.file_count, height)
 
         if self._selected_file_index <= self._first_line:
             self._first_line = self._selected_file_index
-            self._last_line = self._first_line + min(
-                self._get_height(), self.file_count
-            )
+            self._last_line = self._first_line + min(height, self.file_count)
         elif self._selected_file_index >= self._last_line:
-            self._last_line = self._selected_file_index
-            self._first_line = self._last_line - min(
-                self._get_height(), self.file_count
-            )
+            self._last_line = self._selected_file_index + 1
+            self._first_line = self._last_line - min(height, self.file_count)
 
-        for index in range(self._first_line, self._last_line + 1):
-            try:
-                file = list(self.files)[index]
-                file_style, icon, name, info = self._get_file_info(file)
-                style_class = "class:filepane.other_line"
-                if file.index == self._selected_file_index and self._focus():
-                    style_class = "class:filepane.current_line"
-                    display_files.append(("[SetCursorPosition]", ""))
-                style_class += " %s" % file_style
+        if self._last_line > self.file_count:
+            self._last_line = self.file_count
+            self._first_line = self._last_line - min(height, self.file_count)
+        if self._first_line < 0:
+            self._first_line = 0
+            self._last_line = self._first_line + min(height, self.file_count)
 
-                display_files.append((style_class, icon))
-                display_files.append((style_class, name))
-                display_files.append(
-                    (
-                        style_class,
-                        " " * (self._width - len(icon) - len(name) - len(info)),
-                    )
+        for index in range(self._first_line, self._last_line):
+            file = self.files[index]
+            file_style, icon, name, info = self._get_file_info(file)
+            style_class = "class:filepane.other_line"
+            if index == self._selected_file_index and self._focus():
+                style_class = "class:filepane.current_line"
+                display_files.append(("[SetCursorPosition]", ""))
+            style_class += " %s" % file_style
+
+            display_files.append((style_class, icon))
+            display_files.append((style_class, name))
+            display_files.append(
+                (
+                    style_class,
+                    " " * (self._width - len(icon) - len(name) - len(info)),
                 )
-                display_files.append((style_class, info))
-                display_files.append(("", "\n"))
-            except IndexError:
-                # IndexError will happen when the file list is still empty, skip doing anything.
-                break
+            )
+            display_files.append((style_class, info))
+            display_files.append(("", "\n"))
         if display_files:
             display_files.pop()
         return display_files
@@ -287,46 +302,25 @@ class FilePane(BasePane):
 
     def handle_down(self) -> None:
         """Move current selection down."""
-        if self._display_hidden:
-            self._selected_file_index = (
-                self._selected_file_index + 1
-            ) % self.file_count
-        else:
-            self._selected_file_index = (
-                self._selected_file_index + 1
-            ) % self.file_count
-            self.shift()
+        self._selected_file_index = (self._selected_file_index + 1) % self.file_count
 
     def handle_up(self) -> None:
         """Move current selection up."""
-        if self._display_hidden:
-            self._selected_file_index = (
-                self._selected_file_index - 1
-            ) % self.file_count
-        else:
-            self._selected_file_index = (
-                self._selected_file_index - 1
-            ) % self.file_count
-            self.shift(up=True)
+        self._selected_file_index = (self._selected_file_index - 1) % self.file_count
 
-    def shift(self, up: bool = False) -> None:
+    async def filter_files(self) -> None:
         """Shift up/down taking consideration of hidden status.
 
         When the filepane change its hidden display status, if the current
         highlight is a hidden file, the app will lost its highlighted line.
         Use this method to shift down until it found a file thats not hidden.
-
-        Args:
-            up: Shift direction.
         """
-        counter = 0
-        while counter <= self.file_count and self.current_selection.hidden:
-            counter += 1
-            self._selected_file_index = (
-                self._selected_file_index + 1
-                if not up
-                else self._selected_file_index - 1
-            ) % self.file_count
+        if self._display_hidden:
+            self._filtered_files = self._files
+        else:
+            self._filtered_files = list(
+                filter(lambda file: not file.hidden, self._files)
+            )
 
     async def load_data(
         self, mode_id: ID = PaneMode.s3, bucket: str = None, path: str = None
@@ -352,14 +346,14 @@ class FilePane(BasePane):
             self._files += await self._fs.get_paths()
         else:
             raise Bug("unexpected pane mode.")
-        self.shift()
+        await self.filter_files()
         self._loading = False
         self._loaded = True
 
     @property
     def file_count(self) -> int:
         """int: Total file count."""
-        return len(self._files)
+        return len(self._filtered_files)
 
     @property
     def spinner(self) -> Spinner:
@@ -376,16 +370,14 @@ class FilePane(BasePane):
         self._id = value
 
     @property
-    def files(self) -> Iterable[File]:
+    def files(self) -> List[File]:
         """Iterable[File]: All available files to display."""
-        if not self._display_hidden:
-            return filter(lambda file: not file.hidden, self._files)
-        return self._files
+        return self._filtered_files
 
     @property
     def current_selection(self) -> File:
         """File: Get current file selection."""
-        return self._files[self._selected_file_index]
+        return self._files[self._filtered_files[self._selected_file_index].index]
 
     @property
     def display_hidden_files(self) -> bool:

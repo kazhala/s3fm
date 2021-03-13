@@ -1,6 +1,6 @@
 """Module contains base classes and IDs.
 
-ID is an identifier that can be used to find certian resource
+ID is an identifier that can be used to find certain resource
 in some of the mappings. More information about ID please reference
 :ref:`pages/configuration:ID`.
 """
@@ -9,6 +9,8 @@ from typing import Any, Dict, Iterator, List, NamedTuple, Tuple, Union
 from prompt_toolkit.filters.base import Condition, FilterOrBool
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.layout.containers import AnyContainer, ConditionalContainer
+
+from s3fm.ui.spinner import Spinner
 
 ID = int
 KBs = Union[Keys, str]
@@ -86,6 +88,8 @@ class BasePane(ConditionalContainer):
     type hinting and error screaming.
     """
 
+    spinner: Spinner
+
     def __init__(self, content: AnyContainer, filter: FilterOrBool) -> None:
         super().__init__(content=content, filter=filter)
 
@@ -105,7 +109,7 @@ class BasePane(ConditionalContainer):
         """Handle right movement."""
         pass
 
-    def shift(self):
+    async def filter_files(self):
         """Hanlde additional logic during movement."""
         pass
 
