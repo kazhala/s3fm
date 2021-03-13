@@ -5,7 +5,7 @@ from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 from typing import List
 
-from s3fm.base import ID, File, FileType
+from s3fm.id import ID, File, FileType
 
 
 class FS:

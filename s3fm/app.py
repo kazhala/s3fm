@@ -26,8 +26,8 @@ from prompt_toolkit.widgets.base import Frame
 from s3fm.api.cache import Cache
 from s3fm.api.config import Config
 from s3fm.api.kb import KB
-from s3fm.base import ID, Direction, LayoutMode, Pane
 from s3fm.exceptions import Bug
+from s3fm.id import ID, Direction, LayoutMode, Pane
 from s3fm.ui.commandpane import CommandPane
 from s3fm.ui.filepane import FilePane
 from s3fm.ui.optionpane import OptionPane

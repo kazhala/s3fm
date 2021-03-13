@@ -18,8 +18,8 @@ from prompt_toolkit.layout.dimension import LayoutDimension
 from s3fm.api.config import AppConfig, LineModeConfig, SpinnerConfig
 from s3fm.api.fs import FS
 from s3fm.api.s3 import S3
-from s3fm.base import ID, File, Pane, PaneMode
 from s3fm.exceptions import Bug, ClientError
+from s3fm.id import ID, File, Pane, PaneMode
 from s3fm.ui.spinner import Spinner
 from s3fm.utils import get_dimension
 

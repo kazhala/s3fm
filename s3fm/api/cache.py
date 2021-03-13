@@ -4,7 +4,7 @@ Used to store and retrieve the state of the :class:`~s3fm.app.App`.
 """
 from pathlib import Path
 
-from s3fm.base import ID, Pane, PaneMode
+from s3fm.id import ID, Pane, PaneMode
 
 
 class Cache:

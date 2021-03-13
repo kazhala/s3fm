@@ -1,4 +1,4 @@
-"""Module contains base classes and IDs.
+"""Module contains IDs that will be used as arguments.
 
 ID is an identifier that can be used to find certain resource
 in some of the mappings. More information about ID please reference

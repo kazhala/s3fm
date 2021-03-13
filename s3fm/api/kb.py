@@ -6,7 +6,7 @@ from prompt_toolkit.key_binding.key_bindings import KeyBindings, KeyHandlerCalla
 from prompt_toolkit.key_binding.key_processor import KeyPressEvent
 from prompt_toolkit.keys import Keys
 
-from s3fm.base import ID, KB_MAPS, Direction, KBMode, LayoutMode
+from s3fm.id import ID, KB_MAPS, Direction, KBMode, LayoutMode
 
 if TYPE_CHECKING:
     from s3fm.app import App
@@ -199,7 +199,7 @@ class KB(KeyBindings):
             for more information.
 
             >>> from s3fm.api.config import Config
-            >>> from s3fm.base import KBMode
+            >>> from s3fm.id import KBMode
             >>> config = Config()
             >>> @config.app.use_effect
             ... def _(app):
