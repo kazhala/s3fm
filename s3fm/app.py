@@ -306,12 +306,12 @@ class App:
 
     @property
     def current_focus(self) -> Container:
-        """:class:`~s3fm.base.BasePane`: Get current focused pane."""
+        """:class:`prompt_toolkit.layout.Container`: Get current focused pane."""
         return self.panes[self._current_focus]
 
     @property
     def current_filepane(self) -> FilePane:
-        """:class:`~s3fm.base.FilePane`: Get current focused filepane.
+        """:class:`~s3fm.ui.filepane.FilePane`: Get current focused filepane.
 
         Raises:
             Bug: Current focus is not a filepane.
@@ -325,7 +325,7 @@ class App:
 
     @property
     def panes(self) -> Dict[ID, Container]:
-        """Dict[ID, BasePane]: Get pane mappings."""
+        """Dict[ID, Container]: Get pane mappings."""
         return {
             Pane.left: self._left_pane,
             Pane.right: self._right_pane,
@@ -359,7 +359,7 @@ class App:
 
     @property
     def kb(self) -> KB:
-        """KB: KeyBindings."""
+        """:class:`~s3fm.api.kb.KB`: KeyBindings."""
         return self._kb
 
     @property

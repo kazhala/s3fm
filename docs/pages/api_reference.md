@@ -14,10 +14,10 @@
     :members:
 ```
 
-## Base
+## ID
 
 ```{eval-rst}
-.. automodule:: s3fm.base
+.. automodule:: s3fm.id
     :members: File
 ```
 

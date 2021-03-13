@@ -1,8 +1,8 @@
 """Module contains IDs that will be used as arguments.
 
-ID is an identifier that can be used to find certain resource
+ID is an identifier that can be used to find certain resources
 in some of the mappings. More information about ID please reference
-:ref:`pages/configuration:ID`.
+the documentation on :ref:`pages/configuration:ID`.
 """
 from typing import Dict, List, NamedTuple, Union
 

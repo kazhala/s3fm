@@ -201,7 +201,8 @@ class KB(KeyBindings):
         Warning:
             It is recommended to use :meth:`s3fm.api.config.KBConfig.map` to create
             keybindings. Use this function only if you are familiar with :doc:`prompt_toolkit:index`
-            and would like to access the :class:`prompt_toolkit.key_binding.key_processor.KeyPressEvent`.
+            and would like to access the :class:`prompt_toolkit.key_binding.key_processor.KeyPressEvent` or
+            leverage additional kwargs such as `record_in_macro`.
 
         Args:
             keys: Any number of keys to bind to the function.
