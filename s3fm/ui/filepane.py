@@ -19,7 +19,7 @@ from s3fm.api.config import AppConfig, LineModeConfig, SpinnerConfig
 from s3fm.api.fs import FS
 from s3fm.api.s3 import S3
 from s3fm.exceptions import Bug, ClientError
-from s3fm.id import ID, File, Pane, PaneMode
+from s3fm.id import ID, File, FileType, Pane, PaneMode
 from s3fm.ui.spinner import Spinner
 from s3fm.utils import get_dimension
 
@@ -232,7 +232,7 @@ class FilePane(ConditionalContainer):
         This is used internally by :meth:`FilePane._get_formatted_files`.
 
         Args:
-            file: A :class:`~s3fm.base.File` instance.
+            file: A :class:`~s3fm.id.File` instance.
 
         Returns:
             A tuple representing the style, icon, file_name and file_info.
@@ -352,6 +352,15 @@ class FilePane(ConditionalContainer):
             self._selected_file_index -= value
             if self._selected_file_index < 0:
                 self._selected_file_index = 0
+
+    async def forward(self) -> None:
+        """Handle the forward action on the current file based on filetype."""
+        self.loading = True
+        if self._mode == PaneMode.fs:
+            if self.current_selection.type == FileType.dir:
+                self._files = await self._fs.cd(Path(self.current_selection.name))
+                await self.filter_files()
+        self.loading = False
 
     async def filter_files(self) -> None:
         """Shift up/down taking consideration of hidden status.

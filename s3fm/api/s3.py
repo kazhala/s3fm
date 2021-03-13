@@ -33,7 +33,7 @@ class S3:
         Retrieve a list of buckets under :obj:`concurrent.futures.ProcessPoolExecutor`.
 
         Returns:
-            A list of :class:`~s3fm.base.File`.
+            A list of :class:`~s3fm.id.File`.
 
         Examples:
             >>> import asyncio

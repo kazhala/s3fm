@@ -3,8 +3,9 @@ import asyncio
 import os
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
+from s3fm.exceptions import Bug
 from s3fm.id import ID, File, FileType
 
 
@@ -19,13 +20,41 @@ class FS:
         path = path or ""
         self._path = Path(path).expanduser()
 
+    async def cd(
+        self, path: Optional[Path] = None, override: bool = False
+    ) -> List[File]:
+        """Navigate into another directory.
+
+        Args:
+            path: A :class:`pathlib.Path` object to cd into.
+                If not provided, navigate to current path parent.
+            override: Change directory to a absolute new path without
+                any consideration of the current path.
+
+        Returns:
+            A list of files in the new directory.
+
+        Raises:
+            Bug: when the supplied :class`pathlib.Path` object is not a directory.
+        """
+        if not path:
+            self._path = self._path.parent
+        else:
+            if not path.is_dir:
+                raise Bug("target path is not a directory.")
+            if override:
+                self._path = path
+            else:
+                self._path = self._path.joinpath(path)
+        return await self.get_paths()
+
     async def get_paths(self) -> List[File]:
         """Async wrapper to retrieve all paths/files under :attr:`FS.path`.
 
         Retrieve a list of files under :obj:`concurrent.futures.ProcessPoolExecutor`.
 
         Returns:
-            A list of :class:`~s3fm.base.File`.
+            A list of :class:`~s3fm.id.File`.
 
         Examples:
             >>> import asyncio

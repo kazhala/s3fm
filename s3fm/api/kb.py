@@ -1,4 +1,5 @@
 """Module contains the modified :class:`prompt_toolkit.key_binding.KeyBindings` class."""
+import asyncio
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Union
 
 from prompt_toolkit.filters.base import Condition
@@ -31,6 +32,7 @@ default_key_maps: Dict[ID, KB_MAPS] = {
             {"keys": ["g", "g"]},
         ],
         "scroll_bottom": [{"keys": "G"}],
+        "forward": [{"keys": "l"}],
         "toggle_pane_hidden_files": [{"keys": ["z"]}],
     },
     KBMode.command: {"exit": [{"keys": "c-c"}, {"keys": "escape", "eager": True}]},
@@ -89,6 +91,7 @@ class KB(KeyBindings):
                 "scroll_page_up": {"func": self._scroll_up, "args": [1, True]},
                 "scroll_bottom": {"func": self._scroll_down, "args": [1, False, True]},
                 "scroll_top": {"func": self._scroll_up, "args": [1, False, True]},
+                "forward": {"func": self._forward},
                 "toggle_pane_hidden_files": self._app.toggle_pane_hidden_files,
             },
             KBMode.command: {"exit": self._app.exit_cmd},
@@ -148,14 +151,18 @@ class KB(KeyBindings):
         if not isinstance(keys, list):
             keys = [keys]
         target_lookup = self._kb_lookup if not custom else self._custom_kb_lookup
+        key_action = target_lookup[mode_id][action]
+        if not isinstance(key_action, dict):
+            key_action = {"func": key_action}
 
         @self.add(*keys, filter=filter, eager=eager, mode_id=mode_id, **kwargs)
-        def _(_: KeyPressEvent) -> None:
-            key_action = target_lookup[mode_id][action]
-            if isinstance(key_action, dict):
-                key_action["func"](*key_action["args"])
-            else:
-                key_action(*[] if not custom else [self._app])
+        def __(_: KeyPressEvent) -> None:
+            key_action["func"](
+                *key_action.get("args", []) if not custom else [self._app]
+            )
+
+    def _forward(self) -> None:
+        asyncio.create_task(self._app.current_filepane.forward())
 
     def _swap_pane(self, direction: ID) -> None:
         """Move current pane to bottom split.

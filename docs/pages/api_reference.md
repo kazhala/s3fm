@@ -14,13 +14,6 @@
     :members:
 ```
 
-## ID
-
-```{eval-rst}
-.. automodule:: s3fm.id
-    :members: File
-```
-
 ## FilePane
 
 ```{eval-rst}
