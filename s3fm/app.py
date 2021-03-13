@@ -69,24 +69,22 @@ class App:
         self._left_pane = FilePane(
             pane_id=Pane.left,
             spinner_config=config.spinner,
+            linemode_config=config.linemode,
+            app_config=config.app,
             redraw=self.redraw,
-            dimension_offset=0 if not config.app.border else 2,
             layout_single=self._layout_single,
             layout_vertical=self._layout_vertical,
             focus=lambda: self._current_focus,
-            padding=config.app.padding,
-            linemode=config.linemode,
         )
         self._right_pane = FilePane(
             pane_id=Pane.right,
             spinner_config=config.spinner,
+            linemode_config=config.linemode,
+            app_config=config.app,
             redraw=self.redraw,
-            dimension_offset=0 if not config.app.border else 2,
             layout_single=self._layout_single,
             layout_vertical=self._layout_vertical,
             focus=lambda: self._current_focus,
-            padding=config.app.padding,
-            linemode=config.linemode,
         )
         self._command_pane = CommandPane()
         self._option_pane = OptionPane()

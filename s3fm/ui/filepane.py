@@ -9,7 +9,7 @@ from prompt_toolkit.layout.containers import FloatContainer, HSplit, VSplit, Win
 from prompt_toolkit.layout.controls import FormattedTextControl
 from prompt_toolkit.layout.dimension import LayoutDimension
 
-from s3fm.api.config import LineModeConfig, SpinnerConfig
+from s3fm.api.config import AppConfig, LineModeConfig, SpinnerConfig
 from s3fm.api.fs import FS
 from s3fm.api.s3 import S3
 from s3fm.base import ID, BasePane, File, Pane, PaneMode
@@ -48,13 +48,12 @@ class FilePane(BasePane):
         self,
         pane_id: ID,
         spinner_config: SpinnerConfig,
+        linemode_config: LineModeConfig,
+        app_config: AppConfig,
         redraw: Callable[[], None],
-        dimension_offset: int,
         layout_single: Condition,
         layout_vertical: Condition,
         focus: Callable[[], ID],
-        padding: int,
-        linemode: LineModeConfig,
     ) -> None:
         self._s3 = S3()
         self._fs = FS()
@@ -63,15 +62,16 @@ class FilePane(BasePane):
         self._files: List[File] = []
         self._filtered_files: List[File] = []
         self._loading = True
-        self._dimension_offset = dimension_offset
+        self._dimension_offset = 0 if not app_config.border else 2
+        self._padding = app_config.padding
+        self._cycle = app_config.cycle
         self._id = pane_id
         self._single_mode = layout_single
         self._vertical_mode = layout_vertical
         self._focus = Condition(lambda: focus() == self._id)
         self._selected_file_index = 0
         self._width = 0
-        self._padding = padding
-        self._linemode = linemode
+        self._linemode = linemode_config
         self._display_hidden = True
         self._first_line = 0
         self._last_line = self._get_height() - self._first_line
@@ -303,11 +303,25 @@ class FilePane(BasePane):
 
     def handle_down(self) -> None:
         """Move current selection down."""
-        self._selected_file_index = (self._selected_file_index + 1) % self.file_count
+        if self._cycle:
+            self._selected_file_index = (
+                self._selected_file_index + 1
+            ) % self.file_count
+        else:
+            self._selected_file_index += 1
+            if self._selected_file_index >= self.file_count:
+                self._selected_file_index = self.file_count - 1
 
     def handle_up(self) -> None:
         """Move current selection up."""
-        self._selected_file_index = (self._selected_file_index - 1) % self.file_count
+        if self._cycle:
+            self._selected_file_index = (
+                self._selected_file_index - 1
+            ) % self.file_count
+        else:
+            self._selected_file_index -= 1
+            if self._selected_file_index < 0:
+                self._selected_file_index = 0
 
     async def filter_files(self) -> None:
         """Shift up/down taking consideration of hidden status.

@@ -18,6 +18,7 @@ class AppConfig:
         self.border = False
         self.padding = 1
         self._custom_effects = []
+        self.cycle = False
 
     def use_effect(self, func: Callable[["App"], None]) -> None:
         """Register custom function to run on :class:`~s3fm.app.App` re-render.
