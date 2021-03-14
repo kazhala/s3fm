@@ -1,7 +1,7 @@
 """Module contains the floating loading spinner pane."""
 import asyncio
 from itertools import zip_longest
-from typing import Callable, List, Tuple
+from typing import Awaitable, Callable, List, Tuple
 
 from prompt_toolkit.filters.base import Condition
 from prompt_toolkit.layout.containers import ConditionalContainer, Float, Window
@@ -66,7 +66,7 @@ class Spinner(Float):
             ("class:spinner.postfix", self._postfix),
         ]
 
-    async def spin(self) -> None:
+    async def start(self) -> None:
         """Run spinner."""
         if self._spinning:
             return
@@ -80,3 +80,22 @@ class Spinner(Float):
                 self._postfix = postfix
                 self._redraw()
         self._spinning = False
+
+    @staticmethod
+    def spin(func: Callable[..., Awaitable[None]]) -> Callable[..., Awaitable[None]]:
+        """Decorate a :class:`~s3fm.ui.filepane.FilePane` method to start and stop spinner.
+
+        Args:
+            func: Function to be wrapped to start/stop spinner.
+
+        Returns:
+            Decorated function.
+        """
+
+        async def executable(self, *args, **kwargs):
+            if not self.loading:
+                self.loading = True
+            await func(self, *args, **kwargs)
+            self.loading = False
+
+        return executable

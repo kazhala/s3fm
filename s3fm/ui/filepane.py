@@ -354,15 +354,26 @@ class FilePane(ConditionalContainer):
             if self._selected_file_index < 0:
                 self._selected_file_index = 0
 
-    async def forward(self) -> None:
-        """Handle the forward action on the current file based on filetype."""
-        self.loading = True
-        if self._mode == PaneMode.fs:
-            if self.current_selection.type == FileType.dir:
-                self._files = await self._fs.cd(Path(self.current_selection.name))
-                await self.filter_files()
-        self.loading = False
+    @Spinner.spin
+    @File.action
+    async def forward(self, file: File) -> None:
+        """Handle the forward action on the current file based on filetype.
 
+        Args:
+            file: The target file to perform forward action.
+        """
+        if self._mode == PaneMode.fs:
+            if file.type == FileType.dir:
+                self._files = await self._fs.cd(Path(file.name))
+                await self.filter_files()
+
+    @Spinner.spin
+    async def backword(self) -> None:
+        """Handle the backword action."""
+        self._files = await self._fs.cd()
+        await self.filter_files()
+
+    @Spinner.spin
     async def filter_files(self) -> None:
         """Shift up/down taking consideration of hidden status.
 
@@ -370,16 +381,14 @@ class FilePane(ConditionalContainer):
         highlight is a hidden file, the app will lost its highlighted line.
         Use this method to shift down until it found a file thats not hidden.
         """
-        if not self.loading:
-            self.loading = True
         if self._display_hidden:
             self._filtered_files = self._files
         else:
             self._filtered_files = list(
                 filter(lambda file: not file.hidden, self._files)
             )
-        self.loading = False
 
+    @Spinner.spin
     async def load_data(
         self, mode_id: ID = PaneMode.s3, bucket: str = None, path: str = None
     ) -> None:
@@ -405,7 +414,6 @@ class FilePane(ConditionalContainer):
         else:
             raise Bug("unexpected pane mode.")
         await self.filter_files()
-        self._loading = False
         self._loaded = True
 
     @property
@@ -462,4 +470,4 @@ class FilePane(ConditionalContainer):
     def loading(self, value: bool) -> None:
         self._loading = value
         if value:
-            asyncio.create_task(self.spinner.spin())
+            asyncio.create_task(self.spinner.start())

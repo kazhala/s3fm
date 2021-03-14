@@ -162,7 +162,11 @@ class KB(KeyBindings):
             )
 
     def _forward(self) -> None:
-        asyncio.create_task(self._app.current_filepane.forward())
+        asyncio.create_task(
+            self._app.current_filepane.forward(
+                self._app.current_filepane.current_selection
+            )
+        )
 
     def _swap_pane(self, direction: ID) -> None:
         """Move current pane to bottom split.
