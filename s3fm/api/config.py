@@ -1,4 +1,8 @@
 """Module contains the main config class."""
+import os
+import sys
+from importlib import util as import_util
+from pathlib import Path
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -78,11 +82,11 @@ class SpinnerConfig:
 
     pattern: Optional[List[str]] = ["◜", "◠", "◝", "◞", "◡", "◟"]
     delay: float = 0.1
-    top: Optional[int] = 0
+    top: Optional[int] = None
     left: Optional[int] = None
-    right: Optional[int] = 1
+    right: Optional[int] = None
     bottom: Optional[int] = None
-    text: str = ""
+    text: str = " Loading"
 
 
 class LineModeConfig:
@@ -465,12 +469,17 @@ class Config:
         reference individual config class documentation for detailed usage.
     """
 
+    active_instance = None
+
     def __init__(self):
+        if self.__class__.active_instance:
+            return
         self._app = AppConfig()
         self._spinner = SpinnerConfig()
         self._style = StyleConfig()
         self._kb = KBConfig()
         self._linemode = LineModeConfig()
+        self.__class__.active_instance = self
 
     @property
     def style(self) -> StyleConfig:
@@ -496,3 +505,29 @@ class Config:
     def linemode(self) -> LineModeConfig:
         """:class:`LineModeConfig`: Icon config."""
         return self._linemode
+
+    @classmethod
+    def load_config(cls) -> "Config":
+        """Load custom config file.
+
+        If custom config does not exist or :class:`Config` is not
+        properly initialised, use the default config.
+
+        Returns:
+            A config object.
+        """
+        if sys.platform.startswith("darwin") or sys.platform.startswith("linux"):
+            base_dir = os.getenv("XDG_CONFIG_HOME", "~/.config")
+            config_file = Path("%s/s3fm/config.py" % base_dir).expanduser()
+        else:
+            # TODO: get windows config
+            base_dir = os.getenv("APPDATA")
+            config_file = Path("%s\\s3fm\\config.py" % base_dir).expanduser()
+        if not config_file.exists() or not config_file.is_file:
+            return cls()
+        spec = import_util.spec_from_file_location("custom_config", config_file)
+        module = import_util.module_from_spec(spec)
+        spec.loader.exec_module(module)  # type: ignore
+        if cls.active_instance:
+            return cls.active_instance
+        return cls()

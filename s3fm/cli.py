@@ -17,7 +17,6 @@ def main() -> None:
         Bug: When exception is caused by unknown issue.
     """
     try:
-        # TODO: get user config
         asyncio.run(App(no_cache=False).run())
     except ClientError:
         raise
