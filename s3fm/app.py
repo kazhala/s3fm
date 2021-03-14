@@ -50,9 +50,7 @@ class App:
             :class:`~s3fm.api.cache.Cache` won't be loaded.
     """
 
-    def __init__(self, no_cache: bool = False) -> None:
-        config = Config.load_config()
-
+    def __init__(self, config: Config, no_cache: bool = False) -> None:
         self._style = Style.from_dict(dict(config.style))
         self._rendered = False
         self._no_cache = no_cache
