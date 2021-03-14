@@ -42,6 +42,13 @@
     :members:
 ```
 
+## File
+
+```{eval-rst}
+.. automodule:: s3fm.api.file
+    :members:
+```
+
 ## FS
 
 ```{eval-rst}

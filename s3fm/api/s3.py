@@ -7,7 +7,8 @@ from typing import TYPE_CHECKING, List
 import boto3
 from mypy_boto3_s3.type_defs import BucketTypeDef
 
-from s3fm.id import File, FileType
+from s3fm.api.file import File
+from s3fm.id import FileType
 
 if TYPE_CHECKING:
     from mypy_boto3_s3 import S3Client

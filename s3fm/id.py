@@ -34,7 +34,3 @@ FileType = NamedTuple(
         ("exe", ID),
     ],
 )(0, 1, 2, 3, 4, 5)
-File = NamedTuple(
-    "File",
-    [("name", str), ("type", ID), ("info", str), ("hidden", bool), ("index", int)],
-)

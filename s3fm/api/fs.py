@@ -5,8 +5,9 @@ from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 from typing import List, Optional
 
+from s3fm.api.file import File
 from s3fm.exceptions import Bug
-from s3fm.id import ID, File, FileType
+from s3fm.id import ID, FileType
 
 
 class FS:

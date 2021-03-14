@@ -13,9 +13,10 @@ from typing import (
 
 from prompt_toolkit.filters.base import Condition
 
+from s3fm.api.file import File
 from s3fm.api.kb import default_key_maps
 from s3fm.exceptions import ClientError
-from s3fm.id import ID, KB_MAPS, File, FileType, KBMode, KBs
+from s3fm.id import ID, KB_MAPS, FileType, KBMode, KBs
 
 if TYPE_CHECKING:
     from s3fm.app import App

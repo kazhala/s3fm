@@ -2,7 +2,7 @@
 import asyncio
 import math
 from pathlib import Path
-from typing import Callable, List, Tuple
+from typing import Callable, List, Optional, Tuple
 
 from prompt_toolkit.filters.base import Condition
 from prompt_toolkit.layout.containers import (
@@ -16,10 +16,11 @@ from prompt_toolkit.layout.controls import FormattedTextControl
 from prompt_toolkit.layout.dimension import LayoutDimension
 
 from s3fm.api.config import AppConfig, LineModeConfig, SpinnerConfig
+from s3fm.api.file import File
 from s3fm.api.fs import FS
 from s3fm.api.s3 import S3
 from s3fm.exceptions import Bug, ClientError
-from s3fm.id import ID, File, FileType, Pane, PaneMode
+from s3fm.id import ID, FileType, Pane, PaneMode
 from s3fm.ui.spinner import Spinner
 from s3fm.utils import get_dimension
 
@@ -369,7 +370,8 @@ class FilePane(ConditionalContainer):
         highlight is a hidden file, the app will lost its highlighted line.
         Use this method to shift down until it found a file thats not hidden.
         """
-        self.loading = True
+        if not self.loading:
+            self.loading = True
         if self._display_hidden:
             self._filtered_files = self._files
         else:
@@ -431,9 +433,16 @@ class FilePane(ConditionalContainer):
         return self._filtered_files
 
     @property
-    def current_selection(self) -> File:
-        """File: Get current file selection."""
-        return self._files[self._filtered_files[self._selected_file_index].index]
+    def current_selection(self) -> Optional[File]:
+        """File: Get current file selection.
+
+        On filepane initialisation, if `current_selection` is requested,
+        return `None`.
+        """
+        try:
+            return self._files[self._filtered_files[self._selected_file_index].index]
+        except IndexError:
+            return None
 
     @property
     def display_hidden_files(self) -> bool:
