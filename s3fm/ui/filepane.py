@@ -85,11 +85,14 @@ class FilePane(ConditionalContainer):
 
         self._spinner = Spinner(
             loading=Condition(lambda: self._loading),
-            prefix_pattern=spinner_config.prefix_pattern,
-            postfix_pattern=spinner_config.postfix_pattern,
-            text=spinner_config.text,
-            border=spinner_config.border,
+            pattern=spinner_config.pattern,
             redraw=redraw,
+            delay=spinner_config.delay,
+            top=spinner_config.top,
+            bottom=spinner_config.bottom,
+            left=spinner_config.left,
+            right=spinner_config.right,
+            text=spinner_config.text,
         )
 
         super().__init__(
@@ -155,9 +158,7 @@ class FilePane(ConditionalContainer):
             display_info.append(
                 (
                     color_class,
-                    str(self._fs.path.resolve()).replace(
-                        str(Path("~").expanduser()), "~"
-                    ),
+                    str(self._fs.path).replace(str(Path("~").expanduser()), "~"),
                 )
             )
         else:

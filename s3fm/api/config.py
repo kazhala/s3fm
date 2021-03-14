@@ -63,6 +63,7 @@ class AppConfig:
             ...             app.exit()
             ...     else:
             ...         # any code to run on every UI redraw
+            ...         pass
         """
         self._custom_effects.append(func)
 
@@ -75,10 +76,13 @@ class AppConfig:
 class SpinnerConfig:
     """Spinner config class."""
 
-    prefix_pattern: Optional[List[str]] = None
-    postfix_pattern: Optional[List[str]] = None
-    text: str = " Loading "
-    border: bool = True
+    pattern: Optional[List[str]] = ["◜", "◠", "◝", "◞", "◡", "◟"]
+    delay: float = 0.1
+    top: Optional[int] = 0
+    left: Optional[int] = None
+    right: Optional[int] = 1
+    bottom: Optional[int] = None
+    text: str = ""
 
 
 class LineModeConfig:
@@ -272,9 +276,8 @@ class StyleConfig(BaseStyleConfig):
         """Nested spinner style config."""
 
         def __init__(self) -> None:
-            self.text = "#000000"
-            self.prefix = "#ffffff"
-            self.postfix = "#ffffff"
+            self.text = "#ffffff"
+            self.pattern = "#ffffff"
 
     class FilePane(BaseStyleConfig):
         """Nested filepane style config."""

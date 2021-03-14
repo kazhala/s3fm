@@ -39,14 +39,14 @@ class FS:
             Bug: when the supplied :class`pathlib.Path` object is not a directory.
         """
         if not path:
-            self._path = self._path.parent
+            self._path = self._path.parent.resolve()
         else:
             if not path.is_dir:
                 raise Bug("target path is not a directory.")
             if override:
-                self._path = path
+                self._path = path.resolve()
             else:
-                self._path = self._path.joinpath(path)
+                self._path = self._path.joinpath(path).resolve()
         return await self.get_paths()
 
     async def get_paths(self) -> List[File]:
