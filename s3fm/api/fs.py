@@ -19,7 +19,7 @@ class FS:
 
     def __init__(self, path: str = None) -> None:
         path = path or ""
-        self._path = Path(path).expanduser()
+        self._path = Path(path).expanduser().resolve()
 
     async def cd(
         self, path: Optional[Path] = None, override: bool = False

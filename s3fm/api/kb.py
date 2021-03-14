@@ -33,6 +33,7 @@ default_key_maps: Dict[ID, KB_MAPS] = {
         ],
         "scroll_bottom": [{"keys": "G"}],
         "forward": [{"keys": "l"}],
+        "backword": [{"keys": "h"}],
         "toggle_pane_hidden_files": [{"keys": ["z"]}],
     },
     KBMode.command: {"exit": [{"keys": "c-c"}, {"keys": "escape", "eager": True}]},
@@ -91,7 +92,8 @@ class KB(KeyBindings):
                 "scroll_page_up": {"func": self._scroll_up, "args": [1, True]},
                 "scroll_bottom": {"func": self._scroll_down, "args": [1, False, True]},
                 "scroll_top": {"func": self._scroll_up, "args": [1, False, True]},
-                "forward": {"func": self._forward},
+                "forward": self._forward,
+                "backword": self._backword,
                 "toggle_pane_hidden_files": self._app.toggle_pane_hidden_files,
             },
             KBMode.command: {"exit": self._app.exit_cmd},
@@ -162,11 +164,16 @@ class KB(KeyBindings):
             )
 
     def _forward(self) -> None:
+        """Perform forward action on current file."""
         asyncio.create_task(
             self._app.current_filepane.forward(
                 self._app.current_filepane.current_selection
             )
         )
+
+    def _backword(self) -> None:
+        """Perform backword action."""
+        asyncio.create_task(self._app.current_filepane.backword())
 
     def _swap_pane(self, direction: ID) -> None:
         """Move current pane to bottom split.
