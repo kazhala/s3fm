@@ -1,6 +1,6 @@
 """Module contains the modified :class:`prompt_toolkit.key_binding.KeyBindings` class."""
 import asyncio
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Union
 
 from prompt_toolkit.filters.base import Condition
 from prompt_toolkit.key_binding.key_bindings import KeyBindings, KeyHandlerCallable
@@ -60,6 +60,7 @@ class KB(KeyBindings):
     ) -> None:
         self._activated = False
         self._app = app
+        self._action_multiplier = None
         self._mode = {
             KBMode.normal: self._app.normal_mode,
             KBMode.command: self._app.command_mode,
@@ -95,6 +96,7 @@ class KB(KeyBindings):
                 "forward": self._forward,
                 "backword": self._backword,
                 "toggle_pane_hidden_files": self._app.toggle_pane_hidden_files,
+                "set_action_multiplier": self._set_action_multiplier,
             },
             KBMode.command: {"exit": self._app.exit_cmd},
         }
@@ -112,6 +114,15 @@ class KB(KeyBindings):
         self._create_bindings(KBMode.command, custom=False)
         self._create_bindings(KBMode.normal, custom=True)
         self._create_bindings(KBMode.command, custom=True)
+
+        for i in range(10):
+            self._factory(
+                action="set_action_multiplier",
+                mode_id=KBMode.normal,
+                custom=False,
+                raw=True,
+                keys=str(i),
+            )
 
     def _create_bindings(self, mode: ID, custom: bool = False) -> None:
         """Create keybindings.
@@ -133,6 +144,7 @@ class KB(KeyBindings):
         mode_id: ID,
         custom: bool,
         keys: Union[List[Union[Keys, str]], Union[Keys, str]],
+        raw: bool = False,
         filter: Condition = Condition(lambda: True),
         eager: bool = False,
         **kwargs,
@@ -145,6 +157,7 @@ class KB(KeyBindings):
             action: The action to apply keybinding.
             mode_id (ID): Which mode to bind this function.
             custom: Flag indicate if its custom function.
+            raw: Use the raw `KeyPressEvent` as the argument.
             keys: List of keys to bind to the function.
             filter: Enable the keybinding only if filter condition is satisfied.
             eager: Force priority on this keybinding.
@@ -156,12 +169,20 @@ class KB(KeyBindings):
         key_action = target_lookup[mode_id][action]
         if not isinstance(key_action, dict):
             key_action = {"func": key_action}
+        function_args = key_action.get("args", [])
+        if custom:
+            function_args = [self._app]
 
-        @self.add(*keys, filter=filter, eager=eager, mode_id=mode_id, **kwargs)
-        def __(_: KeyPressEvent) -> None:
-            key_action["func"](
-                *key_action.get("args", []) if not custom else [self._app]
-            )
+        @self.add(*keys, filter=filter, eager=eager, mode_id=mode_id, raw=raw, **kwargs)
+        def _(event: KeyPressEvent) -> None:
+            key_action["func"](*function_args if not raw else [event])
+
+    def _set_action_multiplier(self, event: KeyPressEvent) -> None:
+        key_num = event.key_sequence[0].key
+        if not self._action_multiplier:
+            self._action_multiplier = int(key_num)
+        else:
+            self._action_multiplier = int("%s%s" % (self._action_multiplier, key_num))
 
     def _forward(self) -> None:
         """Perform forward action on current file."""
@@ -187,13 +208,18 @@ class KB(KeyBindings):
             self._app.pane_swap(direction, layout_id=LayoutMode.vertical)
 
     def _scroll_down(
-        self, value: int = 1, page: bool = False, bottom: bool = False
+        self,
+        value: int = 1,
+        page: bool = False,
+        bottom: bool = False,
     ) -> None:
         """Move focused pane highlighted line down.
 
         Reference:
             :meth:`~s3fm.ui.filepane.FilePane.scroll_down`
         """
+        if self.action_multiplier:
+            value = self.action_multiplier
         self._app.current_filepane.scroll_down(value=value, page=page, bottom=bottom)
 
     def _scroll_up(self, value: int = 1, page: bool = False, top: bool = False) -> None:
@@ -202,6 +228,8 @@ class KB(KeyBindings):
         Reference:
             :meth:`~s3fm.ui.filepane.FilePane.scroll_up`
         """
+        if self.action_multiplier:
+            value = self.action_multiplier
         self._app.current_filepane.scroll_up(value=value, page=page, top=top)
 
     def add(
@@ -210,6 +238,7 @@ class KB(KeyBindings):
         filter: Condition = Condition(lambda: True),
         eager: bool = False,
         mode_id: ID = KBMode.normal,
+        raw: bool = False,
         **kwargs,
     ) -> Callable[[KeyHandlerCallable], KeyHandlerCallable]:
         """Bind keys to functions.
@@ -227,6 +256,7 @@ class KB(KeyBindings):
             filter: Enable the keybinding only if filter condition is satisfied.
             eager: Force priority on this keybinding.
             mode_id (ID): Which mode to bind this function.
+            raw: Internal use only. For number keybinding.
             **kwargs: Additional args to provide to the :meth:`prompt_toolkit.key_binding.KeyBindings.add`.
 
         Returns:
@@ -257,6 +287,8 @@ class KB(KeyBindings):
                 if not self._activated:
                     return
                 func(event)
+                if not raw:
+                    self._action_multiplier = None
 
             return executable
 
@@ -270,3 +302,12 @@ class KB(KeyBindings):
     @activated.setter
     def activated(self, value: bool) -> None:
         self._activated = value
+
+    @property
+    def action_multiplier(self) -> Optional[int]:
+        """Optional[int]: Multiplier to apply to next numbered action."""
+        return self._action_multiplier
+
+    @action_multiplier.setter
+    def action_multiplier(self, value) -> None:
+        self._action_multiplier = value
