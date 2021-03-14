@@ -32,7 +32,7 @@ default_key_maps: Dict[ID, KB_MAPS] = {
             {"keys": ["g", "g"]},
         ],
         "scroll_bottom": [{"keys": "G"}],
-        "forward": [{"keys": "l"}],
+        "forward": [{"keys": "l"}, {"keys": Keys.Enter}],
         "backword": [{"keys": "h"}],
         "toggle_pane_hidden_files": [{"keys": ["z"]}],
     },
