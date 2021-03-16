@@ -5,7 +5,6 @@ from typing import Awaitable, Callable, List, Optional, Tuple
 from prompt_toolkit.filters.base import Condition
 from prompt_toolkit.layout.containers import ConditionalContainer, Float, Window
 from prompt_toolkit.layout.controls import FormattedTextControl
-from prompt_toolkit.layout.dimension import LayoutDimension
 
 
 class Spinner(Float):
@@ -48,7 +47,6 @@ class Spinner(Float):
 
         window = Window(
             content=FormattedTextControl(text=self._get_text),
-            height=LayoutDimension.exact(1),
         )
 
         super().__init__(
