@@ -355,6 +355,38 @@ class FilePane(ConditionalContainer):
             if self._selected_file_index < 0:
                 self._selected_file_index = 0
 
+    def page_up(self, value: int = 1) -> None:
+        """Scroll page up.
+
+        Slightly different scroll behavior than :meth:`FilePane.scroll_up`, similar
+        to vim "c-y".
+
+        Args:
+            value: Number of lines to scroll.
+        """
+        if self._selected_file_index - value < 0:
+            self._selected_file_index = 0
+            return
+        self._first_line -= value
+        self._last_line -= value
+        self._selected_file_index -= value
+
+    def page_down(self, value: int = 1) -> None:
+        """Scroll page down.
+
+        Slightly different scroll behavior than :meth:`FilePane.scroll_down`, similar
+        to vim "c-e".
+
+        Args:
+            value: Number of lines to scroll.
+        """
+        if self._selected_file_index + value >= self.file_count:
+            self._selected_file_index = self.file_count - 1
+            return
+        self._first_line += value
+        self._last_line += value
+        self._selected_file_index += value
+
     @Spinner.spin
     @File.action
     async def forward(self, file: File) -> None:

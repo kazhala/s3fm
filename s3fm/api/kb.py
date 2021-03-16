@@ -32,6 +32,8 @@ default_key_maps: Dict[ID, KB_MAPS] = {
             {"keys": ["g", "g"]},
         ],
         "scroll_bottom": [{"keys": "G"}],
+        "page_up": [{"keys": "c-y"}],
+        "page_down": [{"keys": "c-e"}],
         "forward": [{"keys": "l"}, {"keys": Keys.Enter}],
         "backword": [{"keys": "h"}],
         "toggle_pane_hidden_files": [{"keys": ["z"]}],
@@ -93,6 +95,8 @@ class KB(KeyBindings):
                 "scroll_page_up": {"func": self._scroll_up, "args": [1, True]},
                 "scroll_bottom": {"func": self._scroll_down, "args": [1, False, True]},
                 "scroll_top": {"func": self._scroll_up, "args": [1, False, True]},
+                "page_up": self._page_up,
+                "page_down": self._page_down,
                 "forward": self._forward,
                 "backword": self._backword,
                 "toggle_pane_hidden_files": self._app.toggle_pane_hidden_files,
@@ -183,6 +187,14 @@ class KB(KeyBindings):
             self._action_multiplier = int(key_num)
         else:
             self._action_multiplier = int("%s%s" % (self._action_multiplier, key_num))
+
+    def _page_up(self) -> None:
+        """Scroll page up."""
+        self._app.current_filepane.page_up()
+
+    def _page_down(self) -> None:
+        """Scroll page down."""
+        self._app.current_filepane.page_down()
 
     def _forward(self) -> None:
         """Perform forward action on current file."""
