@@ -80,7 +80,7 @@ class AppConfig:
 class SpinnerConfig:
     """Spinner config class."""
 
-    pattern: Optional[List[str]] = ["◜", "◠", "◝", "◞", "◡", "◟"]
+    pattern: Optional[List[str]] = ["|", "/", "-", "\\"]
     delay: float = 0.1
     top: Optional[int] = None
     left: Optional[int] = None

@@ -8,7 +8,11 @@ from s3fm.id import ID, Pane, PaneMode
 
 
 class Cache:
-    """Used for storing and reading cache."""
+    """Used for storing and reading cache.
+
+    Cache user activity and also store/retrieve these info
+    into cache files on application exit.
+    """
 
     def __init__(self) -> None:
         self._left_mode = PaneMode.s3
@@ -16,6 +20,7 @@ class Cache:
         self._right_mode = PaneMode.fs
         self._right_path = str(Path.cwd())
         self._focus = Pane.left
+        self._directory = {}
 
     async def read_cache(self) -> None:
         """Read cache."""

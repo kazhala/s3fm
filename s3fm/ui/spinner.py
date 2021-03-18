@@ -1,6 +1,6 @@
 """Module contains the floating loading spinner pane."""
 import asyncio
-from typing import Awaitable, Callable, List, Optional, Tuple
+from typing import Callable, List, Optional, Tuple
 
 from prompt_toolkit.filters.base import Condition
 from prompt_toolkit.layout.containers import ConditionalContainer, Float, Window
@@ -83,22 +83,3 @@ class Spinner(Float):
                 self._char = char
                 self._redraw()
         self._spinning = False
-
-    @staticmethod
-    def spin(func: Callable[..., Awaitable[None]]) -> Callable[..., Awaitable[None]]:
-        """Decorate a :class:`~s3fm.ui.filepane.FilePane` method to start and stop spinner.
-
-        Args:
-            func: Function to be wrapped to start/stop spinner.
-
-        Returns:
-            Decorated function.
-        """
-
-        async def executable(self, *args, **kwargs):
-            if not self.loading:
-                self.loading = True
-            await func(self, *args, **kwargs)
-            self.loading = False
-
-        return executable

@@ -2,7 +2,7 @@
 import asyncio
 import math
 from pathlib import Path
-from typing import Callable, List, Optional, Tuple
+from typing import Awaitable, Callable, List, Optional, Tuple
 
 from prompt_toolkit.filters.base import Condition
 from prompt_toolkit.layout.containers import (
@@ -15,6 +15,7 @@ from prompt_toolkit.layout.containers import (
 from prompt_toolkit.layout.controls import FormattedTextControl
 from prompt_toolkit.layout.dimension import LayoutDimension
 
+from s3fm.api.cache import Cache
 from s3fm.api.config import AppConfig, LineModeConfig, SpinnerConfig
 from s3fm.api.file import File
 from s3fm.api.fs import FS
@@ -23,6 +24,75 @@ from s3fm.exceptions import Bug, ClientError
 from s3fm.id import ID, FileType, Pane, PaneMode
 from s3fm.ui.spinner import Spinner
 from s3fm.utils import get_dimension
+
+
+def cache_dir(func: Callable[..., Awaitable[None]]) -> Callable[..., Awaitable[None]]:
+    """Decorate a :class:`~s3fm.ui.filepane.FilePane` method to store the path history.
+
+    Args:
+        func: Function to be wrapped to store path infomation.
+
+    Returns:
+        Decorated function.
+    """
+
+    async def executable(self, *args, **kwargs):
+        curr_path = str(self._fs._path)
+        curr_result = self._cache._directory.get(curr_path, 0)
+        self._cache._directory[curr_path] = self._selected_file_index
+        await func(self, *args, **kwargs)
+        new_path = str(self._fs._path)
+        if new_path == curr_path:
+            self._cache._directory[curr_path] = curr_result
+        else:
+            self._selected_file_index = self._cache._directory.get(new_path, 0)
+
+    return executable
+
+
+def spin_spinner(
+    func: Callable[..., Awaitable[None]]
+) -> Callable[..., Awaitable[None]]:
+    """Decorate a :class:`~s3fm.ui.filepane.FilePane` method to start and stop spinner.
+
+    Args:
+        func: Function to be wrapped to start/stop spinner.
+
+    Returns:
+        Decorated function.
+    """
+
+    async def executable(self, *args, **kwargs):
+        if not self.loading:
+            self.loading = True
+        await func(self, *args, **kwargs)
+        self.loading = False
+
+    return executable
+
+
+def file_action(
+    func: Callable[["FilePane", "File"], Awaitable[None]]
+) -> Callable[["FilePane", Optional["File"]], Awaitable[None]]:
+    """Decorate a method related to file action.
+
+    On loading time, :attr:`~s3fm.ui.filepane.FilePane.current_selection`
+    may not exist and raise :obj:`IndexError`. Using this decorator
+    to perform additional checks.
+
+    Args:
+        func: The function to decorate.
+
+    Returns:
+        Updated function with checks.
+    """
+
+    async def executable(self, file: Optional["File"]):
+        if not file:
+            return
+        await func(self, file)
+
+    return executable
 
 
 class FilePane(ConditionalContainer):
@@ -61,6 +131,7 @@ class FilePane(ConditionalContainer):
         layout_single: Condition,
         layout_vertical: Condition,
         focus: Callable[[], ID],
+        cache: Cache,
     ) -> None:
         self._s3 = S3()
         self._fs = FS()
@@ -82,6 +153,7 @@ class FilePane(ConditionalContainer):
         self._display_hidden = True
         self._first_line = 0
         self._last_line = self._get_height() - self._first_line
+        self._cache = cache
 
         self._spinner = Spinner(
             loading=Condition(lambda: self._loading),
@@ -387,8 +459,9 @@ class FilePane(ConditionalContainer):
         self._last_line += value
         self._selected_file_index += value
 
-    @Spinner.spin
-    @File.action
+    @cache_dir
+    @spin_spinner
+    @file_action
     async def forward(self, file: File) -> None:
         """Handle the forward action on the current file based on filetype.
 
@@ -400,13 +473,14 @@ class FilePane(ConditionalContainer):
                 self._files = await self._fs.cd(Path(file.name))
                 await self.filter_files()
 
-    @Spinner.spin
+    @cache_dir
+    @spin_spinner
     async def backword(self) -> None:
         """Handle the backword action."""
         self._files = await self._fs.cd()
         await self.filter_files()
 
-    @Spinner.spin
+    @spin_spinner
     async def filter_files(self) -> None:
         """Shift up/down taking consideration of hidden status.
 
@@ -421,7 +495,7 @@ class FilePane(ConditionalContainer):
                 filter(lambda file: not file.hidden, self._files)
             )
 
-    @Spinner.spin
+    @spin_spinner
     async def load_data(
         self, mode_id: ID = PaneMode.s3, bucket: str = None, path: str = None
     ) -> None:

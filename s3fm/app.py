@@ -59,6 +59,7 @@ class App:
         self._current_focus = Pane.left
         self._previous_focus = None
         self._custom_effects = config.app.custom_effects
+        self._cache = Cache()
 
         self._command_mode = Condition(lambda: self._current_focus == Pane.cmd)
         self._normal_mode = Condition(
@@ -79,6 +80,7 @@ class App:
             layout_single=self._layout_single,
             layout_vertical=self._layout_vertical,
             focus=lambda: self._current_focus,
+            cache=self._cache,
         )
         self._right_pane = FilePane(
             pane_id=Pane.right,
@@ -89,6 +91,7 @@ class App:
             layout_single=self._layout_single,
             layout_vertical=self._layout_vertical,
             focus=lambda: self._current_focus,
+            cache=self._cache,
         )
         self._command_pane = CommandPane()
         self._option_pane = OptionPane()
@@ -139,14 +142,13 @@ class App:
         once `Cache` is processed. This decision is made because `Cache` may
         cause the `App` UI to change and confuse the user.
         """
-        cache = Cache()
         if not self._no_cache:
-            await cache.read_cache()
-        self.focus_pane(cache.focus)
+            await self._cache.read_cache()
+        self.focus_pane(self._cache.focus)
         self._kb.activated = True
         await asyncio.gather(
-            self._load_pane_data(pane=self._left_pane, mode_id=cache.left_mode),
-            self._load_pane_data(pane=self._right_pane, mode_id=cache.right_mode),
+            self._load_pane_data(pane=self._left_pane, mode_id=self._cache.left_mode),
+            self._load_pane_data(pane=self._right_pane, mode_id=self._cache.right_mode),
         )
 
     def _after_render(self, _) -> None:
