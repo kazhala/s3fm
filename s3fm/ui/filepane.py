@@ -71,9 +71,7 @@ def spin_spinner(
     return executable
 
 
-def file_action(
-    func: Callable[["FilePane", "File"], Awaitable[None]]
-) -> Callable[["FilePane", Optional["File"]], Awaitable[None]]:
+def file_action(func: Callable[..., Awaitable[None]]) -> Callable[..., Awaitable[None]]:
     """Decorate a method related to file action.
 
     On loading time, :attr:`~s3fm.ui.filepane.FilePane.current_selection`
@@ -87,10 +85,10 @@ def file_action(
         Updated function with checks.
     """
 
-    async def executable(self, file: Optional["File"]):
-        if not file:
+    async def executable(self, *args, **kwargs):
+        if not self.current_selection:
             return
-        await func(self, file)
+        await func(self, *args, **kwargs)
 
     return executable
 
@@ -462,15 +460,15 @@ class FilePane(ConditionalContainer):
     @cache_dir
     @spin_spinner
     @file_action
-    async def forward(self, file: File) -> None:
+    async def forward(self) -> None:
         """Handle the forward action on the current file based on filetype.
 
         Args:
             file: The target file to perform forward action.
         """
         if self._mode == PaneMode.fs:
-            if file.type == FileType.dir:
-                self._files = await self._fs.cd(Path(file.name))
+            if self.current_selection.type == FileType.dir:
+                self._files = await self._fs.cd(Path(self.current_selection.name))
                 await self.filter_files()
 
     @cache_dir

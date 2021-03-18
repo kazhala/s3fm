@@ -198,11 +198,7 @@ class KB(KeyBindings):
 
     def _forward(self) -> None:
         """Perform forward action on current file."""
-        asyncio.create_task(
-            self._app.current_filepane.forward(
-                self._app.current_filepane.current_selection
-            )
-        )
+        asyncio.create_task(self._app.current_filepane.forward())
 
     def _backword(self) -> None:
         """Perform backword action."""
