@@ -58,6 +58,7 @@ class App:
         self._border = config.app.border
         self._current_focus = Pane.left
         self._previous_focus = None
+        self._filepane_focus = Pane.left
         self._custom_effects = config.app.custom_effects
         self._cache = Cache()
 
@@ -179,6 +180,8 @@ class App:
             pane_id (ID): An :ref:`pages/configuration:ID` of the pane to focus.
                 E.g. `Pane.left`.
         """
+        if pane_id in self.filepanes:
+            self._filepane_focus = pane_id
         self._previous_focus = self._current_focus
         self._current_focus = pane_id
         self._app.layout.focus(self.current_focus)
@@ -307,29 +310,22 @@ class App:
     @property
     def current_focus(self) -> Container:
         """:class:`prompt_toolkit.layout.Container`: Get current focused pane."""
-        return self.panes[self._current_focus]
+        return {
+            **self.filepanes,
+            Pane.cmd: self._command_pane,
+        }[self._current_focus]
 
     @property
     def current_filepane(self) -> FilePane:
-        """:class:`~s3fm.ui.filepane.FilePane`: Get current focused filepane.
-
-        Raises:
-            Bug: Current focus is not a filepane.
-        """
-        if self._current_focus == Pane.left:
-            return self._left_pane
-        elif self._current_focus == Pane.right:
-            return self._right_pane
-        else:
-            raise Bug("not focusing any filepane.")
+        """:class:`~s3fm.ui.filepane.FilePane`: Get current focused filepane."""
+        return self.filepanes[self._filepane_focus]
 
     @property
-    def panes(self) -> Dict[ID, Container]:
+    def filepanes(self) -> Dict[ID, FilePane]:
         """Dict[ID, Container]: Get pane mappings."""
         return {
             Pane.left: self._left_pane,
             Pane.right: self._right_pane,
-            Pane.cmd: self._command_pane,
         }
 
     @property
