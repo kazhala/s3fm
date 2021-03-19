@@ -1,6 +1,7 @@
 """Module contains the main filepane which is used as the left/right pane."""
 import asyncio
 import math
+from functools import wraps
 from pathlib import Path
 from typing import Awaitable, Callable, List, Optional, Tuple
 
@@ -26,7 +27,7 @@ from s3fm.ui.spinner import Spinner
 from s3fm.utils import get_dimension
 
 
-def cache_dir(func: Callable[..., Awaitable[None]]) -> Callable[..., Awaitable[None]]:
+def cache_dir(func: Callable[..., Awaitable[None]]):
     """Decorate a :class:`~s3fm.ui.filepane.FilePane` method to store the path history.
 
     Args:
@@ -36,23 +37,22 @@ def cache_dir(func: Callable[..., Awaitable[None]]) -> Callable[..., Awaitable[N
         Decorated function.
     """
 
-    async def executable(self, *args, **kwargs):
-        curr_path = str(self._fs._path)
-        curr_result = self._cache._directory.get(curr_path, 0)
-        self._cache._directory[curr_path] = self._selected_file_index
-        await func(self, *args, **kwargs)
-        new_path = str(self._fs._path)
+    @wraps(func)
+    async def executable(*args, **kwargs):
+        curr_path = str(args[0]._fs._path)
+        curr_result = args[0]._cache._directory.get(curr_path, 0)
+        args[0]._cache._directory[curr_path] = args[0]._selected_file_index
+        await func(*args, **kwargs)
+        new_path = str(args[0]._fs._path)
         if new_path == curr_path:
-            self._cache._directory[curr_path] = curr_result
+            args[0]._cache._directory[curr_path] = curr_result
         else:
-            self._selected_file_index = self._cache._directory.get(new_path, 0)
+            args[0]._selected_file_index = args[0]._cache._directory.get(new_path, 0)
 
     return executable
 
 
-def spin_spinner(
-    func: Callable[..., Awaitable[None]]
-) -> Callable[..., Awaitable[None]]:
+def spin_spinner(func: Callable[..., Awaitable[None]]):
     """Decorate a :class:`~s3fm.ui.filepane.FilePane` method to start and stop spinner.
 
     Args:
@@ -62,16 +62,17 @@ def spin_spinner(
         Decorated function.
     """
 
-    async def executable(self, *args, **kwargs):
-        if not self.loading:
-            self.loading = True
-        await func(self, *args, **kwargs)
-        self.loading = False
+    @wraps(func)
+    async def executable(*args, **kwargs):
+        if not args[0].loading:
+            args[0].loading = True
+        await func(*args, **kwargs)
+        args[0].loading = False
 
     return executable
 
 
-def file_action(func: Callable[..., Awaitable[None]]) -> Callable[..., Awaitable[None]]:
+def file_action(func: Callable[..., Awaitable[None]]):
     """Decorate a method related to file action.
 
     On loading time, :attr:`~s3fm.ui.filepane.FilePane.current_selection`
@@ -85,10 +86,11 @@ def file_action(func: Callable[..., Awaitable[None]]) -> Callable[..., Awaitable
         Updated function with checks.
     """
 
-    async def executable(self, *args, **kwargs):
-        if not self.current_selection:
+    @wraps(func)
+    async def executable(*args, **kwargs):
+        if not args[0].current_selection:
             return
-        await func(self, *args, **kwargs)
+        await func(*args, **kwargs)
 
     return executable
 
@@ -461,11 +463,7 @@ class FilePane(ConditionalContainer):
     @spin_spinner
     @file_action
     async def forward(self) -> None:
-        """Handle the forward action on the current file based on filetype.
-
-        Args:
-            file: The target file to perform forward action.
-        """
+        """Handle the forward action on the current file based on filetype."""
         if self._mode == PaneMode.fs:
             if self.current_selection.type == FileType.dir:
                 self._files = await self._fs.cd(Path(self.current_selection.name))
