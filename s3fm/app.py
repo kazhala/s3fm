@@ -59,7 +59,10 @@ class App:
         self._previous_focus = None
         self._filepane_focus = Pane.left
         self._custom_effects = config.app.custom_effects
-        self._history = History()
+        self._history = History(
+            dir_max_size=config.history.dir_max_size,
+            cmd_max_size=config.history.cmd_max_size,
+        )
 
         self._command_mode = Condition(lambda: self._current_focus == Pane.cmd)
         self._normal_mode = Condition(

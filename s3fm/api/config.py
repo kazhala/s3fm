@@ -26,6 +26,14 @@ if TYPE_CHECKING:
     from s3fm.app import App
 
 
+class HistoryConfig:
+    """History config class."""
+
+    def __init__(self) -> None:
+        self.dir_max_size = 500
+        self.cmd_max_size = 500
+
+
 class AppConfig:
     """App config class."""
 
@@ -479,6 +487,7 @@ class Config:
         self._style = StyleConfig()
         self._kb = KBConfig()
         self._linemode = LineModeConfig()
+        self._history = HistoryConfig()
         self.__class__.active_instance = self
 
     @property
@@ -505,6 +514,11 @@ class Config:
     def linemode(self) -> LineModeConfig:
         """:class:`LineModeConfig`: Icon config."""
         return self._linemode
+
+    @property
+    def history(self) -> HistoryConfig:
+        """:class:`HistoryConfig`: History config."""
+        return self._history
 
     @classmethod
     def load_config(cls) -> "Config":

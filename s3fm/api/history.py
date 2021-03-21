@@ -15,7 +15,7 @@ from s3fm.utils import transform_async
 __all__ = ["History"]
 
 
-class Directory(OrderedDict):
+class Cache(OrderedDict):
     """Custom :class:`collections.OrderedDict` with size limit.
 
     Used to store directory history.
@@ -51,14 +51,15 @@ class History:
     into history files on application exit.
     """
 
-    def __init__(self, max_size=500) -> None:
+    def __init__(self, dir_max_size=500, cmd_max_size=500) -> None:
         self._left_mode = PaneMode.s3
         self._left_path = ""
         self._right_mode = PaneMode.fs
         self._right_path = str(Path.cwd())
         self._focus = Pane.left
-        self._size_limit = max_size
-        self._directory = Directory(size_limit=self._size_limit or 500)
+        self._dir_max_size = dir_max_size
+        self._cmd_max_size = cmd_max_size
+        self._directory = Cache(size_limit=self._dir_max_size or 500)
 
     @transform_async
     def read(self) -> None:
@@ -69,7 +70,7 @@ class History:
             result = json.load(file)
             for key, value in result.items():
                 if key == "_directory":
-                    self._directory = Directory(value, size_limit=self._size_limit)
+                    self._directory = Cache(value, size_limit=self._dir_max_size)
                 else:
                     setattr(self, key, value)
 
