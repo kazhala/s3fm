@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any, Iterator, Tuple
 
 from s3fm.id import ID, Pane, PaneMode
+from s3fm.utils import transform_async
 
 __all__ = ["History"]
 
@@ -23,9 +24,9 @@ class Directory(OrderedDict):
         size_limit: The max size of the dict.
     """
 
-    def __init__(self, size_limit, *args, **kwds) -> None:
-        self._size_limit = size_limit
-        OrderedDict.__init__(self, *args, **kwds)
+    def __init__(self, *args, **kwargs) -> None:
+        self._size_limit = kwargs.pop("size_limit")
+        OrderedDict.__init__(self, *args, **kwargs)
         self._check_size_limit()
 
     def __setitem__(self, key, value) -> None:
@@ -53,27 +54,42 @@ class History:
         self._right_mode = PaneMode.fs
         self._right_path = str(Path.cwd())
         self._focus = Pane.left
-        self._directory = Directory(size_limit=max_size or 500)
+        self._size_limit = max_size
+        self._directory = Directory(size_limit=self._size_limit or 500)
 
-    async def read(self) -> None:
-        """Read history."""
-        self._left_mode = PaneMode.s3
-        self._right_mode = PaneMode.fs
-        self._focus = Pane.left
+    def _get_hist_file(self) -> Path:
+        """Get history file.
 
-    def write(self) -> None:
-        """Write history."""
+        Returns:
+            A Path obj for the history file.
+        """
         if sys.platform.startswith("darwin") or sys.platform.startswith("linux"):
             base_dir = os.getenv("XDG_DATA_HOME", "~/.local/share")
             hist_dir = Path("%s/s3fm" % base_dir).expanduser()
-            if not hist_dir.exists():
-                hist_dir.mkdir(parents=True)
-            hist_file = hist_dir.joinpath("history.json")
         else:
             # TODO: get windows config
             base_dir = os.getenv("APPDATA")
-            hist_file = Path("%s\\s3fm\\history\\history.json" % base_dir).expanduser()
-        with hist_file.open("w") as file:
+            hist_dir = Path("%s\\s3fm\\history" % base_dir).expanduser()
+        if not hist_dir.exists():
+            hist_dir.mkdir(parents=True)
+        return hist_dir.joinpath("history.json")
+
+    @transform_async
+    def read(self) -> None:
+        """Read history."""
+        if not self.hist_file.exists():
+            return
+        with self.hist_file.open("r") as file:
+            result = json.load(file)
+            for key, value in result.items():
+                if key == "_directory":
+                    self._directory = Directory(value, size_limit=self._size_limit)
+                else:
+                    setattr(self, key, value)
+
+    def write(self) -> None:
+        """Write history."""
+        with self.hist_file.open("w") as file:
             json.dump(dict(self), file, indent=4)
 
     def __iter__(self) -> Iterator[Tuple[str, Any]]:
@@ -95,3 +111,17 @@ class History:
     def right_mode(self) -> ID:
         """:ref:`pages/configuration:ID`: Right pane mode."""
         return self._right_mode
+
+    @property
+    def hist_file(self) -> Path:
+        """:class:`pathlib.Path`: History file."""
+        if sys.platform.startswith("darwin") or sys.platform.startswith("linux"):
+            base_dir = os.getenv("XDG_DATA_HOME", "~/.local/share")
+            hist_dir = Path("%s/s3fm" % base_dir).expanduser()
+        else:
+            # TODO: get windows config
+            base_dir = os.getenv("APPDATA")
+            hist_dir = Path("%s\\s3fm\\history" % base_dir).expanduser()
+        if not hist_dir.exists():
+            hist_dir.mkdir(parents=True)
+        return hist_dir.joinpath("history.json")
