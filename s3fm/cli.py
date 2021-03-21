@@ -11,7 +11,7 @@ from s3fm.exceptions import Bug, ClientError
 @click.command()
 @click.help_option("-h", "--help")
 def main() -> None:
-    """Process config, read cache and then run s3fm application.
+    """Process config, read history and then run s3fm application.
 
     Raises:
         ClientError: When exception is caused due to client configuration.
@@ -19,7 +19,7 @@ def main() -> None:
     """
     try:
         config = Config.load_config()
-        asyncio.run(App(config=config, no_cache=False).run())
+        asyncio.run(App(config=config, no_history=False).run())
     except ClientError:
         raise
     except Exception as e:

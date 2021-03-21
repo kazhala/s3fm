@@ -522,7 +522,7 @@ class Config:
         else:
             # TODO: get windows config
             base_dir = os.getenv("APPDATA")
-            config_file = Path("%s\\s3fm\\config.py" % base_dir).expanduser()
+            config_file = Path("%s\\s3fm\\config\\config.py" % base_dir).expanduser()
         if not config_file.exists() or not config_file.is_file:
             return cls()
         spec = import_util.spec_from_file_location("custom_config", config_file)

@@ -28,10 +28,10 @@
     :members:
 ```
 
-## Cache
+## History
 
 ```{eval-rst}
-.. automodule:: s3fm.api.cache
+.. automodule:: s3fm.api.history
     :members:
 ```
 

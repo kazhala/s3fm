@@ -16,10 +16,10 @@ from prompt_toolkit.layout.containers import (
 from prompt_toolkit.layout.controls import FormattedTextControl
 from prompt_toolkit.layout.dimension import LayoutDimension
 
-from s3fm.api.cache import Cache
 from s3fm.api.config import AppConfig, LineModeConfig, SpinnerConfig
 from s3fm.api.file import File
 from s3fm.api.fs import FS
+from s3fm.api.history import History
 from s3fm.api.s3 import S3
 from s3fm.exceptions import Bug, ClientError
 from s3fm.id import ID, FileType, Pane, PaneMode
@@ -27,7 +27,7 @@ from s3fm.ui.spinner import Spinner
 from s3fm.utils import get_dimension
 
 
-def cache_dir(func: Callable[..., Awaitable[None]]):
+def hist_dir(func: Callable[..., Awaitable[None]]):
     """Decorate a :class:`~s3fm.ui.filepane.FilePane` method to store the path history.
 
     Args:
@@ -40,14 +40,14 @@ def cache_dir(func: Callable[..., Awaitable[None]]):
     @wraps(func)
     async def executable(*args, **kwargs):
         curr_path = str(args[0]._fs._path)
-        curr_result = args[0]._cache._directory.get(curr_path, 0)
-        args[0]._cache._directory[curr_path] = args[0]._selected_file_index
+        curr_result = args[0]._history._directory.get(curr_path, 0)
+        args[0]._history._directory[curr_path] = args[0]._selected_file_index
         await func(*args, **kwargs)
         new_path = str(args[0]._fs._path)
         if new_path == curr_path:
-            args[0]._cache._directory[curr_path] = curr_result
+            args[0]._history._directory[curr_path] = curr_result
         else:
-            args[0]._selected_file_index = args[0]._cache._directory.get(new_path, 0)
+            args[0]._selected_file_index = args[0]._history._directory.get(new_path, 0)
 
     return executable
 
@@ -100,8 +100,8 @@ class FilePane(ConditionalContainer):
 
     FilePane has 2 modes to operate: `PaneMode.s3` and `PaneMode.fs`. The default
     mode is the s3 mode. The mode value at the moment cannot be configured via the
-    :class:`~s3fm.api.config.Config` class, this value is stored to the cache via
-    :class:`~s3fm.api.cache.Cache` and is retrieved on the next time the app is opened.
+    :class:`~s3fm.api.config.Config` class, this value is stored to the history via
+    :class:`~s3fm.api.history.History` and is retrieved on the next time the app is opened.
 
     Args:
         pane_id (ID): An :ref:`pages/configuration:ID` indicating whether this pane
@@ -131,7 +131,7 @@ class FilePane(ConditionalContainer):
         layout_single: Condition,
         layout_vertical: Condition,
         focus: Callable[[], ID],
-        cache: Cache,
+        history: History,
     ) -> None:
         self._s3 = S3()
         self._fs = FS()
@@ -153,7 +153,7 @@ class FilePane(ConditionalContainer):
         self._display_hidden = True
         self._first_line = 0
         self._last_line = self._get_height() - self._first_line
-        self._cache = cache
+        self._history = history
 
         self._spinner = Spinner(
             loading=Condition(lambda: self._loading),
@@ -459,7 +459,7 @@ class FilePane(ConditionalContainer):
         self._last_line += value
         self._selected_file_index += value
 
-    @cache_dir
+    @hist_dir
     @spin_spinner
     @file_action
     async def forward(self) -> None:
@@ -469,7 +469,7 @@ class FilePane(ConditionalContainer):
                 self._files = await self._fs.cd(Path(self.current_selection.name))
                 await self.filter_files()
 
-    @cache_dir
+    @hist_dir
     @spin_spinner
     async def backword(self) -> None:
         """Handle the backword action."""

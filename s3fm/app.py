@@ -23,8 +23,8 @@ from prompt_toolkit.layout.layout import Layout
 from prompt_toolkit.styles import Style
 from prompt_toolkit.widgets.base import Frame
 
-from s3fm.api.cache import Cache
 from s3fm.api.config import Config
+from s3fm.api.history import History
 from s3fm.api.kb import KB
 from s3fm.exceptions import Bug
 from s3fm.id import ID, Direction, LayoutMode, Pane
@@ -45,21 +45,21 @@ class App:
 
     Args:
         config: A :class:`~s3fm.api.config.Config` instance.
-        no_cache: Skip reading cache.
-            :class:`~s3fm.api.cache.Cache` won't be loaded.
+        no_history: Skip reading history.
+            :class:`~s3fm.api.history.History` won't be loaded.
     """
 
-    def __init__(self, config: Config, no_cache: bool = False) -> None:
+    def __init__(self, config: Config, no_history: bool = False) -> None:
         self._style = Style.from_dict(dict(config.style))
         self._rendered = False
-        self._no_cache = no_cache
+        self._no_history = no_history
         self._layout_mode = LayoutMode.vertical
         self._border = config.app.border
         self._current_focus = Pane.left
         self._previous_focus = None
         self._filepane_focus = Pane.left
         self._custom_effects = config.app.custom_effects
-        self._cache = Cache()
+        self._history = History()
 
         self._command_mode = Condition(lambda: self._current_focus == Pane.cmd)
         self._normal_mode = Condition(
@@ -80,7 +80,7 @@ class App:
             layout_single=self._layout_single,
             layout_vertical=self._layout_vertical,
             focus=lambda: self._current_focus,
-            cache=self._cache,
+            history=self._history,
         )
         self._right_pane = FilePane(
             pane_id=Pane.right,
@@ -91,7 +91,7 @@ class App:
             layout_single=self._layout_single,
             layout_vertical=self._layout_vertical,
             focus=lambda: self._current_focus,
-            cache=self._cache,
+            history=self._history,
         )
         self._command_pane = CommandPane()
         self._option_pane = OptionPane()
@@ -136,19 +136,21 @@ class App:
         self.redraw()
 
     async def _render_task(self) -> None:
-        """Read cache and instruct left/right pane to load appropriate data.
+        """Read history and instruct left/right pane to load appropriate data.
 
         When `App` is created, `KB` is not activated and will only be activated
-        once `Cache` is processed. This decision is made because `Cache` may
+        once `History` is processed. This decision is made because `Hache` may
         cause the `App` UI to change and confuse the user.
         """
-        if not self._no_cache:
-            await self._cache.read_cache()
-        self.focus_pane(self._cache.focus)
+        if not self._no_history:
+            await self._history.read()
+        self.focus_pane(self._history.focus)
         self._kb.activated = True
         await asyncio.gather(
-            self._load_pane_data(pane=self._left_pane, mode_id=self._cache.left_mode),
-            self._load_pane_data(pane=self._right_pane, mode_id=self._cache.right_mode),
+            self._load_pane_data(pane=self._left_pane, mode_id=self._history.left_mode),
+            self._load_pane_data(
+                pane=self._right_pane, mode_id=self._history.right_mode
+            ),
         )
 
     def _after_render(self, _) -> None:
@@ -209,6 +211,7 @@ class App:
 
     def exit(self) -> None:
         """Exit the application and kill all spawed processes."""
+        self._history.write()
         self._app.exit()
 
     def switch_layout(self, layout_id: ID) -> None:
