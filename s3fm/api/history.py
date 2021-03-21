@@ -22,17 +22,20 @@ class Directory(OrderedDict):
 
     Args:
         size_limit: The max size of the dict.
+
+    Reference:
+        https://stackoverflow.com/a/2437645
     """
 
     def __init__(self, *args, **kwargs) -> None:
         self._size_limit = kwargs.pop("size_limit")
-        OrderedDict.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._check_size_limit()
 
     def __setitem__(self, key, value) -> None:
         if key in self:
             self.move_to_end(key, last=True)
-        OrderedDict.__setitem__(self, key, value)
+        super().__setitem__(key, value)
         self._check_size_limit()
 
     def _check_size_limit(self) -> None:
@@ -56,23 +59,6 @@ class History:
         self._focus = Pane.left
         self._size_limit = max_size
         self._directory = Directory(size_limit=self._size_limit or 500)
-
-    def _get_hist_file(self) -> Path:
-        """Get history file.
-
-        Returns:
-            A Path obj for the history file.
-        """
-        if sys.platform.startswith("darwin") or sys.platform.startswith("linux"):
-            base_dir = os.getenv("XDG_DATA_HOME", "~/.local/share")
-            hist_dir = Path("%s/s3fm" % base_dir).expanduser()
-        else:
-            # TODO: get windows config
-            base_dir = os.getenv("APPDATA")
-            hist_dir = Path("%s\\s3fm\\history" % base_dir).expanduser()
-        if not hist_dir.exists():
-            hist_dir.mkdir(parents=True)
-        return hist_dir.joinpath("history.json")
 
     @transform_async
     def read(self) -> None:
