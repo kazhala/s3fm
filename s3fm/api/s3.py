@@ -1,6 +1,4 @@
 """Module contains the api class to access/interact with s3."""
-import asyncio
-from concurrent.futures.process import ProcessPoolExecutor
 from pathlib import Path
 from typing import TYPE_CHECKING, List
 
@@ -9,6 +7,7 @@ from mypy_boto3_s3.type_defs import BucketTypeDef
 
 from s3fm.api.file import File
 from s3fm.id import FileType
+from s3fm.utils import transform_async
 
 if TYPE_CHECKING:
     from mypy_boto3_s3 import S3Client
@@ -28,6 +27,11 @@ class S3:
         self._region = "ap-southeast-2"
         self._profile = "default"
 
+    @transform_async
+    def _list_buckets(self) -> List[BucketTypeDef]:
+        """List all buckets in the selected profile and region."""
+        return self.client.list_buckets()["Buckets"]
+
     async def get_buckets(self) -> List[File]:
         """Async wrapper to list all buckets.
 
@@ -44,23 +48,17 @@ class S3:
             ...     files = await s3.get_buckets()
             >>> asyncio.run(main())
         """
-        with ProcessPoolExecutor() as executor:
-            loop = asyncio.get_running_loop()
-            result = await loop.run_in_executor(executor, self._list_buckets)
-            return [
-                File(
-                    name="%s/" % bucket["Name"],
-                    type=FileType.bucket,
-                    info="h",
-                    hidden=bucket["Name"].startswith("."),
-                    index=index,
-                )
-                for index, bucket in enumerate(result)
-            ]
-
-    def _list_buckets(self) -> List[BucketTypeDef]:
-        """List all buckets in the selected profile and region."""
-        return self.client.list_buckets()["Buckets"]
+        result = await self._list_buckets()
+        return [
+            File(
+                name="%s/" % bucket["Name"],
+                type=FileType.bucket,
+                info="h",
+                hidden=bucket["Name"].startswith("."),
+                index=index,
+            )
+            for index, bucket in enumerate(result)
+        ]
 
     @property
     def client(self) -> "S3Client":

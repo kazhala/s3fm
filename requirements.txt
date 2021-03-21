@@ -3,4 +3,3 @@ click==7.1.2
 mypy-boto3-s3==1.17.3.0
 pre-commit==2.10.0
 prompt-toolkit==3.0.16
-psutil==5.8.0

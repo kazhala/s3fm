@@ -1,13 +1,12 @@
 """Module contains the api class to access/interact with the local file system."""
-import asyncio
 import os
-from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 from typing import List, Optional
 
 from s3fm.api.file import File
 from s3fm.exceptions import Bug
 from s3fm.id import ID, FileType
+from s3fm.utils import transform_async
 
 
 class FS:
@@ -20,6 +19,13 @@ class FS:
     def __init__(self, path: str = None) -> None:
         path = path or ""
         self._path = Path(path).expanduser().resolve()
+
+    @transform_async
+    def _list_files(self) -> List[Path]:
+        """Retrieve all files/paths under :attr:`FS.path`."""
+        return list(
+            sorted(self._path.iterdir(), key=lambda file: (file.is_file(), file.name))
+        )
 
     async def cd(
         self, path: Optional[Path] = None, override: bool = False
@@ -76,40 +82,31 @@ class FS:
                     return FileType.exe
                 return FileType.file
 
-        with ProcessPoolExecutor() as executor:
-            loop = asyncio.get_running_loop()
-            result = await loop.run_in_executor(executor, self._list_files)
-            response = []
-            if str(self._path) != "/":
-                response.append(
-                    File(name="..", type=FileType.dir, hidden=False, index=0, info="")
+        result = await self._list_files()
+        response = []
+        if str(self._path) != "/":
+            response.append(
+                File(name="..", type=FileType.dir, hidden=False, index=0, info="")
+            )
+        for index, path in enumerate(result):
+            file_type = _get_filetype(path)
+            name = str(path.name)
+            response.append(
+                File(
+                    name="%s%s"
+                    % (
+                        name,
+                        "/"
+                        if file_type == FileType.dir or file_type == FileType.dir_link
+                        else "",
+                    ),
+                    type=file_type,
+                    info="h",
+                    hidden=name.startswith("."),
+                    index=index + 1 if str(self._path) != "/" else index,
                 )
-            for index, path in enumerate(result):
-                file_type = _get_filetype(path)
-                name = str(path.name)
-                response.append(
-                    File(
-                        name="%s%s"
-                        % (
-                            name,
-                            "/"
-                            if file_type == FileType.dir
-                            or file_type == FileType.dir_link
-                            else "",
-                        ),
-                        type=file_type,
-                        info="h",
-                        hidden=name.startswith("."),
-                        index=index + 1 if str(self._path) != "/" else index,
-                    )
-                )
-            return response
-
-    def _list_files(self) -> List[Path]:
-        """Retrieve all files/paths under :attr:`FS.path`."""
-        return list(
-            sorted(self._path.iterdir(), key=lambda file: (file.is_file(), file.name))
-        )
+            )
+        return response
 
     @property
     def path(self) -> Path:

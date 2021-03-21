@@ -31,7 +31,6 @@ from s3fm.id import ID, Direction, LayoutMode, Pane
 from s3fm.ui.commandpane import CommandPane
 from s3fm.ui.filepane import FilePane
 from s3fm.ui.optionpane import OptionPane
-from s3fm.utils import kill_child_processes
 
 
 class App:
@@ -210,7 +209,6 @@ class App:
 
     def exit(self) -> None:
         """Exit the application and kill all spawed processes."""
-        kill_child_processes()
         self._app.exit()
 
     def switch_layout(self, layout_id: ID) -> None:
