@@ -73,3 +73,12 @@ class S3:
         if not self._bucket:
             return "s3://"
         return "s3://%s" % str(Path(self._bucket).joinpath(self._path))
+
+    @property
+    def path(self) -> str:
+        """str: S3 filepath."""
+        return self._path
+
+    @path.setter
+    def path(self, value: str) -> None:
+        self._path = value

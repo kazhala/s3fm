@@ -492,24 +492,16 @@ class FilePane(ConditionalContainer):
             )
 
     @spin_spinner
-    async def load_data(
-        self, mode_id: ID = PaneMode.s3, bucket: str = None, path: str = None
-    ) -> None:
+    async def load_data(self) -> None:
         """Load the data into filepane.
 
         Provide a `mode_id` to instruct which file to load. `PaneMode.s3` will
         instruct to load the s3 data. `PaneMode.fs` will load the local file system
         data.
 
-        Args:
-            mode_id (ID): An :ref:`pages/configuration:ID` indicating which mode.
-            bucket: Bucket to load the s3 data.
-            path: Path to load the s3 or fs data.
-
         Raises:
             Bug: Current pane mode is not recognized.
         """
-        self._mode = mode_id
         if self._mode == PaneMode.s3:
             self._files += await self._s3.get_buckets()
         elif self._mode == PaneMode.fs:
@@ -574,3 +566,41 @@ class FilePane(ConditionalContainer):
         self._loading = value
         if value:
             asyncio.create_task(self.spinner.start())
+
+    @property
+    def mode(self) -> ID:
+        """:ref:`pages/configuration:ID`: Current pane mode."""
+        return self._mode
+
+    @mode.setter
+    def mode(self, value: ID) -> None:
+        self._mode = value
+
+    @property
+    def selected_file_index(self) -> int:
+        """int: Current selection index."""
+        return self._selected_file_index
+
+    @selected_file_index.setter
+    def selected_file_index(self, value: int) -> None:
+        """int: Current selection index."""
+        self._selected_file_index = value
+
+    @property
+    def path(self) -> str:
+        """str: Current filepath."""
+        if self.mode == PaneMode.s3:
+            return self._s3.path
+        elif self.mode == PaneMode.fs:
+            return str(self._fs.path)
+        else:
+            raise Bug("unexpected pane mode.")
+
+    @path.setter
+    def path(self, value) -> None:
+        if self.mode == PaneMode.s3:
+            self._s3.path = value
+        elif self.mode == PaneMode.fs:
+            self._fs.path = Path(value)
+        else:
+            raise Bug("unexpected pane mode.")

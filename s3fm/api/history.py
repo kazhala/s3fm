@@ -9,13 +9,13 @@ from collections import OrderedDict
 from pathlib import Path
 from typing import Any, Iterator, Tuple
 
-from s3fm.id import ID, Pane, PaneMode
+from s3fm.id import ID, LayoutMode, Pane, PaneMode
 from s3fm.utils import transform_async
 
 __all__ = ["History"]
 
 
-class Cache(OrderedDict):
+class Directory(OrderedDict):
     """Custom :class:`collections.OrderedDict` with size limit.
 
     Used to store directory history.
@@ -52,26 +52,31 @@ class History:
     """
 
     def __init__(self, dir_max_size=500, cmd_max_size=500) -> None:
+        self._layout = LayoutMode.vertical
         self._left_mode = PaneMode.s3
         self._left_path = ""
+        self._left_index = 0
         self._right_mode = PaneMode.fs
         self._right_path = str(Path.cwd())
+        self._right_index = 0
         self._focus = Pane.left
         self._dir_max_size = dir_max_size
         self._cmd_max_size = cmd_max_size
-        self._directory = Cache(size_limit=self._dir_max_size or 500)
+        self._directory = Directory(size_limit=self._dir_max_size or 500)
+        self._cmd = []
 
     @transform_async
     def read(self) -> None:
         """Read history."""
         if not self.hist_file.exists():
             return
+        attrs = dict(self)
         with self.hist_file.open("r") as file:
             result = json.load(file)
             for key, value in result.items():
                 if key == "_directory":
-                    self._directory = Cache(value, size_limit=self._dir_max_size)
-                else:
+                    self._directory = Directory(value, size_limit=self._dir_max_size)
+                elif key in attrs:
                     setattr(self, key, value)
 
     def write(self) -> None:
@@ -98,6 +103,31 @@ class History:
     def right_mode(self) -> ID:
         """:ref:`pages/configuration:ID`: Right pane mode."""
         return self._right_mode
+
+    @property
+    def left_index(self) -> int:
+        """int: Left selection index."""
+        return self._left_index
+
+    @property
+    def right_index(self) -> int:
+        """int: Right selection index."""
+        return self._right_index
+
+    @property
+    def left_path(self) -> str:
+        """str: Left filepath."""
+        return self._left_path
+
+    @property
+    def right_path(self) -> str:
+        """str: Right filepath."""
+        return self._right_path
+
+    @property
+    def layout(self) -> ID:
+        """:ref:`pages/configuration:ID`: Layout mode."""
+        return self._layout
 
     @property
     def hist_file(self) -> Path:

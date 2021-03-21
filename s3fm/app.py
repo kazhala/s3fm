@@ -127,15 +127,13 @@ class App:
             return
         self._app.invalidate()
 
-    async def _load_pane_data(self, pane: FilePane, mode_id: ID) -> None:
+    async def _load_pane_data(self, pane: FilePane) -> None:
         """Load the data for the target pane and refersh the app.
 
         Args:
             pane: A `FilePane` instance to load data.
-            mode_id: Indicate which mode the pane should be operating.
-                This controls what data to be loaded. E.g. load S3 data if its `PaneMode.s3`.
         """
-        await pane.load_data(mode_id=mode_id)
+        await pane.load_data()
         self.redraw()
 
     async def _render_task(self) -> None:
@@ -147,13 +145,18 @@ class App:
         """
         if not self._no_history:
             await self._history.read()
+        self._left_pane.mode = self._history.left_mode
+        self._right_pane.mode = self._history.right_mode
+        self._left_pane.selected_file_index = self._history.left_index
+        self._right_pane.selected_file_index = self._history.right_index
+        self._left_pane.path = self._history.left_path
+        self._right_pane.path = self._history.right_path
         self.focus_pane(self._history.focus)
+        self.switch_layout(self._history.layout)
         self._kb.activated = True
         await asyncio.gather(
-            self._load_pane_data(pane=self._left_pane, mode_id=self._history.left_mode),
-            self._load_pane_data(
-                pane=self._right_pane, mode_id=self._history.right_mode
-            ),
+            self._load_pane_data(pane=self._left_pane),
+            self._load_pane_data(pane=self._right_pane),
         )
 
     def _after_render(self, _) -> None:

@@ -112,3 +112,7 @@ class FS:
     def path(self) -> Path:
         """:obj:`pathlib.Path`: Current path."""
         return self._path
+
+    @path.setter
+    def path(self, value: Path) -> None:
+        self._path = value
