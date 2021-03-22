@@ -82,7 +82,7 @@ class App:
             redraw=self.redraw,
             layout_single=self._layout_single,
             layout_vertical=self._layout_vertical,
-            focus=lambda: self._current_focus,
+            focus=lambda: self._filepane_focus,
             history=self._history,
         )
         self._right_pane = FilePane(
@@ -93,7 +93,7 @@ class App:
             redraw=self.redraw,
             layout_single=self._layout_single,
             layout_vertical=self._layout_vertical,
-            focus=lambda: self._current_focus,
+            focus=lambda: self._filepane_focus,
             history=self._history,
         )
         self._command_pane = CommandPane()
