@@ -528,9 +528,17 @@ class FilePane(ConditionalContainer):
             Bug: Current pane mode is not recognized.
         """
         if self._mode == PaneMode.s3:
-            self._files += await self._s3.get_paths()
+            try:
+                self._files += await self._s3.get_paths()
+            except:
+                self._s3.path = Path("")
+                self._files += await self._s3.get_paths()
         elif self._mode == PaneMode.fs:
-            self._files += await self._fs.get_paths()
+            try:
+                self._files += await self._fs.get_paths()
+            except:
+                self._fs.path = Path("").resolve()
+                self._files += await self._fs.get_paths()
         else:
             raise Bug("unexpected pane mode.")
         await self.filter_files()

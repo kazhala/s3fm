@@ -135,6 +135,7 @@ class S3:
                 self._path = Path(path)
             else:
                 self._path = self._path.joinpath(path)
+        # TODO: permission handling
         return await self.get_paths()
 
     @property
