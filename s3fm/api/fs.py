@@ -16,8 +16,8 @@ class FS:
         path: Local directory path as the default path.
     """
 
-    def __init__(self, path: str = None) -> None:
-        path = path or ""
+    def __init__(self) -> None:
+        path = ""
         self._path = Path(path).expanduser().resolve()
 
     @transform_async
