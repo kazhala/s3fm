@@ -3,14 +3,14 @@ from pathlib import Path
 from typing import TYPE_CHECKING, List, Union
 
 import boto3
-from mypy_boto3_s3.type_defs import BucketTypeDef, ObjectTypeDef
 
 from s3fm.api.file import File
 from s3fm.id import FileType
-from s3fm.utils import transform_async
+from s3fm.utils import human_readable_size, transform_async
 
 if TYPE_CHECKING:
     from mypy_boto3_s3 import S3Client
+    from mypy_boto3_s3.type_defs import BucketTypeDef, ObjectTypeDef
 
 
 class S3:
@@ -22,12 +22,14 @@ class S3:
         self._profile = "default"
 
     @transform_async
-    def _list_buckets(self) -> List[BucketTypeDef]:
+    def _list_buckets(self) -> List["BucketTypeDef"]:
         """List all buckets in the selected profile and region."""
         return self.client.list_buckets()["Buckets"]
 
     @transform_async
-    def _list_objects(self, full_data: bool = False) -> List[Union[str, ObjectTypeDef]]:
+    def _list_objects(
+        self, full_data: bool = False
+    ) -> List[Union[str, "ObjectTypeDef"]]:
         """List all objects within selected bucket."""
         result = []
         response = self.client.list_objects_v2(
@@ -36,7 +38,7 @@ class S3:
             Delimiter="/",
         )
         for prefix in response.get("CommonPrefixes", []):
-            result.append(prefix["Prefix"])
+            result.append(Path(prefix["Prefix"]).name)
         for s3_obj in response.get("Contents", []):
             result.append(s3_obj)
         return result
@@ -52,7 +54,7 @@ class S3:
             File(
                 name="%s/" % bucket["Name"],
                 type=FileType.bucket,
-                info=str(bucket["CreationDate"]),
+                info=str(bucket["CreationDate"].replace(tzinfo=None)),
                 hidden=bucket["Name"].startswith("."),
                 index=index,
                 raw=bucket,
@@ -72,7 +74,7 @@ class S3:
             if isinstance(s3_obj, str):
                 result.append(
                     File(
-                        name=s3_obj,
+                        name="%s/" % s3_obj,
                         type=FileType.dir,
                         info="",
                         hidden=s3_obj.startswith("."),
@@ -87,7 +89,7 @@ class S3:
                         type=FileType.dir
                         if s3_obj["Key"].endswith("/")
                         else FileType.file,
-                        info=str(s3_obj["LastModified"]),
+                        info=str(human_readable_size(s3_obj["Size"])),
                         hidden=s3_obj["Key"].startswith("."),
                         index=index + offset,
                         raw=s3_obj,

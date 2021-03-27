@@ -107,7 +107,9 @@ class FS:
                         else "",
                     ),
                     type=file_type,
-                    info=str(human_readable_size(path.stat().st_size)),
+                    info=str(human_readable_size(path.stat().st_size))
+                    if file_type != FileType.dir
+                    else "",
                     hidden=name.startswith("."),
                     index=index + 1 if str(self._path) != "/" else index,
                     raw=path,
