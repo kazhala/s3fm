@@ -39,11 +39,15 @@ def hist_dir(func: Callable[..., Awaitable[None]]):
 
     @wraps(func)
     async def executable(*args, **kwargs):
-        curr_path = str(args[0]._fs._path)
+        curr_path = str(
+            args[0]._fs._path if args[0]._mode == PaneMode.fs else args[0]._s3._path
+        )
         curr_result = args[0]._history._directory.get(curr_path, 0)
         args[0]._history._directory[curr_path] = args[0]._selected_file_index
         await func(*args, **kwargs)
-        new_path = str(args[0]._fs._path)
+        new_path = str(
+            args[0]._fs._path if args[0]._mode == PaneMode.fs else args[0]._s3._path
+        )
         if new_path == curr_path:
             args[0]._history._directory[curr_path] = curr_result
         else:
@@ -463,7 +467,11 @@ class FilePane(ConditionalContainer):
     @spin_spinner
     @file_action
     async def forward(self) -> None:
-        """Handle the forward action on the current file based on filetype."""
+        """Handle the forward action on the current file based on filetype.
+
+        Raises:
+            Bug: Unexpected pane mode.
+        """
         if self._mode == PaneMode.fs:
             if self.current_selection.type == FileType.dir:
                 self._files = await self._fs.cd(Path(self.current_selection.name))
@@ -473,13 +481,24 @@ class FilePane(ConditionalContainer):
                 or self.current_selection.type == FileType.bucket
             ):
                 self._files = await self._s3.cd(self.current_selection.name)
+        else:
+            raise Bug("unexpected pane mode.")
         await self.filter_files()
 
     @hist_dir
     @spin_spinner
     async def backword(self) -> None:
-        """Handle the backword action."""
-        self._files = await self._fs.cd()
+        """Handle the backword action.
+
+        Raises:
+            Bug: Unexpected pane mode.
+        """
+        if self._mode == PaneMode.fs:
+            self._files = await self._fs.cd()
+        elif self._mode == PaneMode.s3:
+            self._files = await self._s3.cd()
+        else:
+            raise Bug("unexpected pane mode.")
         await self.filter_files()
 
     @spin_spinner
