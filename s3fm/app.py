@@ -217,7 +217,16 @@ class App:
 
     def exit(self) -> None:
         """Exit the application and kill all spawed processes."""
-        self._history.write()
+        self._history.left_mode = self._left_pane.mode
+        self._history.right_mode = self._right_pane.mode
+        self._history.left_index = self._left_pane.selected_file_index
+        self._history.right_index = self._right_pane.selected_file_index
+        self._history.left_path = self._left_pane.path
+        self._history.right_path = self._right_pane.path
+        self._history.focus = self._filepane_focus
+        self._history.layout = self._layout_mode
+        if not self._no_history:
+            self._history.write()
         self._app.exit()
 
     def switch_layout(self, layout_id: ID) -> None:

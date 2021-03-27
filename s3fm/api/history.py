@@ -94,40 +94,72 @@ class History:
         """:ref:`pages/configuration:ID`: Current :class:`~s3fm.app.App` focus id."""
         return self._focus
 
+    @focus.setter
+    def focus(self, value: ID) -> None:
+        self._focus = value
+
     @property
     def left_mode(self) -> ID:
         """:ref:`pages/configuration:ID`: Left pane mode."""
         return self._left_mode
+
+    @left_mode.setter
+    def left_mode(self, value: ID) -> None:
+        self._left_mode = value
 
     @property
     def right_mode(self) -> ID:
         """:ref:`pages/configuration:ID`: Right pane mode."""
         return self._right_mode
 
+    @right_mode.setter
+    def right_mode(self, value: ID) -> None:
+        self._right_mode = value
+
     @property
     def left_index(self) -> int:
         """int: Left selection index."""
         return self._left_index
+
+    @left_index.setter
+    def left_index(self, value: int) -> None:
+        self._left_index = value
 
     @property
     def right_index(self) -> int:
         """int: Right selection index."""
         return self._right_index
 
+    @right_index.setter
+    def right_index(self, value: int) -> None:
+        self._right_index = value
+
     @property
     def left_path(self) -> str:
         """str: Left filepath."""
         return self._left_path
+
+    @left_path.setter
+    def left_path(self, value: str) -> None:
+        self._left_path = value
 
     @property
     def right_path(self) -> str:
         """str: Right filepath."""
         return self._right_path
 
+    @right_path.setter
+    def right_path(self, value: str) -> None:
+        self._right_path = value
+
     @property
     def layout(self) -> ID:
         """:ref:`pages/configuration:ID`: Layout mode."""
         return self._layout
+
+    @layout.setter
+    def layout(self, value: ID) -> None:
+        self._layout = value
 
     @property
     def hist_file(self) -> Path:
