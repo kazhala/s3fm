@@ -6,7 +6,7 @@ from typing import List, Optional
 from s3fm.api.file import File
 from s3fm.exceptions import Bug
 from s3fm.id import ID, FileType
-from s3fm.utils import transform_async
+from s3fm.utils import human_readable_size, transform_async
 
 
 class FS:
@@ -85,7 +85,14 @@ class FS:
         response = []
         if str(self._path) != "/":
             response.append(
-                File(name="..", type=FileType.dir, hidden=False, index=0, info="")
+                File(
+                    name="..",
+                    type=FileType.dir,
+                    hidden=False,
+                    index=0,
+                    info="",
+                    raw=None,
+                )
             )
         for index, path in enumerate(result):
             file_type = _get_filetype(path)
@@ -100,9 +107,10 @@ class FS:
                         else "",
                     ),
                     type=file_type,
-                    info="h",
+                    info=str(human_readable_size(path.stat().st_size)),
                     hidden=name.startswith("."),
                     index=index + 1 if str(self._path) != "/" else index,
+                    raw=path,
                 )
             )
         return response

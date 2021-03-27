@@ -52,9 +52,10 @@ class S3:
             File(
                 name="%s/" % bucket["Name"],
                 type=FileType.bucket,
-                info="h",
+                info=str(bucket["CreationDate"]),
                 hidden=bucket["Name"].startswith("."),
                 index=index,
+                raw=bucket,
             )
             for index, bucket in enumerate(result)
         ]
@@ -76,6 +77,7 @@ class S3:
                         info="",
                         hidden=s3_obj.startswith("."),
                         index=index + offset,
+                        raw=None,
                     )
                 )
             else:
@@ -88,6 +90,7 @@ class S3:
                         info=str(s3_obj["LastModified"]),
                         hidden=s3_obj["Key"].startswith("."),
                         index=index + offset,
+                        raw=s3_obj,
                     )
                 )
         return result
@@ -113,7 +116,14 @@ class S3:
             return await self._get_buckets()
         else:
             return [
-                File(name="..", type=FileType.dir, hidden=False, index=0, info="")
+                File(
+                    name="..",
+                    type=FileType.dir,
+                    hidden=False,
+                    index=0,
+                    info="",
+                    raw=None,
+                )
             ] + await self._get_objects(offset=1)
 
     async def cd(self, path: str = "", override: bool = False) -> List[File]:

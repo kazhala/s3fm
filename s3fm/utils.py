@@ -6,7 +6,8 @@ have no dependency or interaction with `prompt_toolkit`.
 import asyncio
 import shutil
 from functools import partial
-from typing import Any, Awaitable, Callable, Tuple
+from pathlib import Path
+from typing import Any, Awaitable, Callable, Optional, Tuple
 
 from prompt_toolkit.application import run_in_terminal
 
@@ -44,6 +45,31 @@ def transform_async(func: Callable[..., Any]) -> Callable[..., Awaitable[Any]]:
         return await loop.run_in_executor(executor, partial_func)
 
     return run
+
+
+def human_readable_size(value: float) -> Optional[str]:
+    """Convert bytes to human readable size.
+
+    Args:
+        value: Value in bytes.
+
+    Returns:
+        Humand readable size.
+
+    Reference:
+        https://github.com/aws/aws-cli
+    """
+    HUMANIZE_SUFFIXES = ("K", "M", "G", "T", "P", "E")
+    base = 1024
+    bytes_int = float(value)
+
+    if bytes_int < base:
+        return "%d B" % bytes_int
+
+    for i, suffix in enumerate(HUMANIZE_SUFFIXES):
+        unit = base ** (i + 2)
+        if round((bytes_int / unit) * base) < base:
+            return "%.1f %s" % ((base * bytes_int / unit), suffix)
 
 
 def patched_print(*values) -> None:
