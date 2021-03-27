@@ -1,5 +1,7 @@
 """Module contains the api class to access/interact with s3."""
-from typing import TYPE_CHECKING, List
+import os
+from pathlib import Path
+from typing import TYPE_CHECKING, List, Union
 
 import boto3
 from mypy_boto3_s3.type_defs import BucketTypeDef, ObjectTypeDef
@@ -16,7 +18,7 @@ class S3:
     """Class to provide access and interact with AWS s3."""
 
     def __init__(self) -> None:
-        self._path = ""
+        self._path = Path("")
         self._region = "ap-southeast-2"
         self._profile = "default"
 
@@ -26,11 +28,19 @@ class S3:
         return self.client.list_buckets()["Buckets"]
 
     @transform_async
-    def _list_objects(self, full_data: bool = False) -> List[ObjectTypeDef]:
+    def _list_objects(self, full_data: bool = False) -> List[Union[str, ObjectTypeDef]]:
         """List all objects within selected bucket."""
-        return self.client.list_objects_v2(
-            Bucket=self.bucket_name, Delimiter="/", Prefix=self.bucket_path
-        )["Contents"]
+        result = []
+        response = self.client.list_objects_v2(
+            Bucket=self.bucket_name,
+            Prefix="%s/" % self.bucket_path if self.bucket_path else "",
+            Delimiter="/",
+        )
+        for prefix in response.get("CommonPrefixes", []):
+            result.append(prefix["Prefix"])
+        for s3_obj in response.get("Contents", []):
+            result.append(s3_obj)
+        return result
 
     async def _get_buckets(self) -> List[File]:
         """Async wrapper to list all buckets.
@@ -56,17 +66,32 @@ class S3:
         Returns:
             A list of :class:`~s3fm.id.File`.
         """
-        result = await self._list_objects()
-        return [
-            File(
-                name=s3_obj["Key"],
-                type=FileType.dir if s3_obj["Key"].endswith("/") else FileType.file,
-                info=str(s3_obj["LastModified"]),
-                hidden=s3_obj["Key"].startswith("."),
-                index=index + offset,
-            )
-            for index, s3_obj in enumerate(result)
-        ]
+        response = await self._list_objects()
+        result = []
+        for index, s3_obj in enumerate(response):
+            if isinstance(s3_obj, str):
+                result.append(
+                    File(
+                        name=s3_obj,
+                        type=FileType.dir,
+                        info="",
+                        hidden=s3_obj.startswith("."),
+                        index=index + offset,
+                    )
+                )
+            else:
+                result.append(
+                    File(
+                        name=Path(s3_obj["Key"]).name,
+                        type=FileType.dir
+                        if s3_obj["Key"].endswith("/")
+                        else FileType.file,
+                        info=str(s3_obj["LastModified"]),
+                        hidden=s3_obj["Key"].startswith("."),
+                        index=index + offset,
+                    )
+                )
+        return result
 
     async def get_paths(self) -> List[File]:
         """Async wrapper to retrieve list of s3 buckets or objects.
@@ -85,12 +110,33 @@ class S3:
             ...     files = await s3.get_paths()
             >>> asyncio.run(main())
         """
-        if not self._path:
+        if str(self._path) == ".":
             return await self._get_buckets()
         else:
             return [
                 File(name="..", type=FileType.dir, hidden=False, index=0, info="")
             ] + await self._get_objects(offset=1)
+
+    async def cd(self, path: str = "", override: bool = False) -> List[File]:
+        """Update s3 path or select a bucket if not selected.
+
+        Args:
+            path: A :obj:`str` representing target path/bucket.
+                If not provided, navigate to current path parent.
+            override: Change directory to a absolute new path without
+                any consideration of the current path.
+
+        Returns:
+            A list of files in the new directory.
+        """
+        if not path or path == "..":
+            self._path = self._path.parent
+        else:
+            if override:
+                self._path = Path(path)
+            else:
+                self._path = self._path.joinpath(path)
+        return await self.get_paths()
 
     @property
     def client(self) -> "S3Client":
@@ -102,25 +148,27 @@ class S3:
     @property
     def uri(self) -> str:
         """str: Current s3 uri."""
-        return "s3://%s" % self._path
+        return "s3://%s" % ("" if str(self._path) == "." else self._path)
 
     @property
-    def path(self) -> str:
+    def path(self) -> Path:
         """str: S3 filepath."""
         return self._path
 
     @path.setter
-    def path(self, value: str) -> None:
+    def path(self, value: Path) -> None:
         self._path = value
 
     @property
     def bucket_name(self) -> str:
         """str: Name of the selected bucket."""
-        if not self._path:
+        if str(self._path) == ".":
             return ""
-        return self._path.split("/")[0]
+        return self._path.parts[0]
 
     @property
     def bucket_path(self) -> str:
         """str: Current s3 path."""
-        return self._path.replace(self.bucket_name, "")
+        if str(self._path) == ".":
+            return ""
+        return "/".join(self._path.parts[1:])

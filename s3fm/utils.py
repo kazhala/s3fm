@@ -8,6 +8,8 @@ import shutil
 from functools import partial
 from typing import Any, Awaitable, Callable, Tuple
 
+from prompt_toolkit.application import run_in_terminal
+
 
 def get_dimension(offset: int = 0) -> Tuple[int, int]:
     """Get terminal dimensions.
@@ -42,3 +44,12 @@ def transform_async(func: Callable[..., Any]) -> Callable[..., Awaitable[Any]]:
         return await loop.run_in_executor(executor, partial_func)
 
     return run
+
+
+def patched_print(*values) -> None:
+    """Print the values without interrupting the prompt."""
+
+    def _print():
+        print(*values)
+
+    run_in_terminal(_print)

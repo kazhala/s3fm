@@ -467,7 +467,13 @@ class FilePane(ConditionalContainer):
         if self._mode == PaneMode.fs:
             if self.current_selection.type == FileType.dir:
                 self._files = await self._fs.cd(Path(self.current_selection.name))
-                await self.filter_files()
+        elif self._mode == PaneMode.s3:
+            if (
+                self.current_selection.type == FileType.dir
+                or self.current_selection.type == FileType.bucket
+            ):
+                self._files = await self._s3.cd(self.current_selection.name)
+        await self.filter_files()
 
     @hist_dir
     @spin_spinner
@@ -590,7 +596,7 @@ class FilePane(ConditionalContainer):
     def path(self) -> str:
         """str: Current filepath."""
         if self.mode == PaneMode.s3:
-            return self._s3.path
+            return str(self._s3.path)
         elif self.mode == PaneMode.fs:
             return str(self._fs.path)
         else:
@@ -599,7 +605,7 @@ class FilePane(ConditionalContainer):
     @path.setter
     def path(self, value) -> None:
         if self.mode == PaneMode.s3:
-            self._s3.path = value
+            self._s3.path = Path(value)
         elif self.mode == PaneMode.fs:
             self._fs.path = Path(value)
         else:

@@ -17,8 +17,7 @@ class FS:
     """
 
     def __init__(self) -> None:
-        path = ""
-        self._path = Path(path).expanduser().resolve()
+        self._path = Path("").resolve()
 
     @transform_async
     def _list_files(self) -> List[Path]:
