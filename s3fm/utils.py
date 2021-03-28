@@ -6,10 +6,7 @@ have no dependency or interaction with `prompt_toolkit`.
 import asyncio
 import shutil
 from functools import partial
-from pathlib import Path
 from typing import Any, Awaitable, Callable, Optional, Tuple
-
-from prompt_toolkit.application import run_in_terminal
 
 
 def get_dimension(offset: int = 0) -> Tuple[int, int]:
@@ -20,6 +17,15 @@ def get_dimension(offset: int = 0) -> Tuple[int, int]:
 
     Returns:
         Height and width of the terminal with additional offset.
+
+    Examples:
+        >>> import os
+        >>> os.environ["LINES"] = "10"
+        >>> os.environ["COLUMNS"] = "20"
+        >>> get_dimension()
+        (20, 10)
+        >>> get_dimension(offset=2)
+        (18, 8)
     """
     term_cols, term_rows = shutil.get_terminal_size()
     return term_cols - offset, term_rows - offset
@@ -36,6 +42,20 @@ def transform_async(func: Callable[..., Any]) -> Callable[..., Awaitable[Any]]:
 
     Reference:
         https://github.com/Tinche/aiofiles/blob/32e3a7346b8a4060efb6102afdf9c3398b19030f/aiofiles/os.py#L7
+
+    Examples:
+        >>> import inspect
+
+        >>> def hello_world():
+        ...     pass
+        >>> inspect.iscoroutinefunction(hello_world)
+        False
+
+        >>> @transform_async
+        ... def hello_world():
+        ...     pass
+        >>> inspect.iscoroutinefunction(hello_world)
+        True
     """
 
     async def run(*args, loop=None, executor=None, **kwargs):
@@ -58,6 +78,16 @@ def human_readable_size(value: float) -> Optional[str]:
 
     Reference:
         https://github.com/aws/aws-cli
+
+    Examples:
+        >>> human_readable_size(10)
+        '10 B'
+        >>> human_readable_size(1024)
+        '1.0 K'
+        >>> human_readable_size(1048576)
+        '1.0 M'
+        >>> human_readable_size(11445484)
+        '10.9 M'
     """
     HUMANIZE_SUFFIXES = ("K", "M", "G", "T", "P", "E")
     base = 1024
@@ -70,12 +100,3 @@ def human_readable_size(value: float) -> Optional[str]:
         unit = base ** (i + 2)
         if round((bytes_int / unit) * base) < base:
             return "%.1f %s" % ((base * bytes_int / unit), suffix)
-
-
-def patched_print(*values) -> None:
-    """Print the values without interrupting the prompt."""
-
-    def _print():
-        print(*values)
-
-    run_in_terminal(_print)
