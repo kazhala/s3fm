@@ -61,14 +61,6 @@ class FS:
 
         Returns:
             A list of :class:`~s3fm.id.File`.
-
-        Examples:
-            >>> import asyncio
-            >>> from s3fm.api.fs import FS
-            >>> async def main():
-            ...     fs = FS()
-            ...     files = await fs.get_paths()
-            >>> asyncio.run(main())
         """
 
         def _get_filetype(path: Path) -> ID:

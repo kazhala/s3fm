@@ -97,14 +97,6 @@ class S3:
 
         Returns:
             A list of :class:`~s3fm.id.File`.
-
-        Examples:
-            >>> import asyncio
-            >>> from s3fm.api.s3 import S3
-            >>> async def main():
-            ...     s3 = S3()
-            ...     files = await s3.get_paths()
-            >>> asyncio.run(main())
         """
         if str(self._path) == ".":
             return await self._get_buckets()

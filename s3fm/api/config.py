@@ -444,6 +444,7 @@ class KBConfig:
             >>> from s3fm.api.config import Config
             >>> config = Config()
             >>> def exit_app(app):
+            ...     # custom pre-exit action
             ...     app.exit()
             >>> config.kb.unmap("exit")
             >>> config.kb.map(action=exit_app, keys="c-q")
