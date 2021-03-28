@@ -481,8 +481,6 @@ class Config:
     active_instance = None
 
     def __init__(self):
-        if self.__class__.active_instance:
-            return
         self._app = AppConfig()
         self._spinner = SpinnerConfig()
         self._style = StyleConfig()
