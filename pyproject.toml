@@ -25,10 +25,10 @@ pytest = "^6.2.2"
 docs = ["Sphinx", "furo", "sphinx-autobuild", "sphinx-copybutton", "myst-parser"]
 
 [tool.pytest.ini_options]
-addopts = --doctest-modules
+addopts = "--doctest-modules"
 
 [tool.isort]
-profile = black
+profile = "black"
 
 [tool.coverage.report]
 exclude_lines = [
