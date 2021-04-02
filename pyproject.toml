@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "s3fm"
+version = "0.0.1"
+description = "Terminal s3 file manager."
+authors = ["Kevin Zhuang <kevin7441@gmail.com>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.7"
+boto3 = "^1.17.43"
+click = "^7.1.2"
+prompt-toolkit = "^3.0.18"
+Sphinx = { version = "^3.5.3", optional = true }
+furo = { version = "^2021.3.20-beta.31", optional = true }
+myst-parser = { version = "^0.13.5", optional = true }
+sphinx-autobuild = { version = "^2021.3.14", optional = true }
+sphinx-copybutton = { version = "^0.3.1", optional = true }
+
+[tool.poetry.dev-dependencies]
+mypy-boto3-s3 = "^1.17.43"
+pre-commit = "^2.11.1"
+pytest = "^6.2.2"
+
+[tool.poetry.extras]
+docs = ["Sphinx", "furo", "sphinx-autobuild", "sphinx-copybutton", "myst-parser"]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
