@@ -24,6 +24,17 @@ pytest = "^6.2.2"
 [tool.poetry.extras]
 docs = ["Sphinx", "furo", "sphinx-autobuild", "sphinx-copybutton", "myst-parser"]
 
+[tool.pytest.ini_options]
+addopts = --doctest-modules
+
+[tool.isort]
+profile = black
+
+[tool.coverage.report]
+exclude_lines = [
+    "if TYPE_CHECKING:"
+]
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
