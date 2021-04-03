@@ -356,7 +356,10 @@ class App:
                 [VSplit([self._left_pane, self._right_pane]), self._command_pane]
             )
 
-        elif self._layout_mode == LayoutMode.horizontal:
+        elif (
+            self._layout_mode == LayoutMode.horizontal
+            or self._layout_mode == LayoutMode.single
+        ):
             layout = HSplit([self._left_pane, self._right_pane, self._command_pane])
         else:
             raise Bug("unexpected layout mode.")
