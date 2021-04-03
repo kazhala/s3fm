@@ -20,6 +20,7 @@ sphinx-copybutton = { version = "^0.3.1", optional = true }
 mypy-boto3-s3 = "^1.17.43"
 pre-commit = "^2.11.1"
 pytest = "^6.2.2"
+pytest-asyncio = "^0.14.0"
 
 [tool.poetry.extras]
 docs = ["Sphinx", "furo", "sphinx-autobuild", "sphinx-copybutton", "myst-parser"]
