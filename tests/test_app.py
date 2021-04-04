@@ -11,7 +11,7 @@ from s3fm.api.config import Config
 from s3fm.api.history import History
 from s3fm.app import App
 from s3fm.exceptions import Bug
-from s3fm.id import LayoutMode, Pane
+from s3fm.id import Direction, LayoutMode, Pane
 from s3fm.ui.filepane import FilePane
 
 
@@ -189,7 +189,7 @@ class TestFocus:
         assert app._current_focus == Pane.right
         assert app._filepane_focus == Pane.right
 
-    def test_focus_cmd(self, app, mocker: MockerFixture):
+    def test_focus_cmd_func(self, app, mocker: MockerFixture):
         mocked_focus = mocker.patch.object(App, "focus_pane")
         app.focus_cmd()
         mocked_focus.assert_called_once_with(Pane.cmd)
@@ -227,3 +227,41 @@ def test_switch_layout(app, mocker: MockerFixture):
     app.switch_layout(LayoutMode.vertical)
     mocked_focus.assert_called_once()
     assert app._layout_mode == LayoutMode.vertical
+
+
+class TestPaneSwap:
+    def test_single(self, app, mocker: MockerFixture):
+        mocked_focus1 = mocker.patch.object(App, "focus_pane")
+        mocked_focus2 = mocker.patch.object(App, "focus_other_pane")
+        app._layout_mode = LayoutMode.single
+        app.pane_swap(Direction.left, LayoutMode.vertical)
+        mocked_focus1.assert_not_called()
+        mocked_focus2.assert_not_called()
+
+    def test_no_swap_right(self, app, mocker: MockerFixture):
+        mocked_focus1 = mocker.patch.object(App, "focus_pane")
+        mocked_focus2 = mocker.patch.object(App, "focus_other_pane")
+        app._current_focus = Pane.right
+        app._layout_mode = LayoutMode.vertical
+        app.pane_swap(Direction.right, LayoutMode.vertical)
+        mocked_focus1.assert_not_called()
+        mocked_focus2.assert_not_called()
+
+        app._layout_mode = LayoutMode.horizontal
+        app.pane_swap(Direction.down, LayoutMode.horizontal)
+        mocked_focus1.assert_not_called()
+        mocked_focus2.assert_not_called()
+
+    def test_no_swap_left(self, app, mocker: MockerFixture):
+        mocked_focus1 = mocker.patch.object(App, "focus_pane")
+        mocked_focus2 = mocker.patch.object(App, "focus_other_pane")
+        app._current_focus = Pane.left
+        app._layout_mode = LayoutMode.vertical
+        app.pane_swap(Direction.left, LayoutMode.vertical)
+        mocked_focus1.assert_not_called()
+        mocked_focus2.assert_not_called()
+
+        app._layout_mode = LayoutMode.horizontal
+        app.pane_swap(Direction.up, LayoutMode.horizontal)
+        mocked_focus1.assert_not_called()
+        mocked_focus2.assert_not_called()
