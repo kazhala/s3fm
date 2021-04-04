@@ -1,8 +1,9 @@
-name: Lint
+name: CI
 on: [push, pull_request]
 
 jobs:
   pyright:
+    name: Pyright Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -15,7 +16,7 @@ jobs:
         with:
           poetry-version: 1.1.5
       - name: Install dependencies
-        run: poetry install
+        run: poetry install --no-dev
       - name: Setup node
         uses: actions/setup-node@v1
         with:
@@ -26,6 +27,7 @@ jobs:
         run: pyright InquirerPy
 
   pre-commit:
+    name: Pre-commit Check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -35,3 +37,29 @@ jobs:
           python-version: 3.9
       - name: Run pre-commit
         uses: pre-commit/action@v2.0.0
+
+  unittest:
+    name: Unit test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.7, 3.8, 3.9]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install poetry
+        uses: abatilo/actions-poetry@v2.0.0
+        with:
+          poetry-version: 1.1.5
+      - name: Install dependencies
+        run: poetry install
+      - name: Test with pytest
+        run: pytest --cov=s3fm
+      - name: Report coverage
+        if: matrix.python-version == 3.6
+        env:
+          COVERALLS_REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: poetry run coveralls
