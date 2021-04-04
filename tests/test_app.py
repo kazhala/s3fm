@@ -313,3 +313,21 @@ class TestPaneSwap:
         app.pane_swap(Direction.right, LayoutMode.vertical)
         mocked_focus1.assert_called_once()
         mocked_focus2.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_toggle_hidden_files(app):
+    assert app.current_filepane.display_hidden_files == True
+    await app.toggle_pane_hidden_files(False)
+    assert app.current_filepane.display_hidden_files == False
+
+
+def test_property_pane(app):
+    assert app.current_filepane == app._left_pane
+    assert app.current_focus == app._left_pane
+    app._current_focus = Pane.right
+    app._filepane_focus = Pane.right
+    assert app.current_focus == app._right_pane
+    assert app.current_filepane == app._right_pane
+    app._current_focus = Pane.cmd
+    assert app.current_focus == app._command_pane
