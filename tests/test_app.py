@@ -66,30 +66,10 @@ class TestAppLayout:
             app.layout
 
 
-class TestRedraw:
-    class Stub:
-        def __init__(self, value):
-            self.value = value
-
-        def cancelled(self):
-            return self.value
-
-    def test_redraw_cancelled(self, app, mocker):
-        spy = mocker.spy(Application, "invalidate")
-        stub = self.Stub(True)
-        app.redraw(task=stub)
-        spy.assert_not_called()
-
-    def test_redraw(self, app, mocker):
-        spy = mocker.spy(Application, "invalidate")
-        stub = self.Stub(False)
-        app.redraw(task=stub)
-        spy.assert_called_once()
-
-    def test_redraw_empty(self, app, mocker):
-        spy = mocker.spy(Application, "invalidate")
-        app.redraw()
-        spy.assert_called_once()
+def test_redraw(app, mocker: MockerFixture):
+    spy = mocker.spy(Application, "invalidate")
+    app.redraw()
+    spy.assert_called_once()
 
 
 @pytest.mark.asyncio
