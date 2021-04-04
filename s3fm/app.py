@@ -7,18 +7,11 @@ However, it's recommended to import the :class:`App` for type hinting purposes w
 using the :class:`~s3fm.api.config.Config`.
 """
 import asyncio
-from asyncio.tasks import Task
-from typing import Dict
+from typing import TYPE_CHECKING, Dict
 
 from prompt_toolkit.application import Application
 from prompt_toolkit.filters.base import Condition
-from prompt_toolkit.layout.containers import (
-    Container,
-    Float,
-    FloatContainer,
-    HSplit,
-    VSplit,
-)
+from prompt_toolkit.layout.containers import Float, FloatContainer, HSplit, VSplit
 from prompt_toolkit.layout.layout import Layout
 from prompt_toolkit.styles import Style
 from prompt_toolkit.widgets.base import Frame
@@ -31,6 +24,9 @@ from s3fm.id import ID, Direction, LayoutMode, Pane
 from s3fm.ui.commandpane import CommandPane
 from s3fm.ui.filepane import FilePane
 from s3fm.ui.optionpane import OptionPane
+
+if TYPE_CHECKING:
+    from prompt_toolkit.layout.containers import Container
 
 
 class App:
@@ -114,17 +110,11 @@ class App:
             key_bindings=self._kb,
         )
 
-    def redraw(self, task: Task = None) -> None:
+    def redraw(self) -> None:
         """Instruct the app to redraw itself to the terminal.
 
         This is useful when trying to force an UI update of the :class:`App`.
-
-        Args:
-            task: An asyncio task object.
-                Internal use for async task callback.
         """
-        if task is not None and task.cancelled():
-            return
         self._app.invalidate()
 
     async def _load_pane_data(self, pane: FilePane) -> None:
@@ -293,7 +283,7 @@ class App:
         else:
             self.focus_pane(self._current_focus)
 
-    def toggle_pane_hidden_files(self, value: bool = None) -> None:
+    async def toggle_pane_hidden_files(self, value: bool = None) -> None:
         """Toggle the current focused pane display hidden file status.
 
         Use this method to either instruct the current focused pane to show
@@ -310,8 +300,8 @@ class App:
         self.current_filepane.display_hidden_files = (
             value or not self.current_filepane.display_hidden_files
         )
-        task = asyncio.create_task(self.current_filepane.filter_files())
-        task.add_done_callback(self.redraw)
+        await self.current_filepane.filter_files()
+        self.redraw()
 
     @property
     def command_mode(self) -> Condition:
@@ -324,7 +314,7 @@ class App:
         return self._normal_mode
 
     @property
-    def current_focus(self) -> Container:
+    def current_focus(self) -> "Container":
         """:class:`prompt_toolkit.layout.Container`: Get current focused pane."""
         return {
             **self.filepanes,
