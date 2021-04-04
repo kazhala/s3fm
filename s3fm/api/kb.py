@@ -1,5 +1,6 @@
 """Module contains the modified :class:`prompt_toolkit.key_binding.KeyBindings` class."""
 import asyncio
+import inspect
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Union
 
 from prompt_toolkit.filters.base import Condition
@@ -178,8 +179,11 @@ class KB(KeyBindings):
             function_args = [self._app]
 
         @self.add(*keys, filter=filter, eager=eager, mode_id=mode_id, raw=raw, **kwargs)
-        def _(event: KeyPressEvent) -> None:
-            key_action["func"](*function_args if not raw else [event])
+        async def _(event: KeyPressEvent) -> None:
+            if inspect.iscoroutinefunction(key_action["func"]):
+                await key_action["func"](*function_args if not raw else [event])
+            else:
+                key_action["func"](*function_args if not raw else [event])
 
     def _set_action_multiplier(self, event: KeyPressEvent) -> None:
         key_num = event.key_sequence[0].key
@@ -291,10 +295,13 @@ class KB(KeyBindings):
 
         def decorator(func: KeyHandlerCallable) -> KeyHandlerCallable:
             @super_dec
-            def executable(event) -> None:
+            async def executable(event) -> None:
                 if not self._activated:
                     return
-                func(event)
+                if inspect.iscoroutinefunction(func):
+                    await func(event)  # type: ignore
+                else:
+                    func(event)
                 if not raw:
                     self._action_multiplier = None
 
