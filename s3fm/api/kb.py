@@ -1,5 +1,4 @@
 """Module contains the modified :class:`prompt_toolkit.key_binding.KeyBindings` class."""
-import asyncio
 import inspect
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Union
 
@@ -200,13 +199,13 @@ class KB(KeyBindings):
         """Scroll page down."""
         self._app.current_filepane.page_down()
 
-    def _forward(self) -> None:
+    async def _forward(self) -> None:
         """Perform forward action on current file."""
-        asyncio.create_task(self._app.current_filepane.forward())
+        await self._app.current_filepane.forward()
 
-    def _backword(self) -> None:
+    async def _backword(self) -> None:
         """Perform backword action."""
-        asyncio.create_task(self._app.current_filepane.backword())
+        await self._app.current_filepane.backword()
 
     def _swap_pane(self, direction: ID) -> None:
         """Move current pane to bottom split.
