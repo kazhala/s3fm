@@ -1,9 +1,6 @@
 name: CI
 on: [push, pull_request]
 
-env:
-  POETRY_VIRTUALENVS_CREATE: false
-
 jobs:
   pyright:
     name: Pyright Lint
@@ -42,7 +39,7 @@ jobs:
         uses: pre-commit/action@v2.0.0
 
   unittest:
-    name: Unit test
+    name: Unit Test
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -60,9 +57,9 @@ jobs:
       - name: Install dependencies
         run: poetry install
       - name: Test with pytest
-        run: pytest --cov=s3fm
+        run: poetry run pytest --cov=s3fm
       - name: Report coverage
         if: matrix.python-version == 3.8
         env:
-          COVERALLS_REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: poetry run coveralls
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: poetry run coveralls --service=github
