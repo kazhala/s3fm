@@ -11,7 +11,7 @@ from s3fm.api.config import Config
 from s3fm.api.history import History
 from s3fm.app import App
 from s3fm.exceptions import Bug
-from s3fm.id import LayoutMode
+from s3fm.id import LayoutMode, Pane
 from s3fm.ui.filepane import FilePane
 
 
@@ -129,3 +129,78 @@ async def test_after_render(app, mocker: MockerFixture):
     app._after_render(None)
     task.assert_not_called()
     stub.assert_called_with(app)
+
+
+@pytest.mark.asyncio
+async def test_run(app, mocker: MockerFixture):
+    mock_run = mocker.patch.object(Application, "run_async")
+    await app.run()
+    mock_run.assert_called_once()
+
+
+class TestFocus:
+    def test_focus_left(self, app, mocker: MockerFixture):
+        mocked_focus = mocker.patch("prompt_toolkit.layout.Layout.focus")
+        assert app._previous_focus == None
+        assert app._current_focus == Pane.left
+        assert app._filepane_focus == Pane.left
+
+        app.focus_pane(Pane.left)
+        assert app._previous_focus == Pane.left
+        assert app._current_focus == Pane.left
+        assert app._filepane_focus == Pane.left
+
+        mocked_focus.assert_called_once_with(app.current_focus)
+
+    def test_focus_right(self, app, mocker: MockerFixture):
+        mocker.patch("prompt_toolkit.layout.Layout.focus")
+        app.focus_pane(Pane.right)
+        assert app._previous_focus == Pane.left
+        assert app._current_focus == Pane.right
+        assert app._filepane_focus == Pane.right
+
+    def test_focus_cmd(self, app, mocker: MockerFixture):
+        mocker.patch("prompt_toolkit.layout.Layout.focus")
+        app.focus_pane(Pane.cmd)
+        assert app._previous_focus == Pane.left
+        assert app._current_focus == Pane.cmd
+        assert app._filepane_focus == Pane.left
+
+        app.focus_pane(Pane.right)
+        assert app._previous_focus == Pane.cmd
+        assert app._current_focus == Pane.right
+        assert app._filepane_focus == Pane.right
+
+        app.focus_pane(Pane.cmd)
+        assert app._previous_focus == Pane.right
+        assert app._current_focus == Pane.cmd
+        assert app._filepane_focus == Pane.right
+
+    def test_focus_other(self, app, mocker: MockerFixture):
+        mocker.patch("prompt_toolkit.layout.Layout.focus")
+        app.focus_other_pane()
+        assert app._previous_focus == Pane.left
+        assert app._current_focus == Pane.right
+        assert app._filepane_focus == Pane.right
+
+        app._layout_mode = LayoutMode.single
+        app.focus_other_pane()
+        assert app._previous_focus == Pane.left
+        assert app._current_focus == Pane.right
+        assert app._filepane_focus == Pane.right
+
+    def test_focus_cmd(self, app, mocker: MockerFixture):
+        mocked_focus = mocker.patch.object(App, "focus_pane")
+        app.focus_cmd()
+        mocked_focus.assert_called_once_with(Pane.cmd)
+
+    def test_exit_cmd(self, app, mocker: MockerFixture):
+        mocked_focus = mocker.patch.object(App, "focus_pane")
+        assert app._previous_focus == None
+        app.exit_cmd()
+        mocked_focus.assert_called_once_with(Pane.left)
+
+        mocked_focus.reset_mock()
+        app._previous_focus = Pane.right
+        app.exit_cmd()
+        mocked_focus.assert_called_once_with(Pane.right)
