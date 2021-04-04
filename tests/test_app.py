@@ -204,3 +204,26 @@ class TestFocus:
         app._previous_focus = Pane.right
         app.exit_cmd()
         mocked_focus.assert_called_once_with(Pane.right)
+
+
+def test_exit(app, mocker: MockerFixture):
+    mocker.patch.object(Application, "exit")
+    mocked_hist = mocker.patch.object(History, "write")
+    app._no_history = True
+    app.exit()
+    mocked_hist.assert_not_called()
+
+    app._no_history = False
+    app.exit()
+    mocked_hist.assert_called_once()
+
+
+def test_switch_layout(app, mocker: MockerFixture):
+    mocked_focus = mocker.patch.object(App, "focus_pane")
+    app.switch_layout(LayoutMode.single)
+    mocked_focus.assert_not_called()
+    assert app._layout_mode == LayoutMode.single
+
+    app.switch_layout(LayoutMode.vertical)
+    mocked_focus.assert_called_once()
+    assert app._layout_mode == LayoutMode.vertical
