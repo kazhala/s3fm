@@ -1,6 +1,9 @@
 name: CI
 on: [push, pull_request]
 
+env:
+  POETRY_VIRTUALENVS_CREATE: false
+
 jobs:
   pyright:
     name: Pyright Lint
