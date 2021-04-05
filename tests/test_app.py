@@ -11,7 +11,7 @@ from s3fm.api.config import Config
 from s3fm.api.history import History
 from s3fm.app import App
 from s3fm.exceptions import Bug
-from s3fm.id import Direction, LayoutMode, Pane
+from s3fm.enums import Direction, LayoutMode, Pane
 from s3fm.ui.filepane import FilePane
 
 

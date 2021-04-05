@@ -19,8 +19,8 @@ from prompt_toolkit.widgets.base import Frame
 from s3fm.api.config import Config
 from s3fm.api.history import History
 from s3fm.api.kb import KB
+from s3fm.enums import Direction, LayoutMode, Pane
 from s3fm.exceptions import Bug
-from s3fm.id import ID, Direction, LayoutMode, Pane
 from s3fm.ui.commandpane import CommandPane
 from s3fm.ui.filepane import FilePane
 from s3fm.ui.optionpane import OptionPane
@@ -170,17 +170,17 @@ class App:
         """Start the application in async mode."""
         await self._app.run_async()
 
-    def focus_pane(self, pane_id: ID) -> None:
+    def focus_pane(self, pane: Pane) -> None:
         """Focus specified pane and set the focus state.
 
         Args:
-            pane_id (ID): An :ref:`pages/configuration:ID` of the pane to focus.
+            pane: Target pane to focus.
                 E.g. `Pane.left`.
         """
-        if pane_id in self.filepanes:
-            self._filepane_focus = pane_id
+        if pane in self.filepanes:
+            self._filepane_focus = pane
         self._previous_focus = self._current_focus
-        self._current_focus = pane_id
+        self._current_focus = pane
         self._app.layout.focus(self.current_focus)
 
     def focus_other_pane(self) -> None:
@@ -219,19 +219,19 @@ class App:
             self._history.write()
         self._app.exit()
 
-    def switch_layout(self, layout_id: ID) -> None:
+    def switch_layout(self, layout: LayoutMode) -> None:
         """Switch to a different layout.
 
         Args:
-            layout_id (ID): An :ref:`pages/configuration:ID` of the layout.
+            layout: Desired layout mode to switch.
                 E.g. `LayoutMode.vertical`.
         """
-        self._layout_mode = layout_id
-        if layout_id != LayoutMode.single:
+        self._layout_mode = layout
+        if layout != LayoutMode.single:
             self._app.layout = self.layout
             self.focus_pane(self._current_focus)
 
-    def pane_swap(self, direction_id: ID, layout_id: ID) -> None:
+    def pane_swap(self, direction: Direction, layout: LayoutMode) -> None:
         """Swap panes left/right/up/down.
 
         This has side effects where it may cuase layout to change.
@@ -241,34 +241,34 @@ class App:
         This function won't have any effect when theres only one filepane.
 
         Args:
-            direction_id (ID): An :ref:`pages/configuration:ID` of the direction.
+            direction: Desired direction to swap.
                 E.g. `Direction.left`.
-            layout_id (ID): An :ref:`pages/configuration:ID` of the layout.
+            layout: Desired layout.
                 E.g. `LayoutMode.vertical`.
         """
         if self._layout_single():
             return
         if (
             self._current_focus == Pane.right
-            and (direction_id == Direction.right or direction_id == Direction.down)
-            and self._layout_mode == layout_id
+            and (direction == Direction.right or direction == Direction.down)
+            and self._layout_mode == layout
         ):
             return
         if (
             self._current_focus == Pane.left
-            and (direction_id == Direction.left or direction_id == Direction.up)
-            and self._layout_mode == layout_id
+            and (direction == Direction.left or direction == Direction.up)
+            and self._layout_mode == layout
         ):
             return
         pane_swapped = False
         if not (
             self._current_focus == Pane.right
-            and (direction_id == Direction.right or direction_id == Direction.down)
-            and self._layout_mode != layout_id
+            and (direction == Direction.right or direction == Direction.down)
+            and self._layout_mode != layout
         ) and not (
             self._current_focus == Pane.left
-            and (direction_id == Direction.left or direction_id == Direction.up)
-            and self._layout_mode != layout_id
+            and (direction == Direction.left or direction == Direction.up)
+            and self._layout_mode != layout
         ):
             pane_swapped = True
             self._left_pane, self._right_pane = self._right_pane, self._left_pane
@@ -276,7 +276,7 @@ class App:
                 self._right_pane.id,
                 self._left_pane.id,
             )
-        self._layout_mode = layout_id
+        self._layout_mode = layout
         self._app.layout = self.layout
         if pane_swapped:
             self.focus_other_pane()
@@ -327,8 +327,8 @@ class App:
         return self.filepanes[self._filepane_focus]
 
     @property
-    def filepanes(self) -> Dict[ID, FilePane]:
-        """Dict[ID, Container]: Get pane mappings."""
+    def filepanes(self) -> Dict[Pane, FilePane]:
+        """Dict[Pane, FilePane]: Get pane mappings."""
         return {
             Pane.left: self._left_pane,
             Pane.right: self._right_pane,

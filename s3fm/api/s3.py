@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, List
 import boto3
 
 from s3fm.api.file import File
-from s3fm.id import FileType
+from s3fm.enums import FileType
 from s3fm.utils import human_readable_size, transform_async
 
 if TYPE_CHECKING:

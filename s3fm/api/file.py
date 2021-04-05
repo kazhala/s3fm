@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Optional, Union
 
-from s3fm.id import ID
+from s3fm.enums import FileType
 
 
 @dataclass
@@ -18,7 +18,7 @@ class File:
 
     Args:
         name: Name of the file.
-        type (ID): FileType id.
+        type: FileType.
         info: Additional file information.
         hidden: Hidden file.
         index: Original file index
@@ -26,7 +26,7 @@ class File:
     """
 
     name: str
-    type: ID
+    type: FileType
     info: str
     hidden: bool
     index: int

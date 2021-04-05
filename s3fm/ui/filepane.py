@@ -21,8 +21,8 @@ from s3fm.api.file import File
 from s3fm.api.fs import FS
 from s3fm.api.history import History
 from s3fm.api.s3 import S3
+from s3fm.enums import FileType, Pane, PaneMode
 from s3fm.exceptions import Bug, ClientError
-from s3fm.id import ID, FileType, Pane, PaneMode
 from s3fm.ui.spinner import Spinner
 from s3fm.utils import get_dimension
 
@@ -108,7 +108,7 @@ class FilePane(ConditionalContainer):
     :class:`~s3fm.api.history.History` and is retrieved on the next time the app is opened.
 
     Args:
-        pane_id (ID): An :ref:`pages/configuration:ID` indicating whether this pane
+        pane_id: A :class:`~s3fm.enums.Pane` indicating whether this pane
             is the left pane or right pane. This is used to detect current app focus.
         spinner_config: :class:`~s3fm.api.config.Spinner` configuration.
         redraw: A callale that should be provided by :class:`~s3fm.app.App` which can force
@@ -127,14 +127,14 @@ class FilePane(ConditionalContainer):
 
     def __init__(
         self,
-        pane_id: ID,
+        pane_id: Pane,
         spinner_config: SpinnerConfig,
         linemode_config: LineModeConfig,
         app_config: AppConfig,
         redraw: Callable[[], None],
         layout_single: Condition,
         layout_vertical: Condition,
-        focus: Callable[[], ID],
+        focus: Callable[[], Pane],
         history: History,
     ) -> None:
         self._s3 = S3()
@@ -147,7 +147,7 @@ class FilePane(ConditionalContainer):
         self._dimension_offset = 0 if not app_config.border else 2
         self._padding = app_config.padding
         self._cycle = app_config.cycle
-        self._id = pane_id
+        self._id: Pane = pane_id
         self._single_mode = layout_single
         self._vertical_mode = layout_vertical
         self._focus = Condition(lambda: focus() == self._id)
@@ -520,10 +520,6 @@ class FilePane(ConditionalContainer):
     async def load_data(self) -> None:
         """Load the data into filepane.
 
-        Provide a `mode_id` to instruct which file to load. `PaneMode.s3` will
-        instruct to load the s3 data. `PaneMode.fs` will load the local file system
-        data.
-
         Raises:
             Bug: Current pane mode is not recognized.
         """
@@ -555,12 +551,12 @@ class FilePane(ConditionalContainer):
         return self._spinner
 
     @property
-    def id(self) -> ID:
-        """:ref:`pages/configuration:ID`: :class:`FilePane` ID in the :class:`~s3fm.app.App`."""
+    def id(self) -> Pane:
+        """Pane: Get the id indicating purpose of the filepane."""
         return self._id
 
     @id.setter
-    def id(self, value: int) -> None:
+    def id(self, value: Pane) -> None:
         self._id = value
 
     @property
@@ -601,12 +597,12 @@ class FilePane(ConditionalContainer):
             asyncio.create_task(self.spinner.start())
 
     @property
-    def mode(self) -> ID:
-        """:ref:`pages/configuration:ID`: Current pane mode."""
+    def mode(self) -> PaneMode:
+        """PaneMode: Current pane mode."""
         return self._mode
 
     @mode.setter
-    def mode(self, value: ID) -> None:
+    def mode(self, value: PaneMode) -> None:
         self._mode = value
 
     @property

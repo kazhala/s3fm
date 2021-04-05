@@ -7,12 +7,15 @@ from prompt_toolkit.key_binding.key_bindings import KeyBindings, KeyHandlerCalla
 from prompt_toolkit.key_binding.key_processor import KeyPressEvent
 from prompt_toolkit.keys import Keys
 
-from s3fm.id import ID, KB_MAPS, Direction, KBMode, LayoutMode
+from s3fm.enums import Direction, KBMode, LayoutMode
 
 if TYPE_CHECKING:
     from s3fm.app import App
 
-default_key_maps: Dict[ID, KB_MAPS] = {
+KBs = Union[Keys, str]
+KB_MAPS = Dict[str, List[Dict[str, Union[bool, KBs, Condition, List[KBs]]]]]
+
+default_key_maps: Dict[KBMode, KB_MAPS] = {
     KBMode.normal: {
         "exit": [{"keys": "c-c"}, {"keys": "q"}],
         "focus_pane": [{"keys": Keys.Tab}],
@@ -56,9 +59,9 @@ class KB(KeyBindings):
     def __init__(
         self,
         app: "App",
-        kb_maps: Dict[ID, KB_MAPS] = None,
-        custom_kb_maps: Dict[ID, KB_MAPS] = None,
-        custom_kb_lookup: Dict[ID, Dict[str, Any]] = None,
+        kb_maps: Dict[KBMode, KB_MAPS] = None,
+        custom_kb_maps: Dict[KBMode, KB_MAPS] = None,
+        custom_kb_lookup: Dict[KBMode, Dict[str, Any]] = None,
     ) -> None:
         self._activated = False
         self._app = app
@@ -122,30 +125,30 @@ class KB(KeyBindings):
         for i in range(10):
             self._factory(
                 action="set_action_multiplier",
-                mode_id=KBMode.normal,
+                mode=KBMode.normal,
                 custom=False,
                 raw=True,
                 keys=str(i),
             )
 
-    def _create_bindings(self, mode: ID, custom: bool = False) -> None:
+    def _create_bindings(self, mode: KBMode, custom: bool = False) -> None:
         """Create keybindings.
 
         Interal function to create all keybindings in `kb_maps` and `custom_kb_maps`.
 
         Args:
-            mode (ID): Indicate which mode to create the kb.
+            mode: Indicate which mode to create the kb.
             custom: Indicate if its custom kb.
         """
         target_maps = self._kb_maps if not custom else self._custom_kb_maps
         for action, binds in target_maps[mode].items():
             for bind in binds:
-                self._factory(action=action, mode_id=mode, custom=custom, **bind)
+                self._factory(action=action, mode=mode, custom=custom, **bind)
 
     def _factory(
         self,
         action: str,
-        mode_id: ID,
+        mode: KBMode,
         custom: bool,
         keys: Union[List[Union[Keys, str]], Union[Keys, str]],
         raw: bool = False,
@@ -159,7 +162,7 @@ class KB(KeyBindings):
 
         Args:
             action: The action to apply keybinding.
-            mode_id (ID): Which mode to bind this function.
+            mode: Which mode to bind this function.
             custom: Flag indicate if its custom function.
             raw: Use the raw `KeyPressEvent` as the argument.
             keys: List of keys to bind to the function.
@@ -170,14 +173,14 @@ class KB(KeyBindings):
         if not isinstance(keys, list):
             keys = [keys]
         target_lookup = self._kb_lookup if not custom else self._custom_kb_lookup
-        key_action = target_lookup[mode_id][action]
+        key_action = target_lookup[mode][action]
         if not isinstance(key_action, dict):
             key_action = {"func": key_action}
         function_args = key_action.get("args", [])
         if custom:
             function_args = [self._app]
 
-        @self.add(*keys, filter=filter, eager=eager, mode_id=mode_id, raw=raw, **kwargs)
+        @self.add(*keys, filter=filter, eager=eager, mode=mode, raw=raw, **kwargs)
         async def _(event: KeyPressEvent) -> None:
             if inspect.iscoroutinefunction(key_action["func"]):
                 await key_action["func"](*function_args if not raw else [event])
@@ -207,16 +210,16 @@ class KB(KeyBindings):
         """Perform backword action."""
         await self._app.current_filepane.backword()
 
-    def _swap_pane(self, direction: ID) -> None:
+    def _swap_pane(self, direction: Direction) -> None:
         """Move current pane to bottom split.
 
         Args:
-            direction (ID): Swap direction id.
+            direction: Swap direction.
         """
         if direction == Direction.down or direction == Direction.up:
-            self._app.pane_swap(direction, layout_id=LayoutMode.horizontal)
+            self._app.pane_swap(direction, layout=LayoutMode.horizontal)
         else:
-            self._app.pane_swap(direction, layout_id=LayoutMode.vertical)
+            self._app.pane_swap(direction, layout=LayoutMode.vertical)
 
     def _scroll_down(
         self,
@@ -248,7 +251,7 @@ class KB(KeyBindings):
         *keys: Union[Keys, str],
         filter: Condition = Condition(lambda: True),
         eager: bool = False,
-        mode_id: ID = KBMode.normal,
+        mode: KBMode = KBMode.normal,
         raw: bool = False,
         **kwargs,
     ) -> Callable[[KeyHandlerCallable], KeyHandlerCallable]:
@@ -266,7 +269,7 @@ class KB(KeyBindings):
             keys: Any number of keys to bind to the function.
             filter: Enable the keybinding only if filter condition is satisfied.
             eager: Force priority on this keybinding.
-            mode_id (ID): Which mode to bind this function.
+            mode: Which mode to bind this function.
             raw: Internal use only. For number keybinding.
             **kwargs: Additional args to provide to the :meth:`prompt_toolkit.key_binding.KeyBindings.add`.
 
@@ -279,7 +282,7 @@ class KB(KeyBindings):
             for more information.
 
             >>> from s3fm.api.config import Config
-            >>> from s3fm.id import KBMode
+            >>> from s3fm.enums import KBMode
             >>> config = Config()
             >>> @config.app.use_effect
             ... def _(app):
@@ -289,7 +292,7 @@ class KB(KeyBindings):
             ...             app.exit()
         """
         super_dec = super().add(
-            *keys, filter=filter & self._mode[mode_id], eager=eager, **kwargs
+            *keys, filter=filter & self._mode[mode], eager=eager, **kwargs
         )
 
         def decorator(func: KeyHandlerCallable) -> KeyHandlerCallable:

@@ -19,10 +19,11 @@ from prompt_toolkit.filters.base import Condition
 
 from s3fm.api.file import File
 from s3fm.api.kb import default_key_maps
+from s3fm.enums import FileType, KBMode
 from s3fm.exceptions import ClientError
-from s3fm.id import ID, KB_MAPS, FileType, KBMode, KBs
 
 if TYPE_CHECKING:
+    from s3fm.api.kb import KB_MAPS, KBs
     from s3fm.app import App
 
 
@@ -324,7 +325,7 @@ class StyleConfig(BaseStyleConfig):
 
         Examples:
             >>> from s3fm.api.config import Config, BaseStyleConfig
-            >>> from s3fm.id import FileType
+            >>> from s3fm.enums import FileType
             >>> config = Config()
             >>> @config.style.register(class_name="custom_class")
             ... class CustomClass(BaseStyleConfig):
@@ -359,8 +360,8 @@ class KBConfig:
     def map(
         self,
         action: Union[str, Callable[["App"], None]],
-        keys: Union[KBs, List[KBs]],
-        mode_id: ID = KBMode.normal,
+        keys: Union["KBs", List["KBs"]],
+        mode: KBMode = KBMode.normal,
         filter: Callable[[], bool] = lambda: True,
         eager: bool = False,
         **kwargs
@@ -375,7 +376,7 @@ class KBConfig:
             action: Provide str will indicate mappings for builtin functions.
                 Provide a callable for custom function mappings.
             keys: Keys to map to the action.
-            mode_id (ID): Which mode the keybinding should be operating.
+            mode: Which mode the keybinding should be operating.
             filter: A callable to enable the keybinding only in certain conditions.
             eager: Force priority of the keybindings. Meaning if theres already
                 a mapping using a key like `f`, set this flag to overwrite the other
@@ -392,8 +393,8 @@ class KBConfig:
             >>> config.kb.map(action="focus_cmd", keys=["c-w", ":"])
         """
         if isinstance(action, str):
-            if action in self._kb_maps[mode_id]:
-                self._kb_maps[mode_id][action].append(
+            if action in self._kb_maps[mode]:
+                self._kb_maps[mode][action].append(
                     {
                         "keys": keys,
                         "filter": Condition(filter),
@@ -404,8 +405,8 @@ class KBConfig:
             else:
                 raise ClientError("keybinding action %s does not exists." % action)
         else:
-            if str(action) in self._custom_kb_maps[mode_id]:
-                self._custom_kb_maps[mode_id][str(action)].append(
+            if str(action) in self._custom_kb_maps[mode]:
+                self._custom_kb_maps[mode][str(action)].append(
                     {
                         "keys": keys,
                         "filter": Condition(filter),
@@ -414,7 +415,7 @@ class KBConfig:
                     }
                 )
             else:
-                self._custom_kb_maps[mode_id][str(action)] = [
+                self._custom_kb_maps[mode][str(action)] = [
                     {
                         "keys": keys,
                         "filter": Condition(filter),
@@ -422,10 +423,12 @@ class KBConfig:
                         **kwargs,
                     }
                 ]
-                self._custom_kb_lookup[mode_id][str(action)] = action
+                self._custom_kb_lookup[mode][str(action)] = action
 
     def unmap(
-        self, action: Union[str, Callable[["App"], None]], mode_id: ID = KBMode.normal
+        self,
+        action: Union[str, Callable[["App"], None]],
+        mode: KBMode = KBMode.normal,
     ) -> None:
         """Unmap actions and keys.
 
@@ -438,7 +441,7 @@ class KBConfig:
         Args:
             action: Provide str will indicate unmapping for builtin functions.
                 Provide a callable for unmapping custom function mappings.
-            mode_id (ID): Which mode the keybinding should be unmapped.
+            mode: Which mode the keybinding should be unmapped.
 
         Examples:
             >>> from s3fm.api.config import Config
@@ -450,23 +453,23 @@ class KBConfig:
             >>> config.kb.map(action=exit_app, keys="c-q")
         """
         if isinstance(action, str):
-            self._kb_maps[mode_id].pop(action, None)
+            self._kb_maps[mode].pop(action, None)
         else:
-            self._custom_kb_maps[mode_id].pop(str(action), None)
+            self._custom_kb_maps[mode].pop(str(action), None)
 
     @property
-    def kb_maps(self) -> Dict[ID, KB_MAPS]:
-        """Dict[ID, KB_MAPS]: Configured kb mappings."""
+    def kb_maps(self) -> Dict[KBMode, "KB_MAPS"]:
+        """Dict[KBMode, KB_MAPS]: Configured kb mappings."""
         return self._kb_maps
 
     @property
-    def custom_kb_maps(self) -> Dict[ID, KB_MAPS]:
-        """Dict[ID, KB_MAPS]: Custom kb mappings."""
+    def custom_kb_maps(self) -> Dict[KBMode, "KB_MAPS"]:
+        """Dict[KBMode, KB_MAPS]: Custom kb mappings."""
         return self._custom_kb_maps
 
     @property
-    def custom_kb_lookup(self) -> Dict[ID, Dict[str, Any]]:
-        """Dict[ID, Dict[str, Any]]: Custom kb lookup."""
+    def custom_kb_lookup(self) -> Dict[KBMode, Dict[str, Any]]:
+        """Dict[KBMode, Dict[str, Any]]: Custom kb lookup."""
         return self._custom_kb_lookup
 
 

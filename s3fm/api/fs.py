@@ -4,8 +4,8 @@ from pathlib import Path
 from typing import List, Optional
 
 from s3fm.api.file import File
+from s3fm.enums import FileType
 from s3fm.exceptions import Bug
-from s3fm.id import ID, FileType
 from s3fm.utils import human_readable_size, transform_async
 
 
@@ -63,7 +63,7 @@ class FS:
             A list of :class:`~s3fm.id.File`.
         """
 
-        def _get_filetype(path: Path) -> ID:
+        def _get_filetype(path: Path) -> FileType:
             if path.is_dir():
                 return FileType.dir if not path.is_symlink() else FileType.dir_link
             else:

@@ -9,7 +9,7 @@ from collections import OrderedDict
 from pathlib import Path
 from typing import Any, Iterator, Tuple
 
-from s3fm.id import ID, LayoutMode, Pane, PaneMode
+from s3fm.enums import LayoutMode, Pane, PaneMode
 from s3fm.utils import transform_async
 
 __all__ = ["History"]
@@ -90,30 +90,30 @@ class History:
             yield attr, value
 
     @property
-    def focus(self) -> ID:
-        """:ref:`pages/configuration:ID`: Current :class:`~s3fm.app.App` focus id."""
+    def focus(self) -> Pane:
+        """Pane: Current focus pane."""
         return self._focus
 
     @focus.setter
-    def focus(self, value: ID) -> None:
+    def focus(self, value: Pane) -> None:
         self._focus = value
 
     @property
-    def left_mode(self) -> ID:
-        """:ref:`pages/configuration:ID`: Left pane mode."""
+    def left_mode(self) -> PaneMode:
+        """PaneMode: Left pane mode."""
         return self._left_mode
 
     @left_mode.setter
-    def left_mode(self, value: ID) -> None:
+    def left_mode(self, value: PaneMode) -> None:
         self._left_mode = value
 
     @property
-    def right_mode(self) -> ID:
-        """:ref:`pages/configuration:ID`: Right pane mode."""
+    def right_mode(self) -> PaneMode:
+        """PaneMode: Right pane mode."""
         return self._right_mode
 
     @right_mode.setter
-    def right_mode(self, value: ID) -> None:
+    def right_mode(self, value: PaneMode) -> None:
         self._right_mode = value
 
     @property
@@ -153,12 +153,12 @@ class History:
         self._right_path = value
 
     @property
-    def layout(self) -> ID:
-        """:ref:`pages/configuration:ID`: Layout mode."""
+    def layout(self) -> LayoutMode:
+        """LayoutMode: Layout mode."""
         return self._layout
 
     @layout.setter
-    def layout(self, value: ID) -> None:
+    def layout(self, value: LayoutMode) -> None:
         self._layout = value
 
     @property
