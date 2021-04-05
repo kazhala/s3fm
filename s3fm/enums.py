@@ -1,22 +1,22 @@
 """Module contains Enums that will be used as resource arguments."""
-from enum import Enum
+from enum import IntEnum
 
 
-class KBMode(Enum):
+class KBMode(IntEnum):
     """Keybinding modes."""
 
     normal = 0
     command = 1
 
 
-class PaneMode(Enum):
+class PaneMode(IntEnum):
     """Pane operating modes."""
 
     s3 = 0
     fs = 1
 
 
-class Pane(Enum):
+class Pane(IntEnum):
     """Panes."""
 
     left = 0
@@ -24,7 +24,7 @@ class Pane(Enum):
     cmd = 2
 
 
-class LayoutMode(Enum):
+class LayoutMode(IntEnum):
     """Layout modes."""
 
     vertical = 0
@@ -32,7 +32,7 @@ class LayoutMode(Enum):
     single = 2
 
 
-class Direction(Enum):
+class Direction(IntEnum):
     """Directions."""
 
     up = 0
@@ -41,7 +41,7 @@ class Direction(Enum):
     right = 3
 
 
-class FileType(Enum):
+class FileType(IntEnum):
     """File types."""
 
     bucket = 0
