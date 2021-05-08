@@ -98,6 +98,11 @@ def file_action(func: Callable[..., Awaitable[None]]):
 
     Returns:
         Updated function with checks.
+
+    Examples:
+        >>> @file_action
+        ... async def _(filepane: FilePane):
+        ...     pass
     """
 
     @wraps(func)

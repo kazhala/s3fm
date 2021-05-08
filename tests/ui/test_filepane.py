@@ -5,7 +5,7 @@ from pytest_mock.plugin import MockerFixture
 
 from s3fm.app import App
 from s3fm.enums import PaneMode
-from s3fm.ui.filepane import FilePane, hist_dir, spin_spinner
+from s3fm.ui.filepane import FilePane, file_action, hist_dir, spin_spinner
 
 
 @pytest.mark.asyncio
@@ -51,3 +51,17 @@ async def test_spin_spinner(app: App, mocker: MockerFixture):
 
     await spin(app._left_pane)
     assert app._left_pane.loading == False
+
+
+@pytest.mark.asyncio
+async def test_file_action(app: App, mocker: MockerFixture):
+    @file_action
+    async def file_operation(filepane: FilePane):
+        assert True == False
+
+    await file_operation(app._left_pane)
+
+    mocked_selection = mocker.patch.object(FilePane, "current_selection")
+    mocked_selection.return_value = None
+    with pytest.raises(AssertionError):
+        await file_operation(app._left_pane)
