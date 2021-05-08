@@ -1,3 +1,4 @@
+from s3fm.api.kb import KB
 import pytest
 from prompt_toolkit.application import create_app_session
 from prompt_toolkit.application.application import Application
@@ -331,3 +332,6 @@ def test_property_pane(app):
     assert app.current_filepane == app._right_pane
     app._current_focus = Pane.cmd
     assert app.current_focus == app._command_pane
+
+    assert isinstance(app.kb, KB) == True
+    assert app.rendered == False
