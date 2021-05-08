@@ -1,10 +1,11 @@
 from pathlib import Path
 
 import pytest
+from pytest_mock.plugin import MockerFixture
 
 from s3fm.app import App
 from s3fm.enums import PaneMode
-from s3fm.ui.filepane import FilePane, hist_dir
+from s3fm.ui.filepane import FilePane, hist_dir, spin_spinner
 
 
 @pytest.mark.asyncio
@@ -43,5 +44,10 @@ async def test_hist_dir_cd(app: App):
 
 
 @pytest.mark.asyncio
-async def test_spin_spinner(app: App):
-    pass
+async def test_spin_spinner(app: App, mocker: MockerFixture):
+    @spin_spinner
+    async def spin(filepane: FilePane):
+        assert filepane.loading == True
+
+    await spin(app._left_pane)
+    assert app._left_pane.loading == False

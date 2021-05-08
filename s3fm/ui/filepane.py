@@ -38,7 +38,7 @@ def hist_dir(func: Callable[..., Awaitable[None]]):
 
     Examples:
         >>> @hist_dir
-        ... def _(filepane: FilePane):
+        ... async def _(filepane: FilePane):
         ...     pass
     """
 
@@ -69,6 +69,11 @@ def spin_spinner(func: Callable[..., Awaitable[None]]):
 
     Returns:
         Decorated function.
+
+    Examples:
+        >>> @spin_spinner
+        ... async def _(filepane: FilePane):
+        ...     pass
     """
 
     @wraps(func)
