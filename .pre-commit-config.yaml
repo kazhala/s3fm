@@ -3,7 +3,6 @@ repos:
     rev: 20.8b1
     hooks:
       - id: black
-        files: s3fm
 
   - repo: https://github.com/PyCQA/pydocstyle
     rev: 5.1.1
