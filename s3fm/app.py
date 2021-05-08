@@ -45,7 +45,8 @@ class App:
             :class:`~s3fm.api.history.History` won't be loaded.
     """
 
-    def __init__(self, config: Config, no_history: bool = False) -> None:
+    def __init__(self, config: Config = None, no_history: bool = False) -> None:
+        config = config or Config()
         self._style = Style.from_dict(dict(config.style))
         self._rendered = False
         self._no_history = no_history
