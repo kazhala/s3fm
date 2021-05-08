@@ -1,31 +1,15 @@
 import pytest
-from prompt_toolkit.application import create_app_session
 from prompt_toolkit.application.application import Application
-from prompt_toolkit.input import create_pipe_input
 from prompt_toolkit.layout.containers import FloatContainer, VSplit
-from prompt_toolkit.output import DummyOutput
 from prompt_toolkit.widgets.base import Frame
 from pytest_mock.plugin import MockerFixture
 
-from s3fm.api.config import Config
 from s3fm.api.history import History
 from s3fm.api.kb import KB
 from s3fm.app import App
 from s3fm.enums import Direction, LayoutMode, Pane
 from s3fm.exceptions import Bug
 from s3fm.ui.filepane import FilePane
-
-
-@pytest.fixture
-def app():
-    pipe_input = create_pipe_input()
-    try:
-        with create_app_session(input=pipe_input, output=DummyOutput()):
-            config = Config()
-            app = App(config=config)
-            yield app
-    finally:
-        pipe_input.close()
 
 
 class TestAppLayout:

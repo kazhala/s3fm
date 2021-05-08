@@ -35,6 +35,11 @@ def hist_dir(func: Callable[..., Awaitable[None]]):
 
     Returns:
         Decorated function.
+
+    Examples:
+        >>> @hist_dir
+        ... def _(filepane: FilePane):
+        ...     pass
     """
 
     @wraps(func)
