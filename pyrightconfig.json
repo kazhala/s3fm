@@ -3,5 +3,6 @@
   "reportUnusedVariable": "warning",
   "reportUnusedClass": "warning",
   "reportDuplicateImport": "warning",
-  "reportPrivateUsage": "error"
+  "reportPrivateUsage": "error",
+  "ignore": ["tests"]
 }
