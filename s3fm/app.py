@@ -180,8 +180,8 @@ class App:
         Examples:
             >>> from s3fm.app import App
             >>> from s3fm.enums import Pane
-            >>> app = App()
-            >>> app.focus_pane(Pane.left)
+            >>> app = App() # doctest: +SKIP
+            >>> app.focus_pane(Pane.left) # doctest: +SKIP
         """
         if pane in self.filepanes:
             self._filepane_focus = pane
@@ -234,8 +234,8 @@ class App:
         Examples:
             >>> from s3fm.app import App
             >>> from s3fm.enums import LayoutMode
-            >>> app = App()
-            >>> app.switch_layout(LayoutMode.vertical)
+            >>> app = App() # doctest: +SKIP
+            >>> app.switch_layout(LayoutMode.vertical) # doctest: +SKIP
         """
         self._layout_mode = layout
         if layout != LayoutMode.single:
@@ -258,8 +258,8 @@ class App:
         Examples:
             >>> from s3fm.app import App
             >>> from s3fm.enums import Direction, LayoutMode
-            >>> app = App()
-            >>> app.pane_swap(Direction.left, LayoutMode.vertical)
+            >>> app = App() # doctest: +SKIP
+            >>> app.pane_swap(Direction.left, LayoutMode.vertical) # doctest: +SKIP
         """
         if self._layout_single():
             return
