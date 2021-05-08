@@ -176,7 +176,12 @@ class App:
 
         Args:
             pane: Target pane to focus.
-                E.g. `Pane.left`.
+
+        Examples:
+            >>> from s3fm.app import App
+            >>> from s3fm.enums import Pane
+            >>> app = App()
+            >>> app.focus_pane(Pane.left)
         """
         if pane in self.filepanes:
             self._filepane_focus = pane
@@ -225,7 +230,12 @@ class App:
 
         Args:
             layout: Desired layout mode to switch.
-                E.g. `LayoutMode.vertical`.
+
+        Examples:
+            >>> from s3fm.app import App
+            >>> from s3fm.enums import LayoutMode
+            >>> app = App()
+            >>> app.switch_layout(LayoutMode.vertical)
         """
         self._layout_mode = layout
         if layout != LayoutMode.single:
@@ -243,9 +253,13 @@ class App:
 
         Args:
             direction: Desired direction to swap.
-                E.g. `Direction.left`.
             layout: Desired layout.
-                E.g. `LayoutMode.vertical`.
+
+        Examples:
+            >>> from s3fm.app import App
+            >>> from s3fm.enums import Direction, LayoutMode
+            >>> app = App()
+            >>> app.pane_swap(Direction.left, LayoutMode.vertical)
         """
         if self._layout_single():
             return
