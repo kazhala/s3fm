@@ -15,4 +15,3 @@ repos:
     rev: 5.7.0
     hooks:
       - id: isort
-        files: s3fm

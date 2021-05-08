@@ -1,4 +1,3 @@
-from s3fm.api.kb import KB
 import pytest
 from prompt_toolkit.application import create_app_session
 from prompt_toolkit.application.application import Application
@@ -10,9 +9,10 @@ from pytest_mock.plugin import MockerFixture
 
 from s3fm.api.config import Config
 from s3fm.api.history import History
+from s3fm.api.kb import KB
 from s3fm.app import App
-from s3fm.exceptions import Bug
 from s3fm.enums import Direction, LayoutMode, Pane
+from s3fm.exceptions import Bug
 from s3fm.ui.filepane import FilePane
 
 
