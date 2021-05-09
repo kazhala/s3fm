@@ -6,7 +6,7 @@ from pytest_mock.plugin import MockerFixture
 from s3fm.api.file import File
 from s3fm.app import App
 from s3fm.enums import FileType, PaneMode
-from s3fm.exceptions import Bug
+from s3fm.exceptions import Bug, ClientError
 from s3fm.ui.filepane import FilePane, file_action, hist_dir, spin_spinner
 
 
@@ -235,3 +235,89 @@ class TestGetFormattedFiles:
         assert patched_app._left_pane._get_formatted_files() == self.output1
         assert patched_app._left_pane._first_line == 0
         assert patched_app._left_pane._last_line == 5
+
+
+class TestGetFileInfo:
+    def test_file(self, app: App):
+        assert (
+            app._left_pane._get_file_info(
+                File(
+                    name="Hello",
+                    type=FileType.file,
+                    info="",
+                    hidden=False,
+                    index=0,
+                    raw=None,
+                )
+            )
+            == ("class:filepane.file", " \uf4a5 ", "Hello", "")
+        )
+
+        assert (
+            app._left_pane._get_file_info(
+                File(
+                    name="Hello.js",
+                    type=FileType.file,
+                    info="",
+                    hidden=False,
+                    index=0,
+                    raw=None,
+                )
+            )
+            == ("class:filepane.file", " \ue60c ", "Hello.js", "")
+        )
+
+    def test_dir(self, app: App):
+        assert (
+            app._left_pane._get_file_info(
+                File(
+                    name="Downloads",
+                    type=FileType.file,
+                    info="",
+                    hidden=False,
+                    index=0,
+                    raw=None,
+                )
+            )
+            == ("class:filepane.file", " \uf74c ", "Downloads", "")
+        )
+
+    def test_line_process_bug(self, app: App):
+        @app._left_pane._linemode.register
+        def _(file):
+            return ("hello",)
+
+        with pytest.raises(ClientError):
+            app._left_pane._get_file_info(
+                File(
+                    name="Downloads",
+                    type=FileType.link,
+                    info="",
+                    hidden=False,
+                    index=0,
+                    raw=None,
+                )
+            )
+
+    def test_line_process(self, app: App):
+        @app._left_pane._linemode.register
+        def _(file):
+            return None
+
+        @app._left_pane._linemode.register
+        def _(file):
+            return ("class:filepane.file", "   ", file.name, file.info)
+
+        assert (
+            app._left_pane._get_file_info(
+                File(
+                    name="Downloads",
+                    type=FileType.file,
+                    info="",
+                    hidden=False,
+                    index=0,
+                    raw=None,
+                )
+            )
+            == ("class:filepane.file", "   ", "Downloads", "")
+        )
