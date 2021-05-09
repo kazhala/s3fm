@@ -5,6 +5,7 @@ from pytest_mock.plugin import MockerFixture
 
 from s3fm.app import App
 from s3fm.enums import PaneMode
+from s3fm.exceptions import Bug
 from s3fm.ui.filepane import FilePane, file_action, hist_dir, spin_spinner
 
 
@@ -65,3 +66,26 @@ async def test_file_action(app: App, mocker: MockerFixture):
     mocked_selection.return_value = None
     with pytest.raises(AssertionError):
         await file_operation(app._left_pane)
+
+
+def test_get_pane_info(app: App):
+    assert app._left_pane._get_pane_info() == []
+    assert app._right_pane._get_pane_info() == []
+    app._right_pane.mode = PaneMode.fs
+
+    app._left_pane._loaded = True
+    assert app._left_pane.mode == PaneMode.s3
+    assert app._left_pane._get_pane_info() == [("class:filepane.focus_path", "s3://")]
+
+    app._right_pane._loaded = True
+    assert app._right_pane.mode == PaneMode.fs
+    assert app._right_pane._get_pane_info() == [
+        (
+            "class:filepane.unfocus_path",
+            str(app._right_pane._fs.path).replace(str(Path("~").expanduser()), "~"),
+        )
+    ]
+
+    with pytest.raises(Bug):
+        app._left_pane.mode = 3
+        app._left_pane._get_pane_info()
