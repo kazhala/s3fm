@@ -126,18 +126,17 @@ class FilePane(ConditionalContainer):
         pane_id: A :class:`~s3fm.enums.Pane` indicating whether this pane
             is the left pane or right pane. This is used to detect current app focus.
         spinner_config: :class:`~s3fm.api.config.Spinner` configuration.
+        linemode_config: :class:`~s3fm.api.config.LineModeConfig` instance.
+        app_config: :class:`~s3fm.api.config.AppConfig` instance.
         redraw: A callale that should be provided by :class:`~s3fm.app.App` which can force
             an UI update on the app.
-        dimension_offset: Offset that should be applied to height or width.
         layout_single: A :class:`prompt_toolkit.filters.Condition` that can be used to check
             if the current :class:`~s3fm.app.App` is single layout.
         layout_vertical: A :class:`prompt_toolkit.filters.Condition` that can be used check
             if the current :class:`~s3fm.app.App` is vertical layout.
         focus: A function to be provided by :class:`~s3fm.app.App` to be used to get current
             app focus.
-        padding: Padding to be applied around the file pane. This can be configured under
-            :class:`~s3fm.api.config.AppConfig`.
-        linemode: :class:`~s3fm.api.config.LineModeConfig` instance.
+        history: :class:`~s3fm.api.hisotry.History` instnace.
     """
 
     def __init__(
