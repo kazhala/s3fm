@@ -5,7 +5,7 @@ from pytest_mock.plugin import MockerFixture
 
 from s3fm.api.file import File
 from s3fm.app import App
-from s3fm.enums import FileType, PaneMode
+from s3fm.enums import FileType, Pane, PaneMode
 from s3fm.exceptions import Bug, ClientError
 from s3fm.ui.filepane import FilePane, file_action, hist_dir, spin_spinner
 
@@ -321,3 +321,18 @@ class TestGetFileInfo:
             )
             == ("class:filepane.file", "   ", "Downloads", "")
         )
+
+
+def test_get_width_dimension(app: App, mocker: MockerFixture):
+    mocked_dimension = mocker.patch("s3fm.ui.filepane.get_dimension")
+    mocked_dimension.return_value = (19, 10)
+
+    assert app._left_pane._id == Pane.left
+    assert app._left_pane._padding == 1
+    app._left_pane._get_width_dimension()
+    assert app._left_pane._width == 9
+
+    assert app._right_pane._id == Pane.right
+    assert app._right_pane._padding == 1
+    app._right_pane._get_width_dimension()
+    assert app._right_pane._width == 8
