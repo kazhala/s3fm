@@ -3,8 +3,9 @@ from pathlib import Path
 import pytest
 from pytest_mock.plugin import MockerFixture
 
+from s3fm.api.file import File
 from s3fm.app import App
-from s3fm.enums import PaneMode
+from s3fm.enums import FileType, PaneMode
 from s3fm.exceptions import Bug
 from s3fm.ui.filepane import FilePane, file_action, hist_dir, spin_spinner
 
@@ -89,3 +90,51 @@ def test_get_pane_info(app: App):
     with pytest.raises(Bug):
         app._left_pane.mode = 3
         app._left_pane._get_pane_info()
+
+
+class TestGetFormattedFiles:
+    def test_no_files(self, app: App):
+        assert app._left_pane.file_count == 0
+        assert app._left_pane._get_formatted_files() == []
+
+    @pytest.mark.asyncio
+    async def test_index_fix(self, app: App, mocker: MockerFixture):
+        mocked_height = mocker.patch.object(FilePane, "_get_height")
+        mocked_height.return_value = 10
+
+        app._left_pane._width = 10
+        app._left_pane._selected_file_index = -1
+        app._left_pane._files = [
+            File(
+                name="hello",
+                type=FileType.dir,
+                info="",
+                hidden=False,
+                raw=Path(),
+                index=0,
+            )
+        ]
+        await app._left_pane.filter_files()
+        assert app._left_pane.file_count == 1
+        assert app._left_pane._get_formatted_files() == [
+            ("[SetCursorPosition]", ""),
+            ("class:filepane.current_line class:filepane.dir", " \uf413 "),
+            ("class:filepane.current_line class:filepane.dir", "hello"),
+            ("class:filepane.current_line class:filepane.dir", "  "),
+            ("class:filepane.current_line class:filepane.dir", ""),
+        ]
+        assert app._left_pane._selected_file_index == 0
+
+        app._left_pane._selected_file_index = 2
+        app._left_pane._get_formatted_files()
+        assert app._left_pane._selected_file_index == 0
+
+    @pytest.mark.asyncio
+    async def test_height(self, app: App, mocker: MockerFixture):
+        mocked_height = mocker.patch.object(FilePane, "_get_height")
+        mocked_height.return_value = 5
+        app._left_pane._files = [
+            File(name="%s" % i, type=i, info="", hidden=False, raw=Path(), index=i)
+            for i in range(6)
+        ]
+        await app._left_pane.filter_files()

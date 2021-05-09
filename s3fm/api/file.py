@@ -22,7 +22,7 @@ class File:
         info: Additional file information.
         hidden: Hidden file.
         index: Original file index
-        Path: Full path of the file.
+        raw: Full path of the file.
     """
 
     name: str
