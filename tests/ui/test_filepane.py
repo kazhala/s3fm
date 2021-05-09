@@ -93,6 +93,62 @@ def test_get_pane_info(app: App):
 
 
 class TestGetFormattedFiles:
+    output1 = [
+        ("[SetCursorPosition]", ""),
+        ("class:filepane.current_line class:filepane.bucket", " \uf171 "),
+        ("class:filepane.current_line class:filepane.bucket", "0"),
+        ("class:filepane.current_line class:filepane.bucket", ""),
+        ("class:filepane.current_line class:filepane.bucket", ""),
+        ("", "\n"),
+        ("class:filepane.other_line class:filepane.dir", " \uf413 "),
+        ("class:filepane.other_line class:filepane.dir", "1"),
+        ("class:filepane.other_line class:filepane.dir", ""),
+        ("class:filepane.other_line class:filepane.dir", ""),
+        ("", "\n"),
+        ("class:filepane.other_line class:filepane.file", " \uf4a5 "),
+        ("class:filepane.other_line class:filepane.file", "2"),
+        ("class:filepane.other_line class:filepane.file", ""),
+        ("class:filepane.other_line class:filepane.file", ""),
+        ("", "\n"),
+        ("class:filepane.other_line class:filepane.link", " \uf481 "),
+        ("class:filepane.other_line class:filepane.link", "3"),
+        ("class:filepane.other_line class:filepane.link", ""),
+        ("class:filepane.other_line class:filepane.link", ""),
+        ("", "\n"),
+        ("class:filepane.other_line class:filepane.dir_link", " \uf482 "),
+        ("class:filepane.other_line class:filepane.dir_link", "4"),
+        ("class:filepane.other_line class:filepane.dir_link", ""),
+        ("class:filepane.other_line class:filepane.dir_link", ""),
+    ]
+
+    output2 = [
+        ("class:filepane.other_line class:filepane.dir", " \uf413 "),
+        ("class:filepane.other_line class:filepane.dir", "1"),
+        ("class:filepane.other_line class:filepane.dir", ""),
+        ("class:filepane.other_line class:filepane.dir", ""),
+        ("", "\n"),
+        ("class:filepane.other_line class:filepane.file", " \uf4a5 "),
+        ("class:filepane.other_line class:filepane.file", "2"),
+        ("class:filepane.other_line class:filepane.file", ""),
+        ("class:filepane.other_line class:filepane.file", ""),
+        ("", "\n"),
+        ("class:filepane.other_line class:filepane.link", " \uf481 "),
+        ("class:filepane.other_line class:filepane.link", "3"),
+        ("class:filepane.other_line class:filepane.link", ""),
+        ("class:filepane.other_line class:filepane.link", ""),
+        ("", "\n"),
+        ("class:filepane.other_line class:filepane.dir_link", " \uf482 "),
+        ("class:filepane.other_line class:filepane.dir_link", "4"),
+        ("class:filepane.other_line class:filepane.dir_link", ""),
+        ("class:filepane.other_line class:filepane.dir_link", ""),
+        ("", "\n"),
+        ("[SetCursorPosition]", ""),
+        ("class:filepane.current_line class:filepane.exe", " \uf489 "),
+        ("class:filepane.current_line class:filepane.exe", "5"),
+        ("class:filepane.current_line class:filepane.exe", ""),
+        ("class:filepane.current_line class:filepane.exe", ""),
+    ]
+
     def test_no_files(self, app: App):
         assert app._left_pane.file_count == 0
         assert app._left_pane._get_formatted_files() == []
@@ -129,8 +185,9 @@ class TestGetFormattedFiles:
         app._left_pane._get_formatted_files()
         assert app._left_pane._selected_file_index == 0
 
+    @pytest.fixture
     @pytest.mark.asyncio
-    async def test_height(self, app: App, mocker: MockerFixture):
+    async def patched_app(self, app: App, mocker: MockerFixture):
         mocked_height = mocker.patch.object(FilePane, "_get_height")
         mocked_height.return_value = 5
         app._left_pane._files = [
@@ -138,3 +195,43 @@ class TestGetFormattedFiles:
             for i in range(6)
         ]
         await app._left_pane.filter_files()
+        yield app
+
+    def test_line_fix1(self, patched_app: App):
+        patched_app._left_pane._last_line = 4
+        assert patched_app._left_pane._get_formatted_files() == self.output1
+        assert patched_app._left_pane._last_line == 5
+        assert patched_app._left_pane._first_line == 0
+
+    def test_line_fix2(self, patched_app: App):
+        patched_app._left_pane.selected_file_index = 0
+        patched_app._left_pane._first_line = 1
+        patched_app._left_pane._last_line = 6
+        assert patched_app._left_pane._get_formatted_files() == self.output1
+        assert patched_app._left_pane._first_line == 0
+        assert patched_app._left_pane._last_line == 5
+
+    def test_line_fix3(self, patched_app: App):
+        patched_app._left_pane.selected_file_index = 6
+        patched_app._left_pane._first_line = 0
+        patched_app._left_pane._last_line = 5
+        assert patched_app._left_pane._get_formatted_files() == self.output2
+        assert patched_app._left_pane._first_line == 1
+        assert patched_app._left_pane._last_line == 6
+        assert patched_app._left_pane.selected_file_index == 5
+
+    def test_line_fix4(self, patched_app: App):
+        patched_app._left_pane.selected_file_index = 8
+        patched_app._left_pane._first_line = 2
+        patched_app._left_pane._last_line = 7
+        assert patched_app._left_pane._get_formatted_files() == self.output2
+        assert patched_app._left_pane._first_line == 1
+        assert patched_app._left_pane._last_line == 6
+        assert patched_app._left_pane.selected_file_index == 5
+
+    def test_line_fix5(self, patched_app: App):
+        patched_app._left_pane._first_line = -1
+        patched_app._left_pane._last_line = 1
+        assert patched_app._left_pane._get_formatted_files() == self.output1
+        assert patched_app._left_pane._first_line == 0
+        assert patched_app._left_pane._last_line == 5
