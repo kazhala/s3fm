@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pytest
+from prompt_toolkit.layout.dimension import LayoutDimension
 from pytest_mock.plugin import MockerFixture
 
 from s3fm.api.file import File
@@ -336,3 +337,11 @@ def test_get_width_dimension(app: App, mocker: MockerFixture):
     assert app._right_pane._padding == 1
     app._right_pane._get_width_dimension()
     assert app._right_pane._width == 8
+
+
+def test_get_height_dimension(app: App, mocker: MockerFixture):
+    mocked_dimension = mocker.patch("s3fm.ui.filepane.get_dimension")
+    mocked_dimension.return_value = (19, 10)
+
+    dimension = app._left_pane._get_height_dimension()
+    assert isinstance(dimension, LayoutDimension)
