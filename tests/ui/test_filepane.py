@@ -416,3 +416,21 @@ def test_scroll_up(patched_app: App, mocker: MockerFixture):
 
     patched_app._left_pane.scroll_up(page=True)
     assert patched_app._left_pane._selected_file_index == 3
+
+
+def test_page_up(patched_app: App, mocker: MockerFixture):
+    patched_app._left_pane._selected_file_index = 0
+    patched_app._left_pane._first_line = 0
+    patched_app._left_pane._last_line = 10
+    patched_app._left_pane.page_up()
+    assert patched_app._left_pane._selected_file_index == 0
+    assert patched_app._left_pane._first_line == 0
+    assert patched_app._left_pane._last_line == 10
+
+    patched_app._left_pane._selected_file_index = 1
+    patched_app._left_pane._first_line = 1
+    patched_app._left_pane._last_line = 11
+    patched_app._left_pane.page_up()
+    assert patched_app._left_pane._selected_file_index == 0
+    assert patched_app._left_pane._first_line == 0
+    assert patched_app._left_pane._last_line == 10
