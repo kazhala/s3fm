@@ -11,6 +11,19 @@ from s3fm.exceptions import Bug, ClientError
 from s3fm.ui.filepane import FilePane, file_action, hist_dir, spin_spinner
 
 
+@pytest.fixture
+@pytest.mark.asyncio
+async def patched_app(app: App, mocker: MockerFixture):
+    mocked_height = mocker.patch.object(FilePane, "_get_height")
+    mocked_height.return_value = 5
+    app._left_pane._files = [
+        File(name="%s" % i, type=i, info="", hidden=False, raw=Path(), index=i)
+        for i in range(6)
+    ]
+    await app._left_pane.filter_files()
+    yield app
+
+
 @pytest.mark.asyncio
 async def test_hist_dir_no_cd(app: App):
     @hist_dir
@@ -186,18 +199,6 @@ class TestGetFormattedFiles:
         app._left_pane._get_formatted_files()
         assert app._left_pane._selected_file_index == 0
 
-    @pytest.fixture
-    @pytest.mark.asyncio
-    async def patched_app(self, app: App, mocker: MockerFixture):
-        mocked_height = mocker.patch.object(FilePane, "_get_height")
-        mocked_height.return_value = 5
-        app._left_pane._files = [
-            File(name="%s" % i, type=i, info="", hidden=False, raw=Path(), index=i)
-            for i in range(6)
-        ]
-        await app._left_pane.filter_files()
-        yield app
-
     def test_line_fix1(self, patched_app: App):
         patched_app._left_pane._last_line = 4
         assert patched_app._left_pane._get_formatted_files() == self.output1
@@ -369,3 +370,28 @@ def test_get_height(app: App, mocker: MockerFixture):
     mocked_dimension.return_value = (19, 11)
     assert app._left_pane._get_height() == 5
     assert app._right_pane._get_height() == 4
+
+
+def test_scroll_down(patched_app: App, mocker: MockerFixture):
+    assert patched_app._left_pane._selected_file_index == 0
+    assert patched_app._left_pane.file_count == 6
+
+    patched_app._left_pane.scroll_down(bottom=True)
+    assert patched_app._left_pane._selected_file_index == 5
+
+    assert patched_app._left_pane._cycle == False
+    patched_app._left_pane.scroll_down()
+    assert patched_app._left_pane._selected_file_index == 5
+
+    patched_app._left_pane._cycle = True
+    assert patched_app._left_pane._cycle == True
+    patched_app._left_pane.scroll_down()
+    assert patched_app._left_pane._selected_file_index == 0
+
+    patched_app._left_pane.scroll_down(value=7)
+    assert patched_app._left_pane._selected_file_index == 5
+    patched_app._left_pane.scroll_down()
+    assert patched_app._left_pane._selected_file_index == 0
+
+    patched_app._left_pane.scroll_down(page=True)
+    assert patched_app._left_pane._selected_file_index == 2
