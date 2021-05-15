@@ -345,3 +345,27 @@ def test_get_height_dimension(app: App, mocker: MockerFixture):
 
     dimension = app._left_pane._get_height_dimension()
     assert isinstance(dimension, LayoutDimension)
+
+
+def test_get_height(app: App, mocker: MockerFixture):
+    mocked_dimension = mocker.patch("s3fm.ui.filepane.get_dimension")
+    mocked_dimension.return_value = (19, 10)
+
+    app._left_pane._vertical_mode = lambda: True
+    assert app._left_pane._dimension_offset == 0
+    assert app._left_pane._get_height() == 10
+
+    app._left_pane._vertical_mode = lambda: False
+    app._left_pane._single_mode = lambda: True
+    assert app._left_pane._get_height() == 10
+
+    app._left_pane._single_mode = lambda: False
+    app._left_pane._vertical_mode = lambda: False
+    app._right_pane._single_mode = lambda: False
+    app._right_pane._vertical_mode = lambda: False
+    assert app._right_pane._get_height() == 4
+    assert app._left_pane._get_height() == 4
+
+    mocked_dimension.return_value = (19, 11)
+    assert app._left_pane._get_height() == 5
+    assert app._right_pane._get_height() == 4
