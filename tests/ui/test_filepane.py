@@ -427,10 +427,24 @@ def test_page_up(patched_app: App, mocker: MockerFixture):
     assert patched_app._left_pane._first_line == 0
     assert patched_app._left_pane._last_line == 10
 
-    patched_app._left_pane._selected_file_index = 1
-    patched_app._left_pane._first_line = 1
-    patched_app._left_pane._last_line = 11
-    patched_app._left_pane.page_up()
+    patched_app._left_pane._selected_file_index = 2
+    patched_app._left_pane._first_line = 2
+    patched_app._left_pane._last_line = 12
+    patched_app._left_pane.page_up(2)
     assert patched_app._left_pane._selected_file_index == 0
     assert patched_app._left_pane._first_line == 0
     assert patched_app._left_pane._last_line == 10
+
+
+def test_page_down(patched_app: App, mocker: MockerFixture):
+    patched_app._left_pane._selected_file_index = 0
+    patched_app._left_pane._first_line = 0
+    patched_app._left_pane._last_line = 10
+    patched_app._left_pane.page_down(2)
+    assert patched_app._left_pane._selected_file_index == 2
+    assert patched_app._left_pane._first_line == 2
+    assert patched_app._left_pane._last_line == 12
+
+    assert patched_app._left_pane.file_count == 6
+    patched_app._left_pane.page_down(6)
+    assert patched_app._left_pane._selected_file_index == 5
