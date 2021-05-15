@@ -395,3 +395,24 @@ def test_scroll_down(patched_app: App, mocker: MockerFixture):
 
     patched_app._left_pane.scroll_down(page=True)
     assert patched_app._left_pane._selected_file_index == 2
+
+
+def test_scroll_up(patched_app: App, mocker: MockerFixture):
+    assert patched_app._left_pane._selected_file_index == 0
+    assert patched_app._left_pane.file_count == 6
+    assert patched_app._left_pane._cycle == False
+    patched_app._left_pane.scroll_up()
+    assert patched_app._left_pane._selected_file_index == 0
+
+    patched_app._left_pane._cycle = True
+    assert patched_app._left_pane._cycle == True
+    patched_app._left_pane.scroll_up()
+    assert patched_app._left_pane._selected_file_index == 5
+
+    patched_app._left_pane.scroll_up(top=True)
+    assert patched_app._left_pane._selected_file_index == 0
+    patched_app._left_pane.scroll_up()
+    assert patched_app._left_pane._selected_file_index == 5
+
+    patched_app._left_pane.scroll_up(page=True)
+    assert patched_app._left_pane._selected_file_index == 3
