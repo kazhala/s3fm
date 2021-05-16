@@ -12,6 +12,7 @@ from typing import (
     List,
     Optional,
     Tuple,
+    Type,
     Union,
 )
 
@@ -342,7 +343,7 @@ class StyleConfig(BaseStyleConfig):
             >>> config.linemode.style_maps[FileType.file] = "class:custom_class.file_color"
         """
 
-        def decorator(style_cls) -> None:
+        def decorator(style_cls: Type[BaseStyleConfig]) -> None:
             class_to_register = style_cls()
             if not isinstance(class_to_register, BaseStyleConfig):
                 raise ClientError(
