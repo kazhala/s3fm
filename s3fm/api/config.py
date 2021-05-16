@@ -17,9 +17,9 @@ from typing import (
 )
 
 from prompt_toolkit.filters.base import Condition
+from prompt_toolkit.keys import Keys
 
 from s3fm.api.file import File
-from s3fm.api.kb import default_key_maps
 from s3fm.enums import FileType, KBMode
 from s3fm.exceptions import ClientError
 
@@ -362,7 +362,36 @@ class KBConfig:
     """
 
     def __init__(self) -> None:
-        self._kb_maps = default_key_maps
+        self._kb_maps = {
+            KBMode.normal: {
+                "exit": [{"keys": "c-c"}, {"keys": "q"}],
+                "focus_pane": [{"keys": Keys.Tab}],
+                "focus_cmd": [{"keys": ":"}],
+                "layout_vertical": [{"keys": ["c-w", "v"]}],
+                "layout_horizontal": [{"keys": ["c-w", "s"]}],
+                "layout_single": [{"keys": ["c-w", "o"]}],
+                "pane_swap_down": [{"keys": ["c-w", "J"]}],
+                "pane_swap_up": [{"keys": ["c-w", "K"]}],
+                "pane_swap_left": [{"keys": ["c-w", "H"]}],
+                "pane_swap_right": [{"keys": ["c-w", "L"]}],
+                "scroll_down": [{"keys": "j"}],
+                "scroll_up": [{"keys": "k"}],
+                "scroll_page_down": [{"keys": "c-d"}],
+                "scroll_page_up": [{"keys": "c-u"}],
+                "scroll_top": [
+                    {"keys": ["g", "g"]},
+                ],
+                "scroll_bottom": [{"keys": "G"}],
+                "page_up": [{"keys": "c-y"}],
+                "page_down": [{"keys": "c-e"}],
+                "forward": [{"keys": "l"}, {"keys": Keys.Enter}],
+                "backword": [{"keys": "h"}],
+                "toggle_pane_hidden_files": [{"keys": ["z"]}],
+            },
+            KBMode.command: {
+                "exit": [{"keys": "c-c"}, {"keys": "escape", "eager": True}]
+            },
+        }
         self._custom_kb_maps = {KBMode.normal: {}, KBMode.command: {}}
         self._custom_kb_lookup = {KBMode.normal: {}, KBMode.command: {}}
 
@@ -465,6 +494,7 @@ class KBConfig:
             self._kb_maps[mode].pop(action, None)
         else:
             self._custom_kb_maps[mode].pop(str(action), None)
+            self._custom_kb_lookup[mode].pop(str(action), None)
 
     @property
     def kb_maps(self) -> Dict[KBMode, "KB_MAPS"]:

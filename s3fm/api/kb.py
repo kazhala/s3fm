@@ -15,35 +15,6 @@ if TYPE_CHECKING:
 KBs = Union[Keys, str]
 KB_MAPS = Dict[str, List[Dict[str, Union[bool, KBs, Condition, List[KBs]]]]]
 
-default_key_maps: Dict[KBMode, KB_MAPS] = {
-    KBMode.normal: {
-        "exit": [{"keys": "c-c"}, {"keys": "q"}],
-        "focus_pane": [{"keys": Keys.Tab}],
-        "focus_cmd": [{"keys": ":"}],
-        "layout_vertical": [{"keys": ["c-w", "v"]}],
-        "layout_horizontal": [{"keys": ["c-w", "s"]}],
-        "layout_single": [{"keys": ["c-w", "o"]}],
-        "pane_swap_down": [{"keys": ["c-w", "J"]}],
-        "pane_swap_up": [{"keys": ["c-w", "K"]}],
-        "pane_swap_left": [{"keys": ["c-w", "H"]}],
-        "pane_swap_right": [{"keys": ["c-w", "L"]}],
-        "scroll_down": [{"keys": "j"}],
-        "scroll_up": [{"keys": "k"}],
-        "scroll_page_down": [{"keys": "c-d"}],
-        "scroll_page_up": [{"keys": "c-u"}],
-        "scroll_top": [
-            {"keys": ["g", "g"]},
-        ],
-        "scroll_bottom": [{"keys": "G"}],
-        "page_up": [{"keys": "c-y"}],
-        "page_down": [{"keys": "c-e"}],
-        "forward": [{"keys": "l"}, {"keys": Keys.Enter}],
-        "backword": [{"keys": "h"}],
-        "toggle_pane_hidden_files": [{"keys": ["z"]}],
-    },
-    KBMode.command: {"exit": [{"keys": "c-c"}, {"keys": "escape", "eager": True}]},
-}
-
 
 class KB(KeyBindings):
     """Modified :class:`prompt_toolkit.key_binding.KeyBindings` class to apply custom decorator logic.
