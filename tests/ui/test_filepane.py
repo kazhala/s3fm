@@ -448,3 +448,46 @@ def test_page_down(patched_app: App, mocker: MockerFixture):
     assert patched_app._left_pane.file_count == 6
     patched_app._left_pane.page_down(6)
     assert patched_app._left_pane._selected_file_index == 5
+
+
+class TestForward:
+    @pytest.mark.asyncio
+    async def test_fs_forward(self, patched_app: App, mocker: MockerFixture):
+        mocked_cd = mocker.patch("s3fm.api.fs.FS.cd")
+        mocked_cd.return_value = [
+            File(name="%s" % i, type=i, info="", hidden=False, raw=Path(), index=i)
+            for i in range(2)
+        ]
+        patched_app._left_pane._mode = PaneMode.fs
+        await patched_app._left_pane.forward()
+        mocked_cd.assert_not_called()
+        assert patched_app._left_pane.file_count == 6
+
+        patched_app._left_pane._selected_file_index = 1
+        await patched_app._left_pane.forward()
+        mocked_cd.assert_called_once_with(Path("1"))
+        assert patched_app._left_pane.file_count == 2
+
+    @pytest.mark.asyncio
+    async def test_s3_forward(self, patched_app: App, mocker: MockerFixture):
+        mocked_cd = mocker.patch("s3fm.api.s3.S3.cd")
+        mocked_cd.return_value = [
+            File(name="%s" % i, type=i, info="", hidden=False, raw=Path(), index=i)
+            for i in range(2)
+        ]
+        assert patched_app._left_pane._mode == PaneMode.s3
+        assert patched_app._left_pane.file_count == 6
+        await patched_app._left_pane.forward()
+        mocked_cd.assert_called_once_with("0")
+        assert patched_app._left_pane.file_count == 2
+
+        mocked_cd.return_value = []
+        patched_app._left_pane._selected_file_index = 1
+        await patched_app._left_pane.forward()
+        assert patched_app._left_pane.file_count == 0
+
+    @pytest.mark.asyncio
+    async def test_exception(self, patched_app: App):
+        patched_app._left_pane._mode = 3
+        with pytest.raises(Bug):
+            await patched_app._left_pane.forward()
