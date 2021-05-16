@@ -491,3 +491,37 @@ class TestForward:
         patched_app._left_pane._mode = 3
         with pytest.raises(Bug):
             await patched_app._left_pane.forward()
+
+
+class TestBackword:
+    @pytest.mark.asyncio
+    async def test_fs_backword(self, app: App, mocker: MockerFixture):
+        mocked_cd = mocker.patch("s3fm.api.fs.FS.cd")
+        mocked_cd.return_value = [
+            File(name="%s" % i, type=i, info="", hidden=False, raw=Path(), index=i)
+            for i in range(2)
+        ]
+        app._left_pane._mode = PaneMode.fs
+        assert app._left_pane.file_count == 0
+        await app._left_pane.backword()
+        assert app._left_pane.file_count == 2
+        mocked_cd.assert_called_once_with()
+
+    @pytest.mark.asyncio
+    async def test_s3_backword(self, app: App, mocker: MockerFixture):
+        mocked_cd = mocker.patch("s3fm.api.s3.S3.cd")
+        mocked_cd.return_value = [
+            File(name="%s" % i, type=i, info="", hidden=False, raw=Path(), index=i)
+            for i in range(2)
+        ]
+        assert app._left_pane._mode == PaneMode.s3
+        assert app._left_pane.file_count == 0
+        await app._left_pane.backword()
+        assert app._left_pane.file_count == 2
+        mocked_cd.assert_called_once_with()
+
+    @pytest.mark.asyncio
+    async def test_exception(self, app: App):
+        app._left_pane._mode = 3
+        with pytest.raises(Bug):
+            await app._left_pane.backword()
