@@ -525,3 +525,17 @@ class TestBackword:
         app._left_pane._mode = 3
         with pytest.raises(Bug):
             await app._left_pane.backword()
+
+
+@pytest.mark.asyncio
+async def test_fileter_files(app: App):
+    app._left_pane._files = [
+        File(name="%s" % i, type=i, info="", hidden=bool(i % 2), raw=Path(), index=i)
+        for i in range(6)
+    ]
+    await app._left_pane.filter_files()
+    assert app._left_pane.file_count == 6
+
+    app._left_pane._display_hidden = False
+    await app._left_pane.filter_files()
+    assert app._left_pane.file_count == 3
