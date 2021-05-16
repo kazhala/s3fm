@@ -80,8 +80,12 @@ def spin_spinner(func: Callable[..., Awaitable[None]]):
     async def executable(*args, **kwargs):
         if not args[0].loading:
             args[0].loading = True
-        await func(*args, **kwargs)
-        args[0].loading = False
+        try:
+            await func(*args, **kwargs)
+        except:
+            raise
+        finally:
+            args[0].loading = False
 
     return executable
 
