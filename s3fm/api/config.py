@@ -581,7 +581,7 @@ class Config:
         if not config_file.exists() or not config_file.is_file:
             return cls()
         spec = import_util.spec_from_file_location("custom_config", config_file)
-        module = import_util.module_from_spec(spec)
+        module = import_util.module_from_spec(spec)  # type: ignore
         spec.loader.exec_module(module)  # type: ignore
         if cls.active_instance:
             return cls.active_instance
