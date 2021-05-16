@@ -44,7 +44,7 @@ class AppConfig:
         self._custom_effects = []
         self.cycle = False
 
-    def use_effect(self, func: Callable[["App"], None]) -> None:
+    def use_effect(self, func: Callable[["App"], None]) -> Callable[["App"], None]:
         """Register custom function to run on :class:`~s3fm.app.App` re-render.
 
         Works sort of like `useEffect` in React.js. It runs on every UI redraw.
@@ -64,6 +64,9 @@ class AppConfig:
         Args:
             func: A callable to be registered to run on UI redraw.
 
+        Returns:
+            Original function definition.
+
         Examples:
             >>> from s3fm.api.config import Config
             >>> config = Config()
@@ -79,6 +82,7 @@ class AppConfig:
             ...         pass
         """
         self._custom_effects.append(func)
+        return func
 
     @property
     def custom_effects(self) -> List[Callable[["App"], None]]:
@@ -199,7 +203,7 @@ class LineModeConfig:
 
     def register(
         self, func: Callable[[File], Optional[Tuple[str, str, str, str]]]
-    ) -> None:
+    ) -> Callable[[File], Optional[Tuple[str, str, str, str]]]:
         """Register custom processing function.
 
         Multiple processing function can be registered. The registered function will
@@ -216,6 +220,9 @@ class LineModeConfig:
         Args:
             func: Custom processing function.
 
+        Returns:
+            Original function definition.
+
         Examples:
             >>> from s3fm.api.config import Config
             >>> config = Config()
@@ -228,6 +235,7 @@ class LineModeConfig:
             ...     return style_class, icon, name, info
         """
         self._process.append(func)
+        return func
 
     @property
     def process(
