@@ -539,3 +539,47 @@ async def test_fileter_files(app: App):
     app._left_pane._display_hidden = False
     await app._left_pane.filter_files()
     assert app._left_pane.file_count == 3
+
+
+class TestLoadData:
+    @pytest.mark.asyncio
+    async def test_s3(self, app: App, mocker: MockerFixture):
+        mocked_s3 = mocker.patch("s3fm.api.s3.S3.get_paths")
+        mocked_s3.return_value = [
+            File(name="%s" % i, type=i, info="", hidden=False, raw=Path(), index=i)
+            for i in range(6)
+        ]
+        assert app._left_pane._mode == PaneMode.s3
+        assert app._left_pane.file_count == 0
+        await app._left_pane.load_data()
+        assert app._left_pane.file_count == 6
+
+        app._left_pane._s3.path = Path("hello")
+        mocked_s3.side_effect = lambda: exec("raise(Exception)")
+        with pytest.raises(Exception):
+            await app._left_pane.load_data()
+            assert app._left_pane._s3.path == Path("")
+
+    @pytest.mark.asyncio
+    async def test_fs(self, app: App, mocker: MockerFixture):
+        mocked_fs = mocker.patch("s3fm.api.fs.FS.get_paths")
+        mocked_fs.return_value = [
+            File(name="%s" % i, type=i, info="", hidden=False, raw=Path(), index=i)
+            for i in range(6)
+        ]
+        app._left_pane._mode = PaneMode.fs
+        assert app._left_pane.file_count == 0
+        await app._left_pane.load_data()
+        assert app._left_pane.file_count == 6
+
+        app._left_pane._fs.path = Path("hello")
+        mocked_fs.side_effect = lambda: exec("raise(Exception)")
+        with pytest.raises(Exception):
+            await app._left_pane.load_data()
+            assert app._left_pane._fs.path == Path("")
+
+    @pytest.mark.asyncio
+    async def test_exception(self, app: App):
+        app._left_pane._mode = 3
+        with pytest.raises(Bug):
+            await app._left_pane.load_data()
