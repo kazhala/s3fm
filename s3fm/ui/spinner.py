@@ -73,7 +73,11 @@ class Spinner(Float):
         ]
 
     async def start(self) -> None:
-        """Run spinner."""
+        """Run spinner.
+
+        Examples:
+            >>> asyncio.create_task(spinner.start()) # doctest: +SKIP
+        """
         if self._spinning:
             return
         self._spinning = True
