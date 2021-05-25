@@ -470,7 +470,7 @@ class TestForward:
 
     @pytest.mark.asyncio
     async def test_s3_forward(self, patched_app: App, mocker: MockerFixture):
-        mocked_cd = mocker.patch("s3fm.api.s3.S3.cd")
+        mocked_cd = mocker.patch("s3fm.api.fs.S3.cd")
         mocked_cd.return_value = [
             File(name="%s" % i, type=i, info="", hidden=False, raw=Path(), index=i)
             for i in range(2)
@@ -509,7 +509,7 @@ class TestBackword:
 
     @pytest.mark.asyncio
     async def test_s3_backword(self, app: App, mocker: MockerFixture):
-        mocked_cd = mocker.patch("s3fm.api.s3.S3.cd")
+        mocked_cd = mocker.patch("s3fm.api.fs.S3.cd")
         mocked_cd.return_value = [
             File(name="%s" % i, type=i, info="", hidden=False, raw=Path(), index=i)
             for i in range(2)
@@ -544,7 +544,7 @@ async def test_fileter_files(app: App):
 class TestLoadData:
     @pytest.mark.asyncio
     async def test_s3(self, app: App, mocker: MockerFixture):
-        mocked_s3 = mocker.patch("s3fm.api.s3.S3.get_paths")
+        mocked_s3 = mocker.patch("s3fm.api.fs.S3.get_paths")
         mocked_s3.return_value = [
             File(name="%s" % i, type=i, info="", hidden=False, raw=Path(), index=i)
             for i in range(6)
