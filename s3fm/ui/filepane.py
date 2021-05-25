@@ -17,10 +17,8 @@ from prompt_toolkit.layout.controls import FormattedTextControl
 from prompt_toolkit.layout.dimension import LayoutDimension
 
 from s3fm.api.config import AppConfig, LineModeConfig, SpinnerConfig
-from s3fm.api.file import File
-from s3fm.api.fs import FS
+from s3fm.api.fs import FS, S3, File
 from s3fm.api.history import History
-from s3fm.api.s3 import S3
 from s3fm.enums import FileType, Pane, PaneMode
 from s3fm.exceptions import Bug, ClientError
 from s3fm.ui.spinner import Spinner

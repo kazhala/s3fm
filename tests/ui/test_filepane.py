@@ -4,7 +4,7 @@ import pytest
 from prompt_toolkit.layout.dimension import LayoutDimension
 from pytest_mock.plugin import MockerFixture
 
-from s3fm.api.file import File
+from s3fm.api.fs import File
 from s3fm.app import App
 from s3fm.enums import FileType, Pane, PaneMode
 from s3fm.exceptions import Bug, ClientError

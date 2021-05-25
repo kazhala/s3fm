@@ -19,7 +19,7 @@ from typing import (
 from prompt_toolkit.filters.base import Condition
 from prompt_toolkit.keys import Keys
 
-from s3fm.api.file import File
+from s3fm.api.fs import File
 from s3fm.enums import FileType, KBMode
 from s3fm.exceptions import ClientError
 
