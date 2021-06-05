@@ -276,3 +276,33 @@ class TestS3:
         s3._path = Path("1/2")
         await s3.cd("3", override=True)
         assert s3._path == Path("3")
+
+    def test_bucket_name(self):
+        s3 = S3()
+        assert s3.bucket_name == ""
+
+        s3.path = Path("hello.com")
+        assert s3.bucket_name == "hello.com"
+
+        s3.path = Path("hello.com/adsafsd")
+        assert s3.bucket_name == "hello.com"
+
+    def test_bucket_path(self):
+        s3 = S3()
+        assert s3.bucket_path == ""
+
+        s3.path = Path("hello.com")
+        assert s3.bucket_path == ""
+
+        s3.path = Path("hello.com/yes")
+        assert s3.bucket_path == "yes"
+
+    def test_s3_uri(self):
+        s3 = S3()
+        assert s3.uri == "s3://"
+
+        s3.path = Path("hello.com")
+        assert s3.uri == "s3://hello.com"
+
+        s3.path = Path("hello.com/yes/no")
+        assert s3.uri == "s3://hello.com/yes/no"
