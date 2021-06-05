@@ -1,0 +1,61 @@
+{
+  "ResponseMetadata": {
+    "RequestId": "111111",
+    "HostId": "222222",
+    "HTTPStatusCode": 200,
+    "HTTPHeaders": {
+      "x-amz-id-2": "111111",
+      "x-amz-request-id": "222222",
+      "date": "Wed, 03 Jun 2020 01:59:15 GMT",
+      "x-amz-bucket-region": "ap-southeast-2",
+      "content-type": "application/xml",
+      "transfer-encoding": "chunked",
+      "server": "AmazonS3"
+    },
+    "RetryAttempts": 0
+  },
+  "IsTruncated": false,
+  "Marker": "",
+  "Contents": [
+    {
+      "Key": ".file1",
+      "ETag": "\"52ebcf031c745265d0f5523f1d77299b\"",
+      "Size": 6148,
+      "StorageClass": "STANDARD",
+      "Owner": {
+        "DisplayName": "trololo",
+        "ID": "111111"
+      }
+    },
+    {
+      "Key": "file2",
+      "ETag": "\"1fdb255a4cf7a2484d109893800955cd\"",
+      "Size": 155568,
+      "StorageClass": "STANDARD",
+      "Owner": {
+        "DisplayName": "trololo",
+        "ID": "111111"
+      }
+    },
+    {
+      "Key": "file3",
+      "ETag": "\"c8420c7e0f9dfb749eb4288a94765003\"",
+      "Size": 3547,
+      "StorageClass": "STANDARD",
+      "Owner": {
+        "DisplayName": "trololo",
+        "ID": "111111"
+      }
+    }
+  ],
+  "Name": "bucket1",
+  "Prefix": "",
+  "Delimiter": "/",
+  "MaxKeys": 1000,
+  "CommonPrefixes": [
+    { "Prefix": "dir1/" },
+    { "Prefix": "dir2/" },
+    { "Prefix": "dir3/" }
+  ],
+  "EncodingType": "url"
+}

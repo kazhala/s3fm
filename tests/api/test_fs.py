@@ -179,3 +179,61 @@ class TestS3:
                 raw={"Name": "bucket5", "CreationDate": curr_time},
             ),
         ]
+
+    @pytest.mark.asyncio
+    async def test_get_objects(self, mocker: MockerFixture):
+        with Path(__file__).resolve().parent.joinpath(
+            "../data/s3_list_objects.json"
+        ).open("r") as file:
+            response = json.load(file)
+
+        patched_s3 = mocker.patch.object(S3, "_list_objects")
+        patched_s3.return_value = response
+
+        s3 = S3()
+        s3._bucket_name = "bucket1"
+        assert await s3._get_objects() == [
+            File(
+                name="dir1/", type=FileType.dir, info="", hidden=False, index=0, raw=ANY
+            ),
+            File(
+                name="dir2/",
+                type=FileType.dir,
+                info="",
+                hidden=False,
+                index=1,
+                raw=None,
+            ),
+            File(
+                name="dir3/",
+                type=FileType.dir,
+                info="",
+                hidden=False,
+                index=2,
+                raw=None,
+            ),
+            File(
+                name=".file1",
+                type=FileType.file,
+                info="6.0 K",
+                hidden=True,
+                index=0,
+                raw=ANY,
+            ),
+            File(
+                name="file2",
+                type=FileType.file,
+                info="151.9 K",
+                hidden=False,
+                index=1,
+                raw=ANY,
+            ),
+            File(
+                name="file3",
+                type=FileType.file,
+                info="3.5 K",
+                hidden=False,
+                index=2,
+                raw=ANY,
+            ),
+        ]
