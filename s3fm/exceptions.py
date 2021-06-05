@@ -29,3 +29,15 @@ class Bug(Exception):
         self._message += "\n"
         self._message += "Something went wrong with s3fm, please report this behavior over at https://github.com/kazhala/s3fm/issues"
         super().__init__(self._message)
+
+
+class Notification(Exception):
+    """Used to display error message to the user but not exit the app.
+
+    Args:
+        message: Error message to display.
+    """
+
+    def __init__(self, message: str) -> None:
+        self._message = message
+        super().__init__(self._message)

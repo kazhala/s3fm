@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 import boto3
 
 from s3fm.enums import FileType
-from s3fm.exceptions import Bug
+from s3fm.exceptions import Notification
 from s3fm.utils import human_readable_size, transform_async
 
 if TYPE_CHECKING:
@@ -82,8 +82,8 @@ class FS:
         if not path:
             self._path = self._path.parent.resolve()
         else:
-            if not path.is_dir:
-                raise Bug("target path is not a directory.")
+            if not path.is_dir() and not self._path.joinpath(path).is_dir():
+                raise Notification("Target path %s is not a directory." % str(path))
             if override:
                 self._path = path.resolve()
             else:
