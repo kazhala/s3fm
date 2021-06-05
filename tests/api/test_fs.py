@@ -237,3 +237,42 @@ class TestS3:
                 raw=ANY,
             ),
         ]
+
+    @pytest.mark.asyncio
+    async def test_get_paths(self, mocker: MockerFixture):
+        patched_s3_object = mocker.patch.object(S3, "_get_objects")
+        patched_s3_bucket = mocker.patch.object(S3, "_get_buckets")
+
+        s3 = S3()
+        await s3.get_paths()
+        patched_s3_object.assert_not_called()
+        patched_s3_bucket.assert_called_once()
+
+        patched_s3_object.reset_mock()
+        patched_s3_bucket.reset_mock()
+        s3._path = Path("hello")
+        await s3.get_paths()
+        patched_s3_object.assert_called_once()
+        patched_s3_bucket.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_cd(self, mocker: MockerFixture):
+        patched_s3 = mocker.patch.object(S3, "get_paths")
+
+        s3 = S3()
+        s3._path = Path("1/2")
+
+        await s3.cd()
+        assert s3._path == Path("1")
+
+        s3._path = Path("1/2")
+        await s3.cd("..")
+        assert s3._path == Path("1")
+
+        s3._path = Path("1/2")
+        await s3.cd("3")
+        assert s3._path == Path("1/2/3")
+
+        s3._path = Path("1/2")
+        await s3.cd("3", override=True)
+        assert s3._path == Path("3")
