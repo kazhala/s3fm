@@ -114,7 +114,7 @@ class KB(KeyBindings):
         target_maps = self._kb_maps if not custom else self._custom_kb_maps
         for action, binds in target_maps[mode].items():
             for bind in binds:
-                self._factory(action=action, mode=mode, custom=custom, **bind)
+                self._factory(action=action, mode=mode, custom=custom, **bind)  # type: ignore
 
     def _factory(
         self,
