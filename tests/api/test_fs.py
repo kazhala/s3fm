@@ -2,12 +2,13 @@ import os
 import tempfile
 from contextlib import contextmanager
 from pathlib import Path
+from unittest.mock import ANY
 
 import pytest
 
 from s3fm.api.fs import FS, File
 from s3fm.enums import FileType
-from s3fm.exceptions import Bug
+from s3fm.exceptions import Notification
 
 
 @contextmanager
@@ -23,7 +24,7 @@ def chdir(path: Path):
 
 @pytest.fixture
 def test_files():
-    yield ["2.txt", "3.txt", "1.txt"]
+    yield ["2.txt", "3.txt", "1.txt", ".6.txt"]
 
 
 @pytest.fixture
@@ -58,7 +59,7 @@ class TestFS:
         ]
         assert fs.path == cwd.joinpath(test_dirs[0]).resolve()
 
-        assert len(await fs.cd()) == 6
+        assert len(await fs.cd()) == 7
 
     @pytest.mark.asyncio
     async def test_cd_override(self, fs: FS):
@@ -67,5 +68,49 @@ class TestFS:
 
     @pytest.mark.asyncio
     async def test_cd_file(self, fs: FS):
-        with pytest.raises(Bug):
+        with pytest.raises(Notification):
             await fs.cd(Path("asdfasfasdfasfas"))
+
+    @pytest.mark.asyncio
+    async def test_get_paths(self, fs: FS, test_dirs, test_files):
+        assert await fs.get_paths() == [
+            File(name="..", type=FileType.dir, info="", hidden=False, index=0, raw=ANY),
+            File(
+                name="4xx/", type=FileType.dir, info="", hidden=False, index=1, raw=ANY
+            ),
+            File(
+                name="5xx/", type=FileType.dir, info="", hidden=False, index=2, raw=ANY
+            ),
+            File(
+                name=".6.txt",
+                type=FileType.file,
+                info="0 B",
+                hidden=True,
+                index=3,
+                raw=ANY,
+            ),
+            File(
+                name="1.txt",
+                type=FileType.file,
+                info="0 B",
+                hidden=False,
+                index=4,
+                raw=ANY,
+            ),
+            File(
+                name="2.txt",
+                type=FileType.file,
+                info="0 B",
+                hidden=False,
+                index=5,
+                raw=ANY,
+            ),
+            File(
+                name="3.txt",
+                type=FileType.file,
+                info="0 B",
+                hidden=False,
+                index=6,
+                raw=ANY,
+            ),
+        ]
