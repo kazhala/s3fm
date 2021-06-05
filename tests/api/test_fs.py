@@ -122,22 +122,6 @@ class TestFS:
 
 
 class TestS3:
-    # @pytest.mark.asyncio
-    # async def test_list_buckets(self, mocker: MockerFixture):
-    #     with Path(__file__).resolve().parent.joinpath(
-    #         "../data/s3_list_buckets.json"
-    #     ).open("r") as file:
-    #         response = json.load(file)
-
-    #     client = boto3.client("s3")
-    #     stubber = Stubber(client)
-    #     stubber.add_response("list_buckets", response)
-    #     stubber.activate()
-    #     patched_client = mocker.patch.object(S3, "client", new_callable=PropertyMock)
-    #     patched_client.return_value = client
-    #     s3 = S3()
-    #     assert await s3._list_buckets() == response
-
     @pytest.mark.asyncio
     async def test_get_buckets(self, mocker: MockerFixture):
         with Path(__file__).resolve().parent.joinpath(
