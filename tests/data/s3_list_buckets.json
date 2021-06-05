@@ -1,0 +1,37 @@
+{
+  "ResponseMetadata": {
+    "RequestId": "898987897897",
+    "HostId": "13123213123123123",
+    "HTTPStatusCode": 200,
+    "HTTPHeaders": {
+      "x-amz-id-2": "123123123123189898",
+      "x-amz-request-id": "089u8989",
+      "date": "Tue, 02 Jun 2020 23:45:50 GMT",
+      "content-type": "application/xml",
+      "transfer-encoding": "chunked",
+      "server": "AmazonS3"
+    },
+    "RetryAttempts": 0
+  },
+  "Buckets": [
+    {
+      "Name": "bucket1"
+    },
+    {
+      "Name": "bucket2"
+    },
+    {
+      "Name": "bucket3"
+    },
+    {
+      "Name": "bucket4"
+    },
+    {
+      "Name": "bucket5"
+    }
+  ],
+  "Owner": {
+    "DisplayName": "lololo",
+    "ID": "1111111111"
+  }
+}

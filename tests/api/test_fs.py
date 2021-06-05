@@ -1,12 +1,17 @@
+import json
 import os
 import tempfile
 from contextlib import contextmanager
+from datetime import datetime
 from pathlib import Path
-from unittest.mock import ANY
+from unittest.mock import ANY, PropertyMock
 
+import boto3
 import pytest
+from botocore.stub import Stubber
+from pytest_mock.plugin import MockerFixture
 
-from s3fm.api.fs import FS, File
+from s3fm.api.fs import FS, S3, File
 from s3fm.enums import FileType
 from s3fm.exceptions import Notification
 
@@ -112,5 +117,81 @@ class TestFS:
                 hidden=False,
                 index=6,
                 raw=ANY,
+            ),
+        ]
+
+
+class TestS3:
+    # @pytest.mark.asyncio
+    # async def test_list_buckets(self, mocker: MockerFixture):
+    #     with Path(__file__).resolve().parent.joinpath(
+    #         "../data/s3_list_buckets.json"
+    #     ).open("r") as file:
+    #         response = json.load(file)
+
+    #     client = boto3.client("s3")
+    #     stubber = Stubber(client)
+    #     stubber.add_response("list_buckets", response)
+    #     stubber.activate()
+    #     patched_client = mocker.patch.object(S3, "client", new_callable=PropertyMock)
+    #     patched_client.return_value = client
+    #     s3 = S3()
+    #     assert await s3._list_buckets() == response
+
+    @pytest.mark.asyncio
+    async def test_get_buckets(self, mocker: MockerFixture):
+        with Path(__file__).resolve().parent.joinpath(
+            "../data/s3_list_buckets.json"
+        ).open("r") as file:
+            response = json.load(file)
+
+        curr_time = datetime.now()
+        for bucket in response["Buckets"]:
+            bucket["CreationDate"] = curr_time
+
+        patched_s3 = mocker.patch.object(S3, "_list_buckets")
+        patched_s3.return_value = response
+
+        s3 = S3()
+        assert await s3._get_buckets() == [
+            File(
+                name="bucket1/",
+                type=FileType.bucket,
+                info=str(curr_time),
+                hidden=False,
+                index=0,
+                raw={"Name": "bucket1", "CreationDate": curr_time},
+            ),
+            File(
+                name="bucket2/",
+                type=FileType.bucket,
+                info=str(curr_time),
+                hidden=False,
+                index=1,
+                raw={"Name": "bucket2", "CreationDate": curr_time},
+            ),
+            File(
+                name="bucket3/",
+                type=FileType.bucket,
+                info=str(curr_time),
+                hidden=False,
+                index=2,
+                raw={"Name": "bucket3", "CreationDate": curr_time},
+            ),
+            File(
+                name="bucket4/",
+                type=FileType.bucket,
+                info=str(curr_time),
+                hidden=False,
+                index=3,
+                raw={"Name": "bucket4", "CreationDate": curr_time},
+            ),
+            File(
+                name="bucket5/",
+                type=FileType.bucket,
+                info=str(curr_time),
+                hidden=False,
+                index=4,
+                raw={"Name": "bucket5", "CreationDate": curr_time},
             ),
         ]
