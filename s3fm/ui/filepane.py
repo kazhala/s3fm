@@ -19,8 +19,8 @@ from prompt_toolkit.layout.dimension import LayoutDimension
 from s3fm.api.config import AppConfig, LineModeConfig, SpinnerConfig
 from s3fm.api.fs import FS, S3, File
 from s3fm.api.history import History
-from s3fm.enums import FileType, Pane, PaneMode
-from s3fm.exceptions import Bug, ClientError
+from s3fm.enums import ErrorType, FileType, Pane, PaneMode
+from s3fm.exceptions import ClientError, Notification
 from s3fm.ui.spinner import Spinner
 from s3fm.utils import get_dimension
 
@@ -139,6 +139,7 @@ class FilePane(ConditionalContainer):
         focus: A function to be provided by :class:`~s3fm.app.App` to be used to get current
             app focus.
         history: :class:`~s3fm.api.hisotry.History` instnace.
+        set_error: A callable to be provided by :class:`~s3fm.app.App` to set error for the application.
     """
 
     def __init__(
@@ -152,6 +153,7 @@ class FilePane(ConditionalContainer):
         layout_vertical: Condition,
         focus: Callable[[], Pane],
         history: History,
+        set_error: Callable[[Optional[Notification]], None],
     ) -> None:
         self._s3 = S3()
         self._fs = FS()
@@ -174,6 +176,7 @@ class FilePane(ConditionalContainer):
         self._first_line = 0
         self._last_line = self._get_height() - self._first_line
         self._history = history
+        self._set_error = set_error
 
         self._spinner = Spinner(
             loading=Condition(lambda: self._loading),
@@ -234,7 +237,7 @@ class FilePane(ConditionalContainer):
             :class:`prompt_toolkit.formatted_text.FormattedText`.
 
         Raises:
-            Bug: When pane mode is not recognized.
+            Notification: When pane mode is not recognized.
         """
         if not self._loaded:
             return []
@@ -254,7 +257,11 @@ class FilePane(ConditionalContainer):
                 )
             )
         else:
-            raise Bug("unexpected pane mode.")
+            self._mode = PaneMode.fs
+            self.set_error(
+                Notification("Unexpected pane mode.", error_type=ErrorType.warning)
+            )
+            return self._get_pane_info()
         return display_info
 
     def _get_formatted_files(self) -> List[Tuple[str, str]]:
@@ -483,11 +490,7 @@ class FilePane(ConditionalContainer):
     @spin_spinner
     @file_action
     async def forward(self) -> None:
-        """Handle the forward action on the current file based on filetype.
-
-        Raises:
-            Bug: Unexpected pane mode.
-        """
+        """Handle the forward action on the current file based on filetype."""
         if self._mode == PaneMode.fs:
             if self.current_selection.type == FileType.dir:
                 self._files = await self._fs.cd(Path(self.current_selection.name))
@@ -498,7 +501,11 @@ class FilePane(ConditionalContainer):
             ):
                 self._files = await self._s3.cd(self.current_selection.name)
         else:
-            raise Bug("unexpected pane mode.")
+            self._mode = PaneMode.fs
+            self.set_error(
+                Notification("Unexpected pane mode.", error_type=ErrorType.warning)
+            )
+            return await self.forward()
         await self.filter_files()
 
     @hist_dir
@@ -507,14 +514,18 @@ class FilePane(ConditionalContainer):
         """Handle the backword action.
 
         Raises:
-            Bug: Unexpected pane mode.
+            Notification: Unexpected pane mode.
         """
         if self._mode == PaneMode.fs:
             self._files = await self._fs.cd()
         elif self._mode == PaneMode.s3:
             self._files = await self._s3.cd()
         else:
-            raise Bug("unexpected pane mode.")
+            self._mode = PaneMode.fs
+            self.set_error(
+                Notification("Unexpected pane mode.", error_type=ErrorType.warning)
+            )
+            return await self.filter_files()
         await self.filter_files()
 
     @spin_spinner
@@ -537,7 +548,7 @@ class FilePane(ConditionalContainer):
         """Load the data into filepane.
 
         Raises:
-            Bug: Current pane mode is not recognized.
+            Notification: Current pane mode is not recognized.
         """
         self._files = []
         if self._mode == PaneMode.s3:
@@ -553,9 +564,23 @@ class FilePane(ConditionalContainer):
                 self._fs.path = Path("").resolve()
                 self._files += await self._fs.get_paths()
         else:
-            raise Bug("unexpected pane mode.")
+            self._mode = PaneMode.fs
+            self.set_error(
+                Notification("Unexpected pane mode.", error_type=ErrorType.warning)
+            )
+            return await self.load_data()
         await self.filter_files()
         self._loaded = True
+
+    def set_error(self, notification: Notification = None) -> None:
+        """Set error notification for the application.
+
+        This should only be used to set non-application error.
+
+        Args:
+            notification: A :class:`~s3fm.exceptions.Notification` instance.
+        """
+        self._set_error(notification)
 
     @property
     def file_count(self) -> int:
@@ -640,7 +665,11 @@ class FilePane(ConditionalContainer):
         elif self.mode == PaneMode.fs:
             return str(self._fs.path)
         else:
-            raise Bug("unexpected pane mode.")
+            self._mode = PaneMode.fs
+            self.set_error(
+                Notification("Unexpected pane mode.", error_type=ErrorType.warning)
+            )
+            return self.path
 
     @path.setter
     def path(self, value) -> None:
@@ -649,4 +678,8 @@ class FilePane(ConditionalContainer):
         elif self.mode == PaneMode.fs:
             self._fs.path = Path(value)
         else:
-            raise Bug("unexpected pane mode.")
+            self._mode = PaneMode.fs
+            self.set_error(
+                Notification("Unexpected pane mode.", error_type=ErrorType.warning)
+            )
+            self._fs.path = Path(value)

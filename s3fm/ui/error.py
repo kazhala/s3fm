@@ -67,6 +67,7 @@ class ErrorPane(Float):
             :class:`prompt_toolkit.formatted_text.FormattedText`.
         """
         return [
+            ("", "\n"),
             ("class:error.%s" % self._type().value.lower(), self._message()),
             ("", "\n"),
             ("", "\n"),

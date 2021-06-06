@@ -43,5 +43,5 @@ class Notification(Exception):
 
     def __init__(self, message: str, error_type: ErrorType = ErrorType.error) -> None:
         self._message = message
-        self._type = error_type
+        self.type = error_type
         super().__init__(self._message)

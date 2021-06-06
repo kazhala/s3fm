@@ -7,7 +7,7 @@ However, it's recommended to import the :class:`App` for type hinting purposes w
 using the :class:`~s3fm.api.config.Config`.
 """
 import asyncio
-from typing import TYPE_CHECKING, Dict
+from typing import TYPE_CHECKING, Dict, Optional
 
 from prompt_toolkit.application import Application
 from prompt_toolkit.filters.base import Condition
@@ -20,7 +20,7 @@ from s3fm.api.config import Config
 from s3fm.api.history import History
 from s3fm.api.kb import KB
 from s3fm.enums import Direction, ErrorType, LayoutMode, Pane, PaneMode
-from s3fm.exceptions import Bug
+from s3fm.exceptions import Notification
 from s3fm.ui.commandpane import CommandPane
 from s3fm.ui.error import ErrorPane
 from s3fm.ui.filepane import FilePane
@@ -90,6 +90,7 @@ class App:
             layout_vertical=self._layout_vertical,
             focus=lambda: self._filepane_focus,
             history=self._history,
+            set_error=self.set_error,
         )
         self._right_pane = FilePane(
             pane_id=Pane.right,
@@ -101,6 +102,7 @@ class App:
             layout_vertical=self._layout_vertical,
             focus=lambda: self._filepane_focus,
             history=self._history,
+            set_error=self.set_error,
         )
         self._command_pane = CommandPane()
         self._option_pane = OptionPane()
@@ -346,6 +348,20 @@ class App:
             )
         await self.current_filepane.load_data()
 
+    def set_error(self, exception: Optional["Notification"] = None) -> None:
+        """Configure error notification for the application.
+
+        This should only be used to set non-application error.
+
+        Args:
+            exception: A :class:`~s3fm.exceptions.Notification` instance.
+        """
+        if not exception:
+            self._error = ""
+        else:
+            self._error = str(exception)
+            self._error_type = exception.type
+
     @property
     def command_mode(self) -> Condition:
         """:class:`prompt_toolkit.filters.Condition`: A callable if current focus is commandpane."""
@@ -359,15 +375,29 @@ class App:
     @property
     def current_focus(self) -> "Container":
         """:class:`prompt_toolkit.layout.Container`: Get current focused pane."""
-        return {
-            **self.filepanes,
-            Pane.cmd: self._command_pane,
-        }[self._current_focus]
+        try:
+            return {
+                **self.filepanes,
+                Pane.cmd: self._command_pane,
+            }[self._current_focus]
+        except KeyError:
+            self.set_error(
+                Notification("Unexpected focus.", error_type=ErrorType.warning)
+            )
+            self._current_focus = Pane.left
+            return self.current_focus
 
     @property
     def current_filepane(self) -> FilePane:
         """:class:`~s3fm.ui.filepane.FilePane`: Get current focused filepane."""
-        return self.filepanes[self._filepane_focus]
+        try:
+            return self.filepanes[self._filepane_focus]
+        except KeyError:
+            self.set_error(
+                Notification("Unexpected focus.", error_type=ErrorType.warning)
+            )
+            self._filepane_focus = Pane.left
+            return self.current_filepane
 
     @property
     def filepanes(self) -> Dict[Pane, FilePane]:
@@ -379,11 +409,7 @@ class App:
 
     @property
     def layout(self) -> Layout:
-        """:class:`prompt_toolkit.layout.Layout`: Get app layout dynamically.
-
-        Raises:
-            Bug: When layout mode is not recognized.
-        """
+        """:class:`prompt_toolkit.layout.Layout`: Get app layout dynamically."""
         if self._layout_mode == LayoutMode.vertical:
             layout = HSplit(
                 [VSplit([self._left_pane, self._right_pane]), self._command_pane]
@@ -395,7 +421,11 @@ class App:
         ):
             layout = HSplit([self._left_pane, self._right_pane, self._command_pane])
         else:
-            raise Bug("unexpected layout mode.")
+            self._layout_mode = LayoutMode.vertical
+            self.set_error(
+                Notification("Unexpected layout.", error_type=ErrorType.warning)
+            )
+            return self.layout
         if self._border:
             layout = Frame(layout)
         return Layout(
