@@ -1,10 +1,12 @@
 """Module contains the floating loading spinner pane."""
 import asyncio
-from typing import Callable, List, Optional, Tuple
+from typing import TYPE_CHECKING, Callable, List, Optional, Tuple
 
-from prompt_toolkit.filters.base import Condition
 from prompt_toolkit.layout.containers import ConditionalContainer, Float, Window
 from prompt_toolkit.layout.controls import FormattedTextControl
+
+if TYPE_CHECKING:
+    from prompt_toolkit.filters.base import Condition
 
 
 class Spinner(Float):
@@ -27,7 +29,7 @@ class Spinner(Float):
 
     def __init__(
         self,
-        loading: Condition,
+        loading: "Condition",
         redraw: Callable[[], None],
         pattern: List[str] = None,
         delay: float = None,
