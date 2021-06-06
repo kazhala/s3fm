@@ -62,19 +62,25 @@ class App:
             cmd_max_size=config.history.cmd_max_size,
         )
 
+        self._error_mode = Condition(lambda: self._error != "")
+        self._command_mode = Condition(
+            lambda: self._current_focus == Pane.cmd and not self._error
+        )
+        self._normal_mode = Condition(
+            lambda: (
+                self._current_focus == Pane.left or self._current_focus == Pane.right
+            )
+            and not self._error
+        )
+
         self._error = ""
         self._error_type = ErrorType.error
         self._error_pane = ErrorPane(
-            error=Condition(lambda: self._error != ""),
+            error=self._error_mode,
             message=lambda: self._error,
             error_type=lambda: self._error_type,
         )
 
-        self._command_mode = Condition(lambda: self._current_focus == Pane.cmd)
-        self._normal_mode = Condition(
-            lambda: self._current_focus == Pane.left
-            or self._current_focus == Pane.right
-        )
         self._layout_single = Condition(lambda: self._layout_mode == LayoutMode.single)
         self._layout_vertical = Condition(
             lambda: self._layout_mode == LayoutMode.vertical
@@ -373,12 +379,18 @@ class App:
         return self._normal_mode
 
     @property
+    def error_mode(self) -> Condition:
+        """:class:`prompt_toolkit.filters.Condition`: A callable if the application has error."""
+        return self._error_mode
+
+    @property
     def current_focus(self) -> "Container":
         """:class:`prompt_toolkit.layout.Container`: Get current focused pane."""
         try:
             return {
                 **self.filepanes,
                 Pane.cmd: self._command_pane,
+                Pane.error: self._error_pane,
             }[self._current_focus]
         except KeyError:
             self.set_error(

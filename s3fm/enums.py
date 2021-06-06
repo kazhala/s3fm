@@ -7,6 +7,7 @@ class KBMode(IntEnum):
 
     normal = 0
     command = 1
+    error = 2
 
 
 class PaneMode(IntEnum):
@@ -22,6 +23,7 @@ class Pane(IntEnum):
     left = 0
     right = 1
     cmd = 2
+    error = 3
 
 
 class LayoutMode(IntEnum):

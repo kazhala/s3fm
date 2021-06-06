@@ -402,6 +402,7 @@ class KBConfig:
             KBMode.command: {
                 "exit": [{"keys": "c-c"}, {"keys": "escape", "eager": True}]
             },
+            KBMode.error: {"exit": [{"keys": Keys.Any}]},
         }
         self._custom_kb_maps = {KBMode.normal: {}, KBMode.command: {}}
         self._custom_kb_lookup = {KBMode.normal: {}, KBMode.command: {}}

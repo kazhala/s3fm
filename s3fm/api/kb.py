@@ -40,6 +40,7 @@ class KB(KeyBindings):
         self._mode = {
             KBMode.normal: self._app.normal_mode,
             KBMode.command: self._app.command_mode,
+            KBMode.error: self._app.error_mode,
         }
         self._kb_maps = kb_maps or {KBMode.normal: {}, KBMode.command: {}}
         self._kb_lookup = {
@@ -90,6 +91,7 @@ class KB(KeyBindings):
                 "pane_switch_mode": self._app.pane_switch_mode,
             },
             KBMode.command: {"exit": self._app.cmd_exit},
+            KBMode.error: {"exit": self._app.set_error},
         }
         self._custom_kb_maps = custom_kb_maps or {
             KBMode.normal: {},
@@ -101,6 +103,7 @@ class KB(KeyBindings):
         }
         super().__init__()
 
+        self._create_bindings(KBMode.error, custom=False)
         self._create_bindings(KBMode.normal, custom=False)
         self._create_bindings(KBMode.command, custom=False)
         self._create_bindings(KBMode.normal, custom=True)
