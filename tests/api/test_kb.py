@@ -38,15 +38,15 @@ def test_set_action_multiplier(kb):
         key: str
 
     mocked_event = FakeEvent([FakeSequence("0")])
-    kb._set_action_multiplier(mocked_event)
+    kb._pane_set_action_multiplier(mocked_event)
     assert kb._action_multiplier == 0
 
     mocked_event = FakeEvent([FakeSequence("1")])
-    kb._set_action_multiplier(mocked_event)
+    kb._pane_set_action_multiplier(mocked_event)
     assert kb._action_multiplier == 1
 
     mocked_event = FakeEvent([FakeSequence("1")])
-    kb._set_action_multiplier(mocked_event)
+    kb._pane_set_action_multiplier(mocked_event)
     assert kb._action_multiplier == 11
 
 
@@ -63,20 +63,20 @@ def test_swap_pane(mocker: MockerFixture, kb):
 def test_scroll_down(mocker: MockerFixture, kb):
     mocked_scorll = mocker.patch.object(FilePane, "scroll_down")
 
-    kb._scroll_down()
+    kb._pane_scroll_down()
     mocked_scorll.assert_called_with(value=1, page=False, bottom=False)
 
     kb._action_multiplier = 11
-    kb._scroll_down(page=True, bottom=True)
+    kb._pane_scroll_down(page=True, bottom=True)
     mocked_scorll.assert_called_with(value=11, page=True, bottom=True)
 
 
 def test_scroll_up(mocker: MockerFixture, kb):
     mocked_scorll = mocker.patch.object(FilePane, "scroll_up")
 
-    kb._scroll_up()
+    kb._pane_scroll_up()
     mocked_scorll.assert_called_with(value=1, page=False, top=False)
 
     kb._action_multiplier = 11
-    kb._scroll_up(page=True, top=True)
+    kb._pane_scroll_up(page=True, top=True)
     mocked_scorll.assert_called_with(value=11, page=True, top=True)

@@ -45,8 +45,6 @@ class KB(KeyBindings):
         self._kb_lookup = {
             KBMode.normal: {
                 "exit": self._app.exit,
-                "pane_focus": self._app.pane_focus_other,
-                "cmd_focus": self._app.cmd_focus,
                 "layout_vertical": {
                     "func": self._app.layout_switch,
                     "args": [LayoutMode.vertical],
@@ -59,22 +57,36 @@ class KB(KeyBindings):
                     "func": self._app.layout_switch,
                     "args": [LayoutMode.single],
                 },
+                "cmd_focus": self._app.cmd_focus,
+                "pane_focus": self._app.pane_focus_other,
                 "pane_swap_down": {"func": self._swap_pane, "args": [Direction.down]},
                 "pane_swap_up": {"func": self._swap_pane, "args": [Direction.up]},
                 "pane_swap_left": {"func": self._swap_pane, "args": [Direction.left]},
                 "pane_swap_right": {"func": self._swap_pane, "args": [Direction.right]},
-                "scroll_down": self._scroll_down,
-                "scroll_up": self._scroll_up,
-                "scroll_page_down": {"func": self._scroll_down, "args": [1, True]},
-                "scroll_page_up": {"func": self._scroll_up, "args": [1, True]},
-                "scroll_bottom": {"func": self._scroll_down, "args": [1, False, True]},
-                "scroll_top": {"func": self._scroll_up, "args": [1, False, True]},
-                "page_up": self._page_up,
-                "page_down": self._page_down,
-                "forward": self._forward,
-                "backword": self._backword,
+                "pane_scroll_down": self._pane_scroll_down,
+                "pane_scroll_up": self._pane_scroll_up,
+                "pane_scroll_down_page": {
+                    "func": self._pane_scroll_down,
+                    "args": [1, True],
+                },
+                "pane_scroll_up_page": {
+                    "func": self._pane_scroll_up,
+                    "args": [1, True],
+                },
+                "pane_scroll_bottom": {
+                    "func": self._pane_scroll_down,
+                    "args": [1, False, True],
+                },
+                "pane_scroll_top": {
+                    "func": self._pane_scroll_up,
+                    "args": [1, False, True],
+                },
+                "pane_page_up": self._pane_page_up,
+                "pane_page_down": self._pane_page_down,
+                "pane_forward": self._pane_forward,
+                "pane_backword": self._pane_backword,
                 "pane_toggle_hidden_files": self._app.pane_toggle_hidden_files,
-                "set_action_multiplier": self._set_action_multiplier,
+                "pane_set_action_multiplier": self._pane_set_action_multiplier,
                 "pane_switch_mode": self._app.pane_switch_mode,
             },
             KBMode.command: {"exit": self._app.cmd_exit},
@@ -96,7 +108,7 @@ class KB(KeyBindings):
 
         for i in range(10):
             self._factory(
-                action="set_action_multiplier",
+                action="pane_set_action_multiplier",
                 mode=KBMode.normal,
                 custom=False,
                 raw=True,
@@ -159,26 +171,26 @@ class KB(KeyBindings):
             else:
                 key_action["func"](*function_args if not raw else [event])
 
-    def _set_action_multiplier(self, event: KeyPressEvent) -> None:
+    def _pane_set_action_multiplier(self, event: KeyPressEvent) -> None:
         key_num = event.key_sequence[0].key
         if not self._action_multiplier:
             self._action_multiplier = int(key_num)
         else:
             self._action_multiplier = int("%s%s" % (self._action_multiplier, key_num))
 
-    def _page_up(self) -> None:
+    def _pane_page_up(self) -> None:
         """Scroll page up."""
         self._app.current_filepane.page_up()
 
-    def _page_down(self) -> None:
+    def _pane_page_down(self) -> None:
         """Scroll page down."""
         self._app.current_filepane.page_down()
 
-    async def _forward(self) -> None:
+    async def _pane_forward(self) -> None:
         """Perform forward action on current file."""
         await self._app.current_filepane.forward()
 
-    async def _backword(self) -> None:
+    async def _pane_backword(self) -> None:
         """Perform backword action."""
         await self._app.current_filepane.backword()
 
@@ -193,7 +205,7 @@ class KB(KeyBindings):
         else:
             self._app.pane_swap(direction, layout=LayoutMode.vertical)
 
-    def _scroll_down(
+    def _pane_scroll_down(
         self,
         value: int = 1,
         page: bool = False,
@@ -208,7 +220,9 @@ class KB(KeyBindings):
             value = self.action_multiplier
         self._app.current_filepane.scroll_down(value=value, page=page, bottom=bottom)
 
-    def _scroll_up(self, value: int = 1, page: bool = False, top: bool = False) -> None:
+    def _pane_scroll_up(
+        self, value: int = 1, page: bool = False, top: bool = False
+    ) -> None:
         """Move focused pane highlighted line up.
 
         Reference:
