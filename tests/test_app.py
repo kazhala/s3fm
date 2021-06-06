@@ -46,9 +46,9 @@ class TestAppLayout:
         spy.assert_called_once()
 
     def test_exception(self, app):
-        with pytest.raises(Bug):
-            app._layout_mode = 5
-            app.layout
+        app._layout_mode = 5
+        app.layout
+        assert app._layout_mode == LayoutMode.vertical
 
 
 def test_redraw(app, mocker: MockerFixture):

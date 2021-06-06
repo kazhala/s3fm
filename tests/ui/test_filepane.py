@@ -101,9 +101,9 @@ def test_get_pane_info(app: App):
         )
     ]
 
-    with pytest.raises(Bug):
-        app._left_pane.mode = 3
-        app._left_pane._get_pane_info()
+    app._left_pane.mode = 3
+    app._left_pane._get_pane_info()
+    assert app._left_pane.mode == PaneMode.fs
 
 
 class TestGetFormattedFiles:
@@ -487,10 +487,12 @@ class TestForward:
         assert patched_app._left_pane.file_count == 0
 
     @pytest.mark.asyncio
-    async def test_exception(self, patched_app: App):
+    async def test_exception(self, patched_app: App, mocker: MockerFixture):
+        mocker.patch("s3fm.api.fs.FS.get_paths")
+        mocked_error = mocker.patch("s3fm.ui.filepane.FilePane.set_error")
         patched_app._left_pane._mode = 3
-        with pytest.raises(Bug):
-            await patched_app._left_pane.forward()
+        await patched_app._left_pane.forward()
+        mocked_error.assert_called_once()
 
 
 class TestBackword:
@@ -521,10 +523,12 @@ class TestBackword:
         mocked_cd.assert_called_once_with()
 
     @pytest.mark.asyncio
-    async def test_exception(self, app: App):
+    async def test_exception(self, app: App, mocker: MockerFixture):
+        mocker.patch("s3fm.api.fs.FS.get_paths")
+        mocked_error = mocker.patch("s3fm.ui.filepane.FilePane.set_error")
         app._left_pane._mode = 3
-        with pytest.raises(Bug):
-            await app._left_pane.backword()
+        await app._left_pane.backword()
+        mocked_error.assert_called_once()
 
 
 @pytest.mark.asyncio
@@ -579,7 +583,9 @@ class TestLoadData:
             assert app._left_pane._fs.path == Path("")
 
     @pytest.mark.asyncio
-    async def test_exception(self, app: App):
+    async def test_exception(self, app: App, mocker: MockerFixture):
+        mocker.patch("s3fm.api.fs.FS.get_paths")
+        mocked_error = mocker.patch("s3fm.ui.filepane.FilePane.set_error")
         app._left_pane._mode = 3
-        with pytest.raises(Bug):
-            await app._left_pane.load_data()
+        await app._left_pane.load_data()
+        mocked_error.assert_called_once()
