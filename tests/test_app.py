@@ -72,7 +72,7 @@ async def test_load_pane_date(app, mocker: MockerFixture):
 async def test_render_task(app, mocker: MockerFixture):
     assert app._kb.activated == False
     spy = mocker.spy(History, "read")
-    mocker.patch.object(App, "focus_pane")
+    mocker.patch.object(App, "pane_focus")
     mocker.patch.object(App, "layout_switch")
     mocker.patch.object(App, "_load_pane_data")
     app._no_history = True
@@ -110,7 +110,7 @@ class TestFocus:
         assert app._current_focus == Pane.left
         assert app._filepane_focus == Pane.left
 
-        app.focus_pane(Pane.left)
+        app.pane_focus(Pane.left)
         assert app._previous_focus == Pane.left
         assert app._current_focus == Pane.left
         assert app._filepane_focus == Pane.left
@@ -119,24 +119,24 @@ class TestFocus:
 
     def test_focus_right(self, app, mocker: MockerFixture):
         mocker.patch("prompt_toolkit.layout.Layout.focus")
-        app.focus_pane(Pane.right)
+        app.pane_focus(Pane.right)
         assert app._previous_focus == Pane.left
         assert app._current_focus == Pane.right
         assert app._filepane_focus == Pane.right
 
     def test_focus_cmd(self, app, mocker: MockerFixture):
         mocker.patch("prompt_toolkit.layout.Layout.focus")
-        app.focus_pane(Pane.cmd)
+        app.pane_focus(Pane.cmd)
         assert app._previous_focus == Pane.left
         assert app._current_focus == Pane.cmd
         assert app._filepane_focus == Pane.left
 
-        app.focus_pane(Pane.right)
+        app.pane_focus(Pane.right)
         assert app._previous_focus == Pane.cmd
         assert app._current_focus == Pane.right
         assert app._filepane_focus == Pane.right
 
-        app.focus_pane(Pane.cmd)
+        app.pane_focus(Pane.cmd)
         assert app._previous_focus == Pane.right
         assert app._current_focus == Pane.cmd
         assert app._filepane_focus == Pane.right
@@ -155,12 +155,12 @@ class TestFocus:
         assert app._filepane_focus == Pane.right
 
     def test_focus_cmd_func(self, app, mocker: MockerFixture):
-        mocked_focus = mocker.patch.object(App, "focus_pane")
+        mocked_focus = mocker.patch.object(App, "pane_focus")
         app.focus_cmd()
         mocked_focus.assert_called_once_with(Pane.cmd)
 
     def test_exit_cmd(self, app, mocker: MockerFixture):
-        mocked_focus = mocker.patch.object(App, "focus_pane")
+        mocked_focus = mocker.patch.object(App, "pane_focus")
         assert app._previous_focus == None
         app.exit_cmd()
         mocked_focus.assert_called_once_with(Pane.left)
@@ -184,7 +184,7 @@ def test_exit(app, mocker: MockerFixture):
 
 
 def test_layout_switch(app, mocker: MockerFixture):
-    mocked_focus = mocker.patch.object(App, "focus_pane")
+    mocked_focus = mocker.patch.object(App, "pane_focus")
     app.layout_switch(LayoutMode.single)
     mocked_focus.assert_not_called()
     assert app._layout_mode == LayoutMode.single
@@ -196,7 +196,7 @@ def test_layout_switch(app, mocker: MockerFixture):
 
 class TestPaneSwap:
     def test_single(self, app, mocker: MockerFixture):
-        mocked_focus1 = mocker.patch.object(App, "focus_pane")
+        mocked_focus1 = mocker.patch.object(App, "pane_focus")
         mocked_focus2 = mocker.patch.object(App, "focus_other_pane")
         app._layout_mode = LayoutMode.single
         app.pane_swap(Direction.left, LayoutMode.vertical)
@@ -204,7 +204,7 @@ class TestPaneSwap:
         mocked_focus2.assert_not_called()
 
     def test_no_swap_right(self, app, mocker: MockerFixture):
-        mocked_focus1 = mocker.patch.object(App, "focus_pane")
+        mocked_focus1 = mocker.patch.object(App, "pane_focus")
         mocked_focus2 = mocker.patch.object(App, "focus_other_pane")
         app._current_focus = Pane.right
         app._layout_mode = LayoutMode.vertical
@@ -218,7 +218,7 @@ class TestPaneSwap:
         mocked_focus2.assert_not_called()
 
     def test_no_swap_left(self, app, mocker: MockerFixture):
-        mocked_focus1 = mocker.patch.object(App, "focus_pane")
+        mocked_focus1 = mocker.patch.object(App, "pane_focus")
         mocked_focus2 = mocker.patch.object(App, "focus_other_pane")
         app._current_focus = Pane.left
         app._layout_mode = LayoutMode.vertical
@@ -232,7 +232,7 @@ class TestPaneSwap:
         mocked_focus2.assert_not_called()
 
     def test_swap_left_swapped(self, app, mocker: MockerFixture):
-        mocked_focus1 = mocker.patch.object(App, "focus_pane")
+        mocked_focus1 = mocker.patch.object(App, "pane_focus")
         mocked_focus2 = mocker.patch.object(App, "focus_other_pane")
         app._current_focus = Pane.right
         assert app._current_focus == Pane.right
@@ -249,7 +249,7 @@ class TestPaneSwap:
         mocked_focus1.assert_not_called()
 
     def test_swap_right_swapped(self, app, mocker: MockerFixture):
-        mocked_focus1 = mocker.patch.object(App, "focus_pane")
+        mocked_focus1 = mocker.patch.object(App, "pane_focus")
         mocked_focus2 = mocker.patch.object(App, "focus_other_pane")
         assert app._current_focus == Pane.left
         assert app._layout_mode == LayoutMode.vertical
@@ -265,7 +265,7 @@ class TestPaneSwap:
         mocked_focus1.assert_not_called()
 
     def test_swap_left_noswap(self, app, mocker: MockerFixture):
-        mocked_focus1 = mocker.patch.object(App, "focus_pane")
+        mocked_focus1 = mocker.patch.object(App, "pane_focus")
         mocked_focus2 = mocker.patch.object(App, "focus_other_pane")
         assert app._current_focus == Pane.left
         assert app._layout_mode == LayoutMode.vertical
@@ -282,7 +282,7 @@ class TestPaneSwap:
         mocked_focus2.assert_not_called()
 
     def test_swap_right_noswap(self, app, mocker: MockerFixture):
-        mocked_focus1 = mocker.patch.object(App, "focus_pane")
+        mocked_focus1 = mocker.patch.object(App, "pane_focus")
         mocked_focus2 = mocker.patch.object(App, "focus_other_pane")
         app._current_focus = Pane.right
         assert app._current_focus == Pane.right

@@ -365,7 +365,7 @@ class KBConfig:
         self._kb_maps = {
             KBMode.normal: {
                 "exit": [{"keys": "c-c"}, {"keys": "q"}],
-                "focus_pane": [{"keys": Keys.Tab}],
+                "pane_focus": [{"keys": Keys.Tab}],
                 "focus_cmd": [{"keys": ":"}],
                 "layout_vertical": [{"keys": ["c-w", "v"]}],
                 "layout_horizontal": [{"keys": ["c-w", "s"]}],

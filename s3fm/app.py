@@ -142,7 +142,7 @@ class App:
         self._right_pane.selected_file_index = self._history.right_index
         self._left_pane.path = self._history.left_path
         self._right_pane.path = self._history.right_path
-        self.focus_pane(self._history.focus)
+        self.pane_focus(self._history.focus)
         self.layout_switch(self._history.layout)
         self._kb.activated = True
         await asyncio.gather(
@@ -171,7 +171,7 @@ class App:
         """Start the application in async mode."""
         await self._app.run_async()
 
-    def focus_pane(self, pane: Pane) -> None:
+    def pane_focus(self, pane: Pane) -> None:
         """Focus specified pane and set the focus state.
 
         Args:
@@ -181,7 +181,7 @@ class App:
             >>> from s3fm.app import App
             >>> from s3fm.enums import Pane
             >>> app = App() # doctest: +SKIP
-            >>> app.focus_pane(Pane.left) # doctest: +SKIP
+            >>> app.pane_focus(Pane.left) # doctest: +SKIP
         """
         if pane in self.filepanes:
             self._filepane_focus = pane
@@ -199,17 +199,17 @@ class App:
         one filepane.
         """
         if not self._layout_single():
-            self.focus_pane(
+            self.pane_focus(
                 Pane.left if self._current_focus == Pane.right else Pane.right
             )
 
     def focus_cmd(self) -> None:
         """Focus the commandpane."""
-        self.focus_pane(Pane.cmd)
+        self.pane_focus(Pane.cmd)
 
     def exit_cmd(self) -> None:
         """Exit the commandpane and refocus the last focused filepane."""
-        self.focus_pane(self._previous_focus or Pane.left)
+        self.pane_focus(self._previous_focus or Pane.left)
 
     def exit(self) -> None:
         """Exit the application and kill all spawed processes."""
@@ -240,7 +240,7 @@ class App:
         self._layout_mode = layout
         if layout != LayoutMode.single:
             self._app.layout = self.layout
-            self.focus_pane(self._current_focus)
+            self.pane_focus(self._current_focus)
 
     def pane_swap(self, direction: Direction, layout: LayoutMode) -> None:
         """Swap panes left/right/up/down.
@@ -296,7 +296,7 @@ class App:
         if pane_swapped:
             self.focus_other_pane()
         else:
-            self.focus_pane(self._current_focus)
+            self.pane_focus(self._current_focus)
 
     async def pane_toggle_hidden_files(self, value: bool = None) -> None:
         """Toggle the current focused pane display hidden file status.

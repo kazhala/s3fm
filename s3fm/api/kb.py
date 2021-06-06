@@ -45,7 +45,7 @@ class KB(KeyBindings):
         self._kb_lookup = {
             KBMode.normal: {
                 "exit": self._app.exit,
-                "focus_pane": self._app.focus_other_pane,
+                "pane_focus": self._app.focus_other_pane,
                 "focus_cmd": self._app.focus_cmd,
                 "layout_vertical": {
                     "func": self._app.layout_switch,
