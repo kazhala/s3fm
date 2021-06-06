@@ -7,7 +7,7 @@ from pytest_mock.plugin import MockerFixture
 from s3fm.api.history import History
 from s3fm.api.kb import KB
 from s3fm.app import App
-from s3fm.enums import Direction, LayoutMode, Pane
+from s3fm.enums import Direction, LayoutMode, Pane, PaneMode
 from s3fm.exceptions import Bug
 from s3fm.ui.filepane import FilePane
 
@@ -305,6 +305,16 @@ async def test_toggle_hidden_files(app):
     assert app.current_filepane.display_hidden_files == True
     await app.pane_toggle_hidden_files(False)
     assert app.current_filepane.display_hidden_files == False
+
+
+@pytest.mark.asyncio
+async def test_pane_switch_mode(app, mocker: MockerFixture):
+    mocker.patch.object(FilePane, "load_data")
+    assert app.current_filepane.mode == PaneMode.s3
+    await app.pane_switch_mode()
+    assert app.current_filepane.mode == PaneMode.fs
+    await app.pane_switch_mode()
+    assert app.current_filepane.mode == PaneMode.s3
 
 
 def test_property_pane(app):
