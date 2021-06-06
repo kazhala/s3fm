@@ -18,6 +18,7 @@ def kb(app: App):
         kb_maps={
             KBMode.normal: {"exit": [{"keys": "c-c"}]},
             KBMode.command: {"exit": [{"keys": "c-c"}]},
+            KBMode.error: {"exit": [{"keys": "c-c"}]},
         },
         custom_kb_maps={KBMode.normal: {"hello": [{"keys": "j"}]}, KBMode.command: {}},
         custom_kb_lookup={KBMode.normal: {"hello": lambda: True}, KBMode.command: {}},
@@ -27,7 +28,7 @@ def kb(app: App):
 
 def test_init(kb):
     assert isinstance(kb, KeyBindings)
-    assert len(kb.bindings) == 13
+    assert len(kb.bindings) == 14
 
 
 def test_set_action_multiplier(kb):
