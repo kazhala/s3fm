@@ -124,7 +124,7 @@ class TestFocus:
         assert app._current_focus == Pane.right
         assert app._filepane_focus == Pane.right
 
-    def test_focus_cmd(self, app, mocker: MockerFixture):
+    def test_cmd_focus(self, app, mocker: MockerFixture):
         mocker.patch("prompt_toolkit.layout.Layout.focus")
         app.pane_focus(Pane.cmd)
         assert app._previous_focus == Pane.left
@@ -154,9 +154,9 @@ class TestFocus:
         assert app._current_focus == Pane.right
         assert app._filepane_focus == Pane.right
 
-    def test_focus_cmd_func(self, app, mocker: MockerFixture):
+    def test_cmd_focus_func(self, app, mocker: MockerFixture):
         mocked_focus = mocker.patch.object(App, "pane_focus")
-        app.focus_cmd()
+        app.cmd_focus()
         mocked_focus.assert_called_once_with(Pane.cmd)
 
     def test_exit_cmd(self, app, mocker: MockerFixture):

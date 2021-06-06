@@ -203,7 +203,7 @@ class App:
                 Pane.left if self._current_focus == Pane.right else Pane.right
             )
 
-    def focus_cmd(self) -> None:
+    def cmd_focus(self) -> None:
         """Focus the commandpane."""
         self.pane_focus(Pane.cmd)
 

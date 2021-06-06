@@ -366,7 +366,7 @@ class KBConfig:
             KBMode.normal: {
                 "exit": [{"keys": "c-c"}, {"keys": "q"}],
                 "pane_focus": [{"keys": Keys.Tab}],
-                "focus_cmd": [{"keys": ":"}],
+                "cmd_focus": [{"keys": ":"}],
                 "layout_vertical": [{"keys": ["c-w", "v"]}],
                 "layout_horizontal": [{"keys": ["c-w", "s"]}],
                 "layout_single": [{"keys": ["c-w", "o"]}],
@@ -428,7 +428,7 @@ class KBConfig:
             >>> from s3fm.api.config import Config
             >>> config = Config()
             >>> config.kb.map(action=lambda app: app.exit(), keys="c-q")
-            >>> config.kb.map(action="focus_cmd", keys=["c-w", ":"])
+            >>> config.kb.map(action="cmd_focus", keys=["c-w", ":"])
         """
         if isinstance(action, str):
             if action in self._kb_maps[mode]:

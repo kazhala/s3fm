@@ -46,7 +46,7 @@ class KB(KeyBindings):
             KBMode.normal: {
                 "exit": self._app.exit,
                 "pane_focus": self._app.pane_focus_other,
-                "focus_cmd": self._app.focus_cmd,
+                "cmd_focus": self._app.cmd_focus,
                 "layout_vertical": {
                     "func": self._app.layout_switch,
                     "args": [LayoutMode.vertical],
