@@ -189,7 +189,7 @@ class App:
         self._current_focus = pane
         self._app.layout.focus(self.current_focus)
 
-    def focus_other_pane(self) -> None:
+    def pane_focus_other(self) -> None:
         """Focus the other filepane.
 
         Theres only a maximum of 2 filepane in the app currently. Use
@@ -294,7 +294,7 @@ class App:
         self._layout_mode = layout
         self._app.layout = self.layout
         if pane_swapped:
-            self.focus_other_pane()
+            self.pane_focus_other()
         else:
             self.pane_focus(self._current_focus)
 
