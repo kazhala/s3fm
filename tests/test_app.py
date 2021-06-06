@@ -159,15 +159,15 @@ class TestFocus:
         app.cmd_focus()
         mocked_focus.assert_called_once_with(Pane.cmd)
 
-    def test_exit_cmd(self, app, mocker: MockerFixture):
+    def test_cmd_exit(self, app, mocker: MockerFixture):
         mocked_focus = mocker.patch.object(App, "pane_focus")
         assert app._previous_focus == None
-        app.exit_cmd()
+        app.cmd_exit()
         mocked_focus.assert_called_once_with(Pane.left)
 
         mocked_focus.reset_mock()
         app._previous_focus = Pane.right
-        app.exit_cmd()
+        app.cmd_exit()
         mocked_focus.assert_called_once_with(Pane.right)
 
 

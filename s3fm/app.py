@@ -207,7 +207,7 @@ class App:
         """Focus the commandpane."""
         self.pane_focus(Pane.cmd)
 
-    def exit_cmd(self) -> None:
+    def cmd_exit(self) -> None:
         """Exit the commandpane and refocus the last focused filepane."""
         self.pane_focus(self._previous_focus or Pane.left)
 

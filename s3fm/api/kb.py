@@ -76,7 +76,7 @@ class KB(KeyBindings):
                 "pane_toggle_hidden_files": self._app.pane_toggle_hidden_files,
                 "set_action_multiplier": self._set_action_multiplier,
             },
-            KBMode.command: {"exit": self._app.exit_cmd},
+            KBMode.command: {"exit": self._app.cmd_exit},
         }
         self._custom_kb_maps = custom_kb_maps or {
             KBMode.normal: {},
