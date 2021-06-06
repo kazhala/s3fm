@@ -143,7 +143,7 @@ class App:
         self._left_pane.path = self._history.left_path
         self._right_pane.path = self._history.right_path
         self.focus_pane(self._history.focus)
-        self.switch_layout(self._history.layout)
+        self.layout_switch(self._history.layout)
         self._kb.activated = True
         await asyncio.gather(
             self._load_pane_data(pane=self._left_pane),
@@ -225,7 +225,7 @@ class App:
             self._history.write()
         self._app.exit()
 
-    def switch_layout(self, layout: LayoutMode) -> None:
+    def layout_switch(self, layout: LayoutMode) -> None:
         """Switch to a different layout.
 
         Args:
@@ -235,7 +235,7 @@ class App:
             >>> from s3fm.app import App
             >>> from s3fm.enums import LayoutMode
             >>> app = App() # doctest: +SKIP
-            >>> app.switch_layout(LayoutMode.vertical) # doctest: +SKIP
+            >>> app.layout_switch(LayoutMode.vertical) # doctest: +SKIP
         """
         self._layout_mode = layout
         if layout != LayoutMode.single:

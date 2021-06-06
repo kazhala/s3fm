@@ -73,7 +73,7 @@ async def test_render_task(app, mocker: MockerFixture):
     assert app._kb.activated == False
     spy = mocker.spy(History, "read")
     mocker.patch.object(App, "focus_pane")
-    mocker.patch.object(App, "switch_layout")
+    mocker.patch.object(App, "layout_switch")
     mocker.patch.object(App, "_load_pane_data")
     app._no_history = True
     await app._render_task()
@@ -183,13 +183,13 @@ def test_exit(app, mocker: MockerFixture):
     mocked_hist.assert_called_once()
 
 
-def test_switch_layout(app, mocker: MockerFixture):
+def test_layout_switch(app, mocker: MockerFixture):
     mocked_focus = mocker.patch.object(App, "focus_pane")
-    app.switch_layout(LayoutMode.single)
+    app.layout_switch(LayoutMode.single)
     mocked_focus.assert_not_called()
     assert app._layout_mode == LayoutMode.single
 
-    app.switch_layout(LayoutMode.vertical)
+    app.layout_switch(LayoutMode.vertical)
     mocked_focus.assert_called_once()
     assert app._layout_mode == LayoutMode.vertical
 

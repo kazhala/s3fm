@@ -48,15 +48,15 @@ class KB(KeyBindings):
                 "focus_pane": self._app.focus_other_pane,
                 "focus_cmd": self._app.focus_cmd,
                 "layout_vertical": {
-                    "func": self._app.switch_layout,
+                    "func": self._app.layout_switch,
                     "args": [LayoutMode.vertical],
                 },
                 "layout_horizontal": {
-                    "func": self._app.switch_layout,
+                    "func": self._app.layout_switch,
                     "args": [LayoutMode.horizontal],
                 },
                 "layout_single": {
-                    "func": self._app.switch_layout,
+                    "func": self._app.layout_switch,
                     "args": [LayoutMode.single],
                 },
                 "pane_swap_down": {"func": self._swap_pane, "args": [Direction.down]},
