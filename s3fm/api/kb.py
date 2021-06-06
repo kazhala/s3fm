@@ -73,7 +73,7 @@ class KB(KeyBindings):
                 "page_down": self._page_down,
                 "forward": self._forward,
                 "backword": self._backword,
-                "toggle_pane_hidden_files": self._app.toggle_pane_hidden_files,
+                "pane_toggle_hidden_files": self._app.pane_toggle_hidden_files,
                 "set_action_multiplier": self._set_action_multiplier,
             },
             KBMode.command: {"exit": self._app.exit_cmd},

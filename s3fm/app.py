@@ -298,7 +298,7 @@ class App:
         else:
             self.focus_pane(self._current_focus)
 
-    async def toggle_pane_hidden_files(self, value: bool = None) -> None:
+    async def pane_toggle_hidden_files(self, value: bool = None) -> None:
         """Toggle the current focused pane display hidden file status.
 
         Use this method to either instruct the current focused pane to show

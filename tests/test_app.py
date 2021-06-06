@@ -303,7 +303,7 @@ class TestPaneSwap:
 @pytest.mark.asyncio
 async def test_toggle_hidden_files(app):
     assert app.current_filepane.display_hidden_files == True
-    await app.toggle_pane_hidden_files(False)
+    await app.pane_toggle_hidden_files(False)
     assert app.current_filepane.display_hidden_files == False
 
 
