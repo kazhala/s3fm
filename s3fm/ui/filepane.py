@@ -539,6 +539,7 @@ class FilePane(ConditionalContainer):
         Raises:
             Bug: Current pane mode is not recognized.
         """
+        self._files = []
         if self._mode == PaneMode.s3:
             try:
                 self._files += await self._s3.get_paths()

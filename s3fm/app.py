@@ -19,7 +19,7 @@ from prompt_toolkit.widgets.base import Frame
 from s3fm.api.config import Config
 from s3fm.api.history import History
 from s3fm.api.kb import KB
-from s3fm.enums import Direction, LayoutMode, Pane
+from s3fm.enums import Direction, LayoutMode, Pane, PaneMode
 from s3fm.exceptions import Bug
 from s3fm.ui.commandpane import CommandPane
 from s3fm.ui.filepane import FilePane
@@ -317,6 +317,25 @@ class App:
         )
         await self.current_filepane.filter_files()
         self.redraw()
+
+    async def pane_switch_mode(self, mode: PaneMode = None) -> None:
+        """Switch the pane operation mode from one to another.
+
+        If currently is local file system mode, then switch to s3 file system mode or vice versa.
+
+        Args:
+            mode: PaneMode for the current focus pane to switch to.
+                If not provided, it will switch to the alternative mode.
+        """
+        if mode:
+            self.current_filepane.mode = mode
+        else:
+            self.current_filepane.mode = (
+                PaneMode.s3
+                if self.current_filepane.mode == PaneMode.fs
+                else PaneMode.fs
+            )
+        await self.current_filepane.load_data()
 
     @property
     def command_mode(self) -> Condition:

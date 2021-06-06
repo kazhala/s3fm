@@ -75,6 +75,7 @@ class KB(KeyBindings):
                 "backword": self._backword,
                 "pane_toggle_hidden_files": self._app.pane_toggle_hidden_files,
                 "set_action_multiplier": self._set_action_multiplier,
+                "pane_switch_mode": self._app.pane_switch_mode,
             },
             KBMode.command: {"exit": self._app.cmd_exit},
         }

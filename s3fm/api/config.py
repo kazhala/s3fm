@@ -387,6 +387,7 @@ class KBConfig:
                 "forward": [{"keys": "l"}, {"keys": Keys.Enter}],
                 "backword": [{"keys": "h"}],
                 "pane_toggle_hidden_files": [{"keys": ["z"]}],
+                "pane_switch_mode": [{"keys": ["c", "m"]}],
             },
             KBMode.command: {
                 "exit": [{"keys": "c-c"}, {"keys": "escape", "eager": True}]
