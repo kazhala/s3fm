@@ -2,7 +2,9 @@
 
 ClientError: Error caused by user.
 Bug: Unexpected issue.
+Notification: Non-application error.
 """
+from s3fm.enums import ErrorType
 
 
 class ClientError(Exception):
@@ -36,8 +38,10 @@ class Notification(Exception):
 
     Args:
         message: Error message to display.
+        error_type: Error type.
     """
 
-    def __init__(self, message: str) -> None:
+    def __init__(self, message: str, error_type: ErrorType = ErrorType.error) -> None:
         self._message = message
+        self._type = error_type
         super().__init__(self._message)
