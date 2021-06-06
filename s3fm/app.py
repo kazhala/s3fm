@@ -19,9 +19,10 @@ from prompt_toolkit.widgets.base import Frame
 from s3fm.api.config import Config
 from s3fm.api.history import History
 from s3fm.api.kb import KB
-from s3fm.enums import Direction, LayoutMode, Pane, PaneMode
+from s3fm.enums import Direction, ErrorType, LayoutMode, Pane, PaneMode
 from s3fm.exceptions import Bug
 from s3fm.ui.commandpane import CommandPane
+from s3fm.ui.error import ErrorPane
 from s3fm.ui.filepane import FilePane
 from s3fm.ui.optionpane import OptionPane
 
@@ -59,6 +60,14 @@ class App:
         self._history = History(
             dir_max_size=config.history.dir_max_size,
             cmd_max_size=config.history.cmd_max_size,
+        )
+
+        self._error = ""
+        self._error_type = ErrorType.error
+        self._error_pane = ErrorPane(
+            error=Condition(lambda: self._error != ""),
+            message=lambda: self._error,
+            error_type=lambda: self._error_type,
         )
 
         self._command_mode = Condition(lambda: self._current_focus == Pane.cmd)
@@ -392,7 +401,7 @@ class App:
         return Layout(
             FloatContainer(
                 content=layout,
-                floats=[Float(content=self._option_pane)],
+                floats=[Float(content=self._option_pane), self._error_pane],
             )
         )
 

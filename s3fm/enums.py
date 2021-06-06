@@ -1,5 +1,5 @@
 """Module contains Enums that will be used as resource arguments."""
-from enum import IntEnum
+from enum import Enum, IntEnum
 
 
 class KBMode(IntEnum):
@@ -50,3 +50,11 @@ class FileType(IntEnum):
     link = 3
     dir_link = 4
     exe = 5
+
+
+class ErrorType(Enum):
+    """Non-Application Error types."""
+
+    error = "ERROR"
+    warning = "WARNING"
+    info = "INFO"

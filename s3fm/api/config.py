@@ -301,6 +301,15 @@ class StyleConfig(BaseStyleConfig):
             self.text = "#ffffff"
             self.pattern = "#ffffff"
 
+    class Error(BaseStyleConfig):
+        """Nested error style config."""
+
+        def __init__(self) -> None:
+            self.error = "#e06c75"
+            self.info = "#61afef"
+            self.warning = "#e5c07b"
+            self.instruction = "#5c6370"
+
     class FilePane(BaseStyleConfig):
         """Nested filepane style config."""
 
@@ -319,6 +328,7 @@ class StyleConfig(BaseStyleConfig):
     def __init__(self) -> None:
         self.spinner = self.Spinner()
         self.filepane = self.FilePane()
+        self.error = self.Error()
 
     def register(self, class_name: str) -> Callable[[Any], None]:
         """Register custom style class.
