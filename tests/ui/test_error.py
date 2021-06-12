@@ -2,7 +2,7 @@ import pytest
 
 from s3fm.app import App
 from s3fm.enums import ErrorType
-from s3fm.exceptions import Notification
+from s3fm.exceptions import Bug, Notification
 
 
 def test_get_title(app: App):
@@ -41,3 +41,13 @@ def test_get_text(app: App):
         ("", "\n"),
         ("class:error.instruction", "Press any key to continue ..."),
     ]
+
+
+def test_bug():
+    with pytest.raises(Bug):
+        hello = Bug(message="hello")
+        assert (
+            hello._message
+            == "hello\nSomething went wrong with s3fm, please report this behavior over at https://github.com/kazhala/s3fm/issues."
+        )
+        raise hello
