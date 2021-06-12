@@ -20,6 +20,7 @@ def kb(app: App):
             KBMode.command: {"exit": [{"keys": "c-c"}]},
             KBMode.error: {"exit": [{"keys": "c-c"}]},
             KBMode.search: {},
+            KBMode.reverse_search: {},
         },
         custom_kb_maps={KBMode.normal: {"hello": [{"keys": "j"}]}, KBMode.command: {}},
         custom_kb_lookup={KBMode.normal: {"hello": lambda: True}, KBMode.command: {}},
