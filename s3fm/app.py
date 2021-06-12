@@ -75,6 +75,9 @@ class App:
         self._command_mode = Condition(lambda: self._kb_mode == KBMode.command)
         self._normal_mode = Condition(lambda: self._kb_mode == KBMode.normal)
         self._search_mode = Condition(lambda: self._kb_mode == KBMode.search)
+        self._reverse_search_mode = Condition(
+            lambda: self._kb_mode == KBMode.reverse_search
+        )
 
         self._error = ""
         self._error_type = ErrorType.error
@@ -207,7 +210,12 @@ class App:
             self._kb_mode = KBMode.normal
             self._filepane_focus = pane
         else:
-            self._kb_mode = KBMode.command
+            _kb_mode_map = {
+                CommandMode.command: KBMode.command,
+                CommandMode.search: KBMode.search,
+                CommandMode.reverse_search: KBMode.reverse_search,
+            }
+            self._kb_mode = _kb_mode_map.get(self._command_pane.mode, KBMode.command)
         self._previous_focus = self._current_focus
         self._current_focus = pane
         self._app.layout.focus(self.current_focus)
@@ -398,6 +406,16 @@ class App:
     def error_mode(self) -> Condition:
         """:class:`prompt_toolkit.filters.Condition`: A callable if the application has error."""
         return self._error_mode
+
+    @property
+    def search_mode(self) -> Condition:
+        """:class:`prompt_toolkit.filters.Condition`: A callable if the application is searching."""
+        return self._search_mode
+
+    @property
+    def reverse_search_mode(self) -> Condition:
+        """:class:`prompt_toolkit.filters.Condition`: A callable if the application is reverse searching."""
+        return self._reverse_search_mode
 
     @property
     def current_focus(self) -> "Container":

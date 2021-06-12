@@ -7,7 +7,7 @@ from prompt_toolkit.key_binding.key_bindings import KeyBindings, KeyHandlerCalla
 from prompt_toolkit.key_binding.key_processor import KeyPressEvent
 from prompt_toolkit.keys import Keys
 
-from s3fm.enums import Direction, KBMode, LayoutMode
+from s3fm.enums import CommandMode, Direction, KBMode, LayoutMode
 
 if TYPE_CHECKING:
     from s3fm.app import App
@@ -41,12 +41,15 @@ class KB(KeyBindings):
             KBMode.normal: self._app.normal_mode,
             KBMode.command: self._app.command_mode,
             KBMode.error: self._app.error_mode,
+            KBMode.search: self._app.search_mode,
+            KBMode.reverse_search: self._app.reverse_search_mode,
         }
         self._kb_maps = kb_maps or {
             KBMode.normal: {},
             KBMode.command: {},
             KBMode.error: {},
             KBMode.search: {},
+            KBMode.reverse_search: {},
         }
         self._kb_lookup = {
             KBMode.normal: {
@@ -64,6 +67,14 @@ class KB(KeyBindings):
                     "args": [LayoutMode.single],
                 },
                 "cmd_focus": self._app.cmd_focus,
+                "cmd_focus_search": {
+                    "func": self._app.cmd_focus,
+                    "args": [CommandMode.search],
+                },
+                "cmd_focus_reverse_search": {
+                    "func": self._app.cmd_focus,
+                    "args": [CommandMode.reverse_search],
+                },
                 "pane_focus": self._app.pane_focus_other,
                 "pane_swap_down": {"func": self._swap_pane, "args": [Direction.down]},
                 "pane_swap_up": {"func": self._swap_pane, "args": [Direction.up]},
@@ -97,7 +108,8 @@ class KB(KeyBindings):
             },
             KBMode.command: {"exit": self._app.cmd_exit},
             KBMode.error: {"exit": self._app.set_error},
-            KBMode.search: {},
+            KBMode.search: {"exit": self._app.cmd_exit},
+            KBMode.reverse_search: {"exit": self._app.cmd_exit},
         }
         self._custom_kb_maps = custom_kb_maps or {
             KBMode.normal: {},
@@ -112,9 +124,11 @@ class KB(KeyBindings):
         self._create_bindings(KBMode.error, custom=False)
         self._create_bindings(KBMode.normal, custom=False)
         self._create_bindings(KBMode.command, custom=False)
+        self._create_bindings(KBMode.search, custom=False)
+        self._create_bindings(KBMode.reverse_search, custom=False)
+
         self._create_bindings(KBMode.normal, custom=True)
         self._create_bindings(KBMode.command, custom=True)
-        self._create_bindings(KBMode.search, custom=False)
 
         for i in range(10):
             self._factory(
@@ -182,6 +196,11 @@ class KB(KeyBindings):
                 key_action["func"](*function_args if not raw else [event])
 
     def _pane_set_action_multiplier(self, event: KeyPressEvent) -> None:
+        """Set action multiplier.
+
+        Args:
+            event: A `prompt_toolkit.key_binding.key_processor.KeyPressEvent` instance.
+        """
         key_num = event.key_sequence[0].key
         if not self._action_multiplier:
             self._action_multiplier = int(key_num)

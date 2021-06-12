@@ -9,6 +9,7 @@ class KBMode(IntEnum):
     command = 1
     error = 2
     search = 3
+    reverse_search = 4
 
 
 class PaneMode(IntEnum):

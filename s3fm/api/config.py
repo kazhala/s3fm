@@ -387,6 +387,8 @@ class KBConfig:
                 "layout_horizontal": [{"keys": ["c-w", "s"]}],
                 "layout_single": [{"keys": ["c-w", "o"]}],
                 "cmd_focus": [{"keys": ":"}],
+                "cmd_focus_search": [{"keys": "/"}],
+                "cmd_focus_reverse_search": [{"keys": "?"}],
                 "pane_focus": [{"keys": Keys.Tab}],
                 "pane_swap_down": [{"keys": ["c-w", "J"]}],
                 "pane_swap_up": [{"keys": ["c-w", "K"]}],
@@ -411,7 +413,12 @@ class KBConfig:
                 "exit": [{"keys": "c-c"}, {"keys": "escape", "eager": True}]
             },
             KBMode.error: {"exit": [{"keys": Keys.Any}]},
-            KBMode.search: {},
+            KBMode.search: {
+                "exit": [{"keys": "c-c"}, {"keys": "escape", "eager": True}]
+            },
+            KBMode.reverse_search: {
+                "exit": [{"keys": "c-c"}, {"keys": "escape", "eager": True}]
+            },
         }
         self._custom_kb_maps = {KBMode.normal: {}, KBMode.command: {}}
         self._custom_kb_lookup = {KBMode.normal: {}, KBMode.command: {}}
