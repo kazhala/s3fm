@@ -19,7 +19,15 @@ from prompt_toolkit.widgets.base import Frame
 from s3fm.api.config import Config
 from s3fm.api.history import History
 from s3fm.api.kb import KB
-from s3fm.enums import Direction, ErrorType, KBMode, LayoutMode, Pane, PaneMode
+from s3fm.enums import (
+    CommandMode,
+    Direction,
+    ErrorType,
+    KBMode,
+    LayoutMode,
+    Pane,
+    PaneMode,
+)
 from s3fm.exceptions import Notification
 from s3fm.ui.commandpane import CommandPane
 from s3fm.ui.error import ErrorPane
@@ -218,12 +226,19 @@ class App:
                 Pane.left if self._current_focus == Pane.right else Pane.right
             )
 
-    def cmd_focus(self) -> None:
-        """Focus the commandpane."""
+    def cmd_focus(self, mode=CommandMode.command) -> None:
+        """Focus the commandpane.
+
+        Args:
+            mode: Command mode to set for the commandpane.
+        """
+        self._command_pane.mode = mode
         self.pane_focus(Pane.cmd)
 
     def cmd_exit(self) -> None:
         """Exit the commandpane and refocus the last focused filepane."""
+        self._command_pane.mode = CommandMode.clear
+        self._command_pane.buffer.text = ""
         self.pane_focus(self._previous_focus or Pane.left)
 
     def exit(self) -> None:

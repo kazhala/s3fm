@@ -325,10 +325,18 @@ class StyleConfig(BaseStyleConfig):
             self.dir_link = "#61afef"
             self.exe = "#98c379"
 
+    class Command(BaseStyleConfig):
+        """Nested commandpane style config."""
+
+        def __init__(self) -> None:
+            self.input = "#abb2bf"
+            self.prefix = "#abb2bf"
+
     def __init__(self) -> None:
         self.spinner = self.Spinner()
         self.filepane = self.FilePane()
         self.error = self.Error()
+        self.command = self.Command()
 
     def register(self, class_name: str) -> Callable[[Any], None]:
         """Register custom style class.

@@ -61,3 +61,12 @@ class ErrorType(Enum):
     error = "ERROR"
     warning = "WARNING"
     info = "INFO"
+
+
+class CommandMode(IntEnum):
+    """Command pane modes."""
+
+    command = 0
+    search = 1
+    reverse_search = 2
+    clear = 3
