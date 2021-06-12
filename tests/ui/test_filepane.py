@@ -589,3 +589,17 @@ class TestLoadData:
         app._left_pane._mode = 3
         await app._left_pane.load_data()
         mocked_error.assert_called_once()
+
+
+def test_path_property(app: App, mocker: MockerFixture):
+    mocked_error = mocker.patch("s3fm.ui.filepane.FilePane.set_error")
+    app._left_pane.mode = 3
+    app._left_pane.path = "hello"
+    mocked_error.assert_called_once()
+    assert app._left_pane.mode == PaneMode.fs
+
+    mocked_error.reset_mock()
+    app._left_pane.mode = 3
+    app._left_pane.path
+    mocked_error.assert_called_once()
+    assert app._left_pane.mode == PaneMode.fs
