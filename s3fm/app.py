@@ -350,6 +350,7 @@ class App:
                 else PaneMode.fs
             )
         await self.current_filepane.load_data()
+        self.current_filepane.selected_file_index = 0
 
     def set_error(self, exception: Optional["Notification"] = None) -> None:
         """Configure error notification for the application.
