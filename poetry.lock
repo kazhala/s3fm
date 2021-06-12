@@ -529,6 +529,14 @@ python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,>=2.7"
 six = ">=1.5"
 
 [[package]]
+name = "python-levenshtein"
+version = "0.12.2"
+description = "Python extension for computing string edit distances and similarities."
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "pytz"
 version = "2021.1"
 description = "World timezone definitions, modern and historical"
@@ -814,7 +822,7 @@ docs = ["Sphinx", "furo", "sphinx-autobuild", "sphinx-copybutton", "myst-parser"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "2b5fdd46d99341b100d32e060076dc07f5dd0e525141f776408fe703b69d6078"
+content-hash = "34303158db32b929331d248516b95bf0b0c2d51896c52b0ce6c791a41a5c69b4"
 
 [metadata.files]
 alabaster = [
@@ -1081,6 +1089,9 @@ pytest-mock = [
 python-dateutil = [
     {file = "python-dateutil-2.8.1.tar.gz", hash = "sha256:73ebfe9dbf22e832286dafa60473e4cd239f8592f699aa5adaf10050e6e1823c"},
     {file = "python_dateutil-2.8.1-py2.py3-none-any.whl", hash = "sha256:75bb3f31ea686f1197762692a9ee6a7550b59fc6ca3a1f4b5d7e32fb98e2da2a"},
+]
+python-levenshtein = [
+    {file = "python-Levenshtein-0.12.2.tar.gz", hash = "sha256:dc2395fbd148a1ab31090dd113c366695934b9e85fe5a4b2a032745efd0346f6"},
 ]
 pytz = [
     {file = "pytz-2021.1-py2.py3-none-any.whl", hash = "sha256:eb10ce3e7736052ed3623d49975ce333bcd712c7bb19a58b9e2089d4057d0798"},

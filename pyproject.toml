@@ -10,6 +10,7 @@ python = "^3.7"
 boto3 = "^1.17.43"
 click = "^7.1.2"
 prompt-toolkit = "^3.0.18"
+python-Levenshtein = "^0.12.2"
 Sphinx = { version = "^3.5.3", optional = true }
 furo = { version = "^2021.3.20-beta.31", optional = true }
 myst-parser = { version = "^0.13.5", optional = true }
