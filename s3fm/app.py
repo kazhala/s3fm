@@ -19,7 +19,7 @@ from prompt_toolkit.widgets.base import Frame
 from s3fm.api.config import Config
 from s3fm.api.history import History
 from s3fm.api.kb import KB
-from s3fm.enums import Direction, ErrorType, LayoutMode, Pane, PaneMode
+from s3fm.enums import Direction, ErrorType, KBMode, LayoutMode, Pane, PaneMode
 from s3fm.exceptions import Notification
 from s3fm.ui.commandpane import CommandPane
 from s3fm.ui.error import ErrorPane
@@ -61,17 +61,11 @@ class App:
             dir_max_size=config.history.dir_max_size,
             cmd_max_size=config.history.cmd_max_size,
         )
+        self._kb_mode = KBMode.normal
 
-        self._error_mode = Condition(lambda: self._error != "")
-        self._command_mode = Condition(
-            lambda: self._current_focus == Pane.cmd and not self._error
-        )
-        self._normal_mode = Condition(
-            lambda: (
-                self._current_focus == Pane.left or self._current_focus == Pane.right
-            )
-            and not self._error
-        )
+        self._error_mode = Condition(lambda: self._kb_mode == KBMode.error)
+        self._command_mode = Condition(lambda: self._kb_mode == KBMode.command)
+        self._normal_mode = Condition(lambda: self._kb_mode == KBMode.normal)
 
         self._error = ""
         self._error_type = ErrorType.error
@@ -201,7 +195,10 @@ class App:
             >>> app.pane_focus(Pane.left) # doctest: +SKIP
         """
         if pane in self.filepanes:
+            self._kb_mode = KBMode.normal
             self._filepane_focus = pane
+        else:
+            self._kb_mode = KBMode.command
         self._previous_focus = self._current_focus
         self._current_focus = pane
         self._app.layout.focus(self.current_focus)
@@ -363,8 +360,10 @@ class App:
             exception: A :class:`~s3fm.exceptions.Notification` instance.
         """
         if not exception:
+            self._kb_mode = KBMode.normal
             self._error = ""
         else:
+            self._kb_mode = KBMode.error
             self._error = str(exception)
             self._error_type = exception.type
 
@@ -396,7 +395,7 @@ class App:
             self.set_error(
                 Notification("Unexpected focus.", error_type=ErrorType.warning)
             )
-            self._current_focus = Pane.left
+            self.pane_focus(Pane.left)
             return self.current_focus
 
     @property
