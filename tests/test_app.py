@@ -7,8 +7,8 @@ from pytest_mock.plugin import MockerFixture
 from s3fm.api.history import History
 from s3fm.api.kb import KB
 from s3fm.app import App
-from s3fm.enums import Direction, LayoutMode, Pane, PaneMode
-from s3fm.exceptions import Bug
+from s3fm.enums import Direction, ErrorType, LayoutMode, Pane, PaneMode
+from s3fm.exceptions import Bug, Notification
 from s3fm.ui.filepane import FilePane
 
 
@@ -79,6 +79,10 @@ async def test_render_task(app, mocker: MockerFixture):
     await app._render_task()
     assert app._kb.activated == True
     spy.assert_not_called()
+
+    app._no_history = False
+    await app._render_task()
+    spy.assert_called_once()
 
 
 @pytest.mark.asyncio
@@ -308,13 +312,18 @@ async def test_toggle_hidden_files(app):
 
 
 @pytest.mark.asyncio
-async def test_pane_switch_mode(app, mocker: MockerFixture):
+async def test_pane_switch_mode(app: App, mocker: MockerFixture):
     mocker.patch.object(FilePane, "load_data")
     assert app.current_filepane.mode == PaneMode.s3
     await app.pane_switch_mode()
     assert app.current_filepane.mode == PaneMode.fs
     await app.pane_switch_mode()
     assert app.current_filepane.mode == PaneMode.s3
+
+    await app.pane_switch_mode(mode=PaneMode.s3)
+    assert app.current_filepane.mode == PaneMode.s3
+    await app.pane_switch_mode(mode=PaneMode.fs)
+    assert app.current_filepane.mode == PaneMode.fs
 
 
 def test_property_pane(app):
@@ -329,3 +338,33 @@ def test_property_pane(app):
 
     assert isinstance(app.kb, KB) == True
     assert app.rendered == False
+
+
+def test_set_error(app: App):
+    app.set_error(Notification(message="hello", error_type=ErrorType.warning))
+    assert app._error == "hello"
+    assert app._error_type == ErrorType.warning
+
+    app.set_error()
+    assert app._error == ""
+
+
+def test_current_focus(app: App):
+    app._current_focus = Pane.right
+    app.current_focus
+
+    app._current_focus = 10
+    app.current_focus
+    assert app._current_focus == Pane.left
+    assert app._error_type == ErrorType.warning
+
+
+def test_current_filepane(app: App):
+    app._filepane_focus = Pane.right
+    app.current_filepane
+    assert app._filepane_focus == Pane.right
+
+    app._filepane_focus = 10
+    app.current_filepane
+    assert app._filepane_focus == Pane.left
+    assert app._error_type == ErrorType.warning
