@@ -491,15 +491,24 @@ class FilePane(ConditionalContainer):
     @file_action
     async def forward(self) -> None:
         """Handle the forward action on the current file based on filetype."""
+        current_path = self.path
         if self._mode == PaneMode.fs:
             if self.current_selection.type == FileType.dir:
-                self._files = await self._fs.cd(Path(self.current_selection.name))
+                try:
+                    self._files = await self._fs.cd(Path(self.current_selection.name))
+                except Exception as e:
+                    self.set_error(Notification(str(e)))
+                    self._files = await self._fs.cd(Path(current_path))
         elif self._mode == PaneMode.s3:
             if (
                 self.current_selection.type == FileType.dir
                 or self.current_selection.type == FileType.bucket
             ):
-                self._files = await self._s3.cd(self.current_selection.name)
+                try:
+                    self._files = await self._s3.cd(self.current_selection.name)
+                except Exception as e:
+                    self.set_error(Notification(str(e)))
+                    self._files = await self._fs.cd(Path(current_path))
         else:
             self._mode = PaneMode.fs
             self.set_error(
@@ -555,12 +564,24 @@ class FilePane(ConditionalContainer):
             try:
                 self._files += await self._s3.get_paths()
             except:
+                self.set_error(
+                    Notification(
+                        message="Target S3 path %s is not valid or you do not have sufficent permissions."
+                        % self._s3.path
+                    )
+                )
                 self._s3.path = Path("")
                 self._files += await self._s3.get_paths()
         elif self._mode == PaneMode.fs:
             try:
                 self._files += await self._fs.get_paths()
             except:
+                self.set_error(
+                    Notification(
+                        message="Target path %s is not a valid directory."
+                        % self._fs.path
+                    )
+                )
                 self._fs.path = Path("").resolve()
                 self._files += await self._fs.get_paths()
         else:
