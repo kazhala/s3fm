@@ -8,6 +8,7 @@ class KBMode(IntEnum):
     normal = 0
     command = 1
     error = 2
+    search = 3
 
 
 class PaneMode(IntEnum):

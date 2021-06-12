@@ -42,7 +42,12 @@ class KB(KeyBindings):
             KBMode.command: self._app.command_mode,
             KBMode.error: self._app.error_mode,
         }
-        self._kb_maps = kb_maps or {KBMode.normal: {}, KBMode.command: {}}
+        self._kb_maps = kb_maps or {
+            KBMode.normal: {},
+            KBMode.command: {},
+            KBMode.error: {},
+            KBMode.search: {},
+        }
         self._kb_lookup = {
             KBMode.normal: {
                 "exit": self._app.exit,
@@ -92,6 +97,7 @@ class KB(KeyBindings):
             },
             KBMode.command: {"exit": self._app.cmd_exit},
             KBMode.error: {"exit": self._app.set_error},
+            KBMode.search: {},
         }
         self._custom_kb_maps = custom_kb_maps or {
             KBMode.normal: {},
@@ -108,6 +114,7 @@ class KB(KeyBindings):
         self._create_bindings(KBMode.command, custom=False)
         self._create_bindings(KBMode.normal, custom=True)
         self._create_bindings(KBMode.command, custom=True)
+        self._create_bindings(KBMode.search, custom=False)
 
         for i in range(10):
             self._factory(

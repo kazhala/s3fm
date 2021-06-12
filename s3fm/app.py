@@ -66,6 +66,7 @@ class App:
         self._error_mode = Condition(lambda: self._kb_mode == KBMode.error)
         self._command_mode = Condition(lambda: self._kb_mode == KBMode.command)
         self._normal_mode = Condition(lambda: self._kb_mode == KBMode.normal)
+        self._search_mode = Condition(lambda: self._kb_mode == KBMode.search)
 
         self._error = ""
         self._error_type = ErrorType.error
