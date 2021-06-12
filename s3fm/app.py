@@ -344,7 +344,7 @@ class App:
             mode: PaneMode for the current focus pane to switch to.
                 If not provided, it will switch to the alternative mode.
         """
-        if mode:
+        if mode is not None:
             self.current_filepane.mode = mode
         else:
             self.current_filepane.mode = (
