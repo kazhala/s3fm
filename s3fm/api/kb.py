@@ -102,9 +102,9 @@ class KB(KeyBindings):
                 "pane_page_down": self._pane_page_down,
                 "pane_forward": self._pane_forward,
                 "pane_backword": self._pane_backword,
-                "pane_toggle_hidden_files": self._app.pane_toggle_hidden_files,
+                "pane_toggle_hidden_files": self._pane_toggle_hidden_files,
                 "pane_set_action_multiplier": self._pane_set_action_multiplier,
-                "pane_switch_mode": self._app.pane_switch_mode,
+                "pane_switch_mode": self._pane_switch_mode,
             },
             KBMode.command: {"exit": self._app.cmd_exit},
             KBMode.error: {"exit": self._app.set_error},
@@ -260,6 +260,13 @@ class KB(KeyBindings):
         if self.action_multiplier:
             value = self.action_multiplier
         self._app.current_filepane.scroll_up(value=value, page=page, top=top)
+
+    async def _pane_toggle_hidden_files(self) -> None:
+        """Toggle hidden file status on the current filepane."""
+        await self._app.current_filepane.pane_toggle_hidden_files()
+
+    async def _pane_switch_mode(self) -> None:
+        await self._app.current_filepane.pane_switch_mode()
 
     def add(
         self,

@@ -603,6 +603,39 @@ class FilePane(ConditionalContainer):
         """
         self._set_error(notification)
 
+    async def pane_toggle_hidden_files(self, value: bool = None) -> None:
+        """Toggle the current focused pane display hidden file status.
+
+        Use this method to either instruct the current focused pane to show
+        hidden files or hide hidden files.
+
+        If current highlighted file is a hidden file and the focused pane
+        is instructed to hide hidden file, highlight will shift down until
+        a non hidden file.
+
+        Args:
+            value: Optional bool value to indicate show/hide.
+                If not provided, it will toggle the hidden file status.
+        """
+        self.display_hidden_files = value or not self.display_hidden_files
+        await self.filter_files()
+
+    async def pane_switch_mode(self, mode: PaneMode = None) -> None:
+        """Switch the pane operation mode from one to another.
+
+        If currently is local file system mode, then switch to s3 file system mode or vice versa.
+
+        Args:
+            mode: PaneMode for the current focus pane to switch to.
+                If not provided, it will switch to the alternative mode.
+        """
+        if mode is not None:
+            self.mode = mode
+        else:
+            self.mode = PaneMode.s3 if self.mode == PaneMode.fs else PaneMode.fs
+        await self.load_data()
+        self.selected_file_index = 0
+
     @property
     def file_count(self) -> int:
         """int: Total file count."""

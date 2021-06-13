@@ -19,15 +19,7 @@ from prompt_toolkit.widgets.base import Frame
 from s3fm.api.config import Config
 from s3fm.api.history import History
 from s3fm.api.kb import KB
-from s3fm.enums import (
-    CommandMode,
-    Direction,
-    ErrorType,
-    KBMode,
-    LayoutMode,
-    Pane,
-    PaneMode,
-)
+from s3fm.enums import CommandMode, Direction, ErrorType, KBMode, LayoutMode, Pane
 from s3fm.exceptions import Notification
 from s3fm.ui.commandpane import CommandPane
 from s3fm.ui.error import ErrorPane
@@ -335,46 +327,6 @@ class App:
             self.pane_focus_other()
         else:
             self.pane_focus(self._current_focus)
-
-    async def pane_toggle_hidden_files(self, value: bool = None) -> None:
-        """Toggle the current focused pane display hidden file status.
-
-        Use this method to either instruct the current focused pane to show
-        hidden files or hide hidden files.
-
-        If current highlighted file is a hidden file and the focused pane
-        is instructed to hide hidden file, highlight will shift down until
-        a non hidden file.
-
-        Args:
-            value: Optional bool value to indicate show/hide.
-                If not provided, it will toggle the hidden file status.
-        """
-        self.current_filepane.display_hidden_files = (
-            value or not self.current_filepane.display_hidden_files
-        )
-        await self.current_filepane.filter_files()
-        self.redraw()
-
-    async def pane_switch_mode(self, mode: PaneMode = None) -> None:
-        """Switch the pane operation mode from one to another.
-
-        If currently is local file system mode, then switch to s3 file system mode or vice versa.
-
-        Args:
-            mode: PaneMode for the current focus pane to switch to.
-                If not provided, it will switch to the alternative mode.
-        """
-        if mode is not None:
-            self.current_filepane.mode = mode
-        else:
-            self.current_filepane.mode = (
-                PaneMode.s3
-                if self.current_filepane.mode == PaneMode.fs
-                else PaneMode.fs
-            )
-        await self.current_filepane.load_data()
-        self.current_filepane.selected_file_index = 0
 
     def set_error(self, exception: Optional["Notification"] = None) -> None:
         """Configure error notification for the application.
