@@ -108,7 +108,10 @@ class KB(KeyBindings):
             },
             KBMode.command: {"exit": self._app.cmd_exit},
             KBMode.error: {"exit": self._app.set_error},
-            KBMode.search: {"exit": self._app.cmd_exit},
+            KBMode.search: {
+                "exit": self._app.cmd_exit,
+                "confirm": self._cmd_search_confirm,
+            },
             KBMode.reverse_search: {"exit": self._app.cmd_exit},
         }
         self._custom_kb_maps = custom_kb_maps or {
@@ -266,7 +269,12 @@ class KB(KeyBindings):
         await self._app.current_filepane.pane_toggle_hidden_files()
 
     async def _pane_switch_mode(self) -> None:
+        """Switch current focused pane fs mode."""
         await self._app.current_filepane.pane_switch_mode()
+
+    def _cmd_search_confirm(self) -> None:
+        """Confirm the search action."""
+        self._app.pane_focus(self._app.file_pane_focus)
 
     def add(
         self,

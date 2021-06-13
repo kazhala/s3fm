@@ -233,6 +233,7 @@ class App:
             mode: Command mode to set for the commandpane.
         """
         self._command_pane.mode = mode
+        self._command_pane.buffer.text = ""
         self.pane_focus(Pane.cmd)
 
     def cmd_exit(self) -> None:
@@ -397,6 +398,11 @@ class App:
             )
             self._filepane_focus = Pane.left
             return self.current_filepane
+
+    @property
+    def file_pane_focus(self) -> Pane:
+        """Pane: Focused pane ID."""
+        return self._filepane_focus
 
     @property
     def filepanes(self) -> Dict[Pane, FilePane]:

@@ -415,7 +415,8 @@ class KBConfig:
             },
             KBMode.error: {"exit": [{"keys": Keys.Any}]},
             KBMode.search: {
-                "exit": [{"keys": "c-c"}, {"keys": "escape", "eager": True}]
+                "exit": [{"keys": "c-c"}, {"keys": "escape", "eager": True}],
+                "confirm": [{"keys": Keys.Enter}],
             },
             KBMode.reverse_search: {
                 "exit": [{"keys": "c-c"}, {"keys": "escape", "eager": True}]
