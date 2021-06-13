@@ -784,3 +784,12 @@ class FilePane(ConditionalContainer):
                 Notification("Unexpected pane mode.", error_type=ErrorType.warning)
             )
             self._fs.path = Path(value)
+
+    @property
+    def searched_indices(self) -> Optional[Dict[int, List[int]]]:
+        """Optional[Dict[int, List[int]]]: Dictionary of current seach result index and matching indices."""
+        return self._searched_indices
+
+    @searched_indices.setter
+    def searched_indices(self, value) -> None:
+        self._searched_indices = value

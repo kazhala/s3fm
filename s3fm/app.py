@@ -239,6 +239,7 @@ class App:
         """Exit the commandpane and refocus the last focused filepane."""
         self._command_pane.mode = CommandMode.clear
         self._command_pane.buffer.text = ""
+        self.current_filepane.searched_indices = None
         self.pane_focus(self._previous_focus or Pane.left)
 
     def exit(self) -> None:
