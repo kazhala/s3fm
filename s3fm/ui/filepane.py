@@ -162,7 +162,7 @@ class FilePane(ConditionalContainer):
         self._loaded = False
         self._files: List[File] = []
         self._filtered_files: List[File] = []
-        self._searched_indexes: Optional[Dict[int, List[int]]] = None
+        self._searched_indices: Optional[Dict[int, List[int]]] = None
         self._loading = True
         self._dimension_offset = 0 if not app_config.border else 2
         self._padding = app_config.padding
@@ -317,9 +317,9 @@ class FilePane(ConditionalContainer):
             style_class += " %s" % file_style
             display_files.append((style_class, icon))
 
-            if self._searched_indexes is not None and index in self._searched_indexes:
+            if self._searched_indices is not None and index in self._searched_indices:
                 for j in range(len(name)):
-                    if j in self._searched_indexes[index]:
+                    if j in self._searched_indices[index]:
                         display_files.append(("class:filepane.searched", name[j]))
                     else:
                         display_files.append((style_class, name[j]))
@@ -654,10 +654,10 @@ class FilePane(ConditionalContainer):
             text: Text to search.
         """
         if not text:
-            self._searched_indexes = None
+            self._searched_indices = None
         else:
             await asyncio.sleep(self._calculate_wait_time())
-            self._searched_indexes = await match_exact(self.files, text)
+            self._searched_indices = await match_exact(self.files, text)
 
     def _calculate_wait_time(self) -> float:
         """Calculate wait time to smoother the application on big data set.
