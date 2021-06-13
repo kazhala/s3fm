@@ -304,28 +304,6 @@ class TestPaneSwap:
         mocked_focus2.assert_not_called()
 
 
-@pytest.mark.asyncio
-async def test_toggle_hidden_files(app):
-    assert app.current_filepane.display_hidden_files == True
-    await app.pane_toggle_hidden_files(False)
-    assert app.current_filepane.display_hidden_files == False
-
-
-@pytest.mark.asyncio
-async def test_pane_switch_mode(app: App, mocker: MockerFixture):
-    mocker.patch.object(FilePane, "load_data")
-    assert app.current_filepane.mode == PaneMode.s3
-    await app.pane_switch_mode()
-    assert app.current_filepane.mode == PaneMode.fs
-    await app.pane_switch_mode()
-    assert app.current_filepane.mode == PaneMode.s3
-
-    await app.pane_switch_mode(mode=PaneMode.s3)
-    assert app.current_filepane.mode == PaneMode.s3
-    await app.pane_switch_mode(mode=PaneMode.fs)
-    assert app.current_filepane.mode == PaneMode.fs
-
-
 def test_property_pane(app):
     assert app.current_filepane == app._left_pane
     assert app.current_focus == app._left_pane

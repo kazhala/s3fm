@@ -603,3 +603,25 @@ def test_path_property(app: App, mocker: MockerFixture):
     app._left_pane.path
     mocked_error.assert_called_once()
     assert app._left_pane.mode == PaneMode.fs
+
+
+@pytest.mark.asyncio
+async def test_toggle_hidden_files(app):
+    assert app.current_filepane.display_hidden_files == True
+    await app.current_filepane.pane_toggle_hidden_files(False)
+    assert app.current_filepane.display_hidden_files == False
+
+
+@pytest.mark.asyncio
+async def test_pane_switch_mode(app: App, mocker: MockerFixture):
+    mocker.patch.object(FilePane, "load_data")
+    assert app.current_filepane.mode == PaneMode.s3
+    await app.current_filepane.pane_switch_mode()
+    assert app.current_filepane.mode == PaneMode.fs
+    await app.current_filepane.pane_switch_mode()
+    assert app.current_filepane.mode == PaneMode.s3
+
+    await app.current_filepane.pane_switch_mode(mode=PaneMode.s3)
+    assert app.current_filepane.mode == PaneMode.s3
+    await app.current_filepane.pane_switch_mode(mode=PaneMode.fs)
+    assert app.current_filepane.mode == PaneMode.fs
