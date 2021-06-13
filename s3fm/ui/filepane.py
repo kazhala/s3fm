@@ -3,7 +3,7 @@ import asyncio
 import math
 from functools import wraps
 from pathlib import Path
-from typing import Awaitable, Callable, List, Optional, Tuple
+from typing import Awaitable, Callable, Dict, List, Optional, Tuple
 
 from prompt_toolkit.filters.base import Condition
 from prompt_toolkit.layout.containers import (
@@ -18,6 +18,7 @@ from prompt_toolkit.layout.dimension import LayoutDimension
 
 from s3fm.api.config import AppConfig, LineModeConfig, SpinnerConfig
 from s3fm.api.fs import FS, S3, File
+from s3fm.api.fuzzy import match_exact
 from s3fm.api.history import History
 from s3fm.enums import ErrorType, FileType, Pane, PaneMode
 from s3fm.exceptions import ClientError, Notification
@@ -161,6 +162,7 @@ class FilePane(ConditionalContainer):
         self._loaded = False
         self._files: List[File] = []
         self._filtered_files: List[File] = []
+        self._searched_indexes: Optional[Dict[int, List[int]]] = None
         self._loading = True
         self._dimension_offset = 0 if not app_config.border else 2
         self._padding = app_config.padding
@@ -307,14 +309,23 @@ class FilePane(ConditionalContainer):
         for index in range(self._first_line, self._last_line):
             file = self.files[index]
             file_style, icon, name, info = self._get_file_info(file)
+
             style_class = "class:filepane.other_line"
             if index == self._selected_file_index and self._focus():
                 style_class = "class:filepane.current_line"
                 display_files.append(("[SetCursorPosition]", ""))
             style_class += " %s" % file_style
-
             display_files.append((style_class, icon))
-            display_files.append((style_class, name))
+
+            if self._searched_indexes is not None and index in self._searched_indexes:
+                for j in range(len(name)):
+                    if j in self._searched_indexes[index]:
+                        display_files.append(("class:filepane.searched", name[j]))
+                    else:
+                        display_files.append((style_class, name[j]))
+            else:
+                display_files.append((style_class, name))
+
             display_files.append(
                 (
                     style_class,
@@ -635,6 +646,42 @@ class FilePane(ConditionalContainer):
             self.mode = PaneMode.s3 if self.mode == PaneMode.fs else PaneMode.fs
         await self.load_data()
         self.selected_file_index = 0
+
+    async def search_text(self, text: str) -> None:
+        """Search text in all visible files.
+
+        Args:
+            text: Text to search.
+        """
+        if not text:
+            self._searched_indexes = None
+        else:
+            await asyncio.sleep(self._calculate_wait_time())
+            self._searched_indexes = await match_exact(self.files, text)
+
+    def _calculate_wait_time(self) -> float:
+        """Calculate wait time to smoother the application on big data set.
+
+        Using digit of the choices lengeth to get wait time.
+        For digit greater than 6, using formula 2^(digit - 5) * 0.3 to increase the wait_time.
+
+        Still experimenting, require improvements.
+        """
+        wait_table = {
+            2: 0.05,
+            3: 0.1,
+            4: 0.2,
+            5: 0.3,
+        }
+        digit = 1
+        if self.file_count > 0:
+            digit = int(math.log10(self.file_count)) + 1
+
+        if digit < 2:
+            return 0.0
+        if digit in wait_table:
+            return wait_table[digit]
+        return wait_table[5] * (2 ** (digit - 5))
 
     @property
     def file_count(self) -> int:

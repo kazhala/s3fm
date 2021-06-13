@@ -316,6 +316,7 @@ class StyleConfig(BaseStyleConfig):
         def __init__(self) -> None:
             self.current_line = "#61afef reverse"
             self.other_line = "#abb2bf"
+            self.searched = "#e5c07b reverse"
             self.focus_path = "#a0c980"
             self.unfocus_path = "#5c6370"
             self.file = "#abb2bf"
