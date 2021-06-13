@@ -108,7 +108,7 @@ class App:
             history=self._history,
             set_error=self.set_error,
         )
-        self._command_pane = CommandPane()
+        self._command_pane = CommandPane(app=self)
         self._option_pane = OptionPane()
 
         self._kb = KB(
