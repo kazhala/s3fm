@@ -217,7 +217,7 @@ class TestS3:
                 type=FileType.file,
                 info="6.0 K",
                 hidden=True,
-                index=0,
+                index=3,
                 raw=ANY,
             ),
             File(
@@ -225,7 +225,7 @@ class TestS3:
                 type=FileType.file,
                 info="151.9 K",
                 hidden=False,
-                index=1,
+                index=4,
                 raw=ANY,
             ),
             File(
@@ -233,7 +233,7 @@ class TestS3:
                 type=FileType.file,
                 info="3.5 K",
                 hidden=False,
-                index=2,
+                index=5,
                 raw=ANY,
             ),
         ]
