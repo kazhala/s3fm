@@ -199,12 +199,17 @@ class S3:
     async def _get_objects(self, offset: int = 0) -> List[File]:
         """Async wrapper to list all objects in bucket.
 
+        For folders created manually, it will appear as duplicates in the response["Contents"],
+        hence skip them.
+
         Returns:
             A list of :class:`~s3fm.id.File`.
         """
         response = await self._list_objects()
         result = []
+        dir_count = 0
         for index, s3_obj in enumerate(response.get("CommonPrefixes", [])):
+            dir_count += 1
             result.append(
                 File(
                     name="%s/" % Path(s3_obj["Prefix"]).name,
@@ -216,13 +221,15 @@ class S3:
                 )
             )
         for index, s3_obj in enumerate(response.get("Contents", [])):
+            if s3_obj["Key"].endswith("/"):
+                continue
             result.append(
                 File(
                     name=Path(s3_obj["Key"]).name,
-                    type=FileType.dir if s3_obj["Key"].endswith("/") else FileType.file,
+                    type=FileType.file,
                     info=str(human_readable_size(s3_obj["Size"])),
                     hidden=s3_obj["Key"].startswith("."),
-                    index=index + offset,
+                    index=index + offset + dir_count,
                     raw=s3_obj,
                 )
             )
